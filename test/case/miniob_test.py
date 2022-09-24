@@ -1,16 +1,14 @@
 # -*- coding: UTF-8 -*-
 
-from genericpath import exists
-import os
 import json
-import http.client
-import sys
 import logging
-import subprocess
-import socket
+import os
 import select
-import time
 import shutil
+import socket
+import subprocess
+import sys
+import time
 # import timeout_decorator
 from enum import Enum
 
@@ -361,7 +359,7 @@ class MiniObClient:
             (_, event) = events[0]
             if event & (select.POLLHUP | select.POLLERR):
                 msg = "Failed to receive from server. poll return POLLHUP(%s) or POLLERR(%s)" % (
-                str(event & select.POLLHUP), str(event & select.POLLERR))
+                    str(event & select.POLLHUP), str(event & select.POLLERR))
                 logging.info(msg)
                 raise Exception(msg)
 
