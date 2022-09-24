@@ -1,4 +1,3 @@
-
 # 第5章 查询优化
 
 ## 5.1 查询优化概述
@@ -10,7 +9,8 @@
 从一个查询计划看，涉及的主要&quot;关系节点&quot;包括：
 
 - 单表节点：考虑单表的获取方式（全表扫描，或索引获取，或索引定位再I/O到数据块获取数据）。这是一个物理存储到内存解析成逻辑字段的过程。
-- 两表节点：考虑两表以何种方式连接，代价有多大，连接路径有哪些等。表示内存中的元组如何进行元组间的连接。此时，元组通常已经存在于内存中。这是一个完整用户语义的逻辑操作，但只是局部操作，只涉及两个具体的关系。完成用户全部语义，需要配合多表的连接顺序的操作。
+-
+两表节点：考虑两表以何种方式连接，代价有多大，连接路径有哪些等。表示内存中的元组如何进行元组间的连接。此时，元组通常已经存在于内存中。这是一个完整用户语义的逻辑操作，但只是局部操作，只涉及两个具体的关系。完成用户全部语义，需要配合多表的连接顺序的操作。
 - 多表中间节点：考虑多表连接顺序如何构成代价最少的&quot;执行计划&quot;。决定连接执行的顺序。
 
 查询优化的总目标是选择有效的策略，求得给定关系表达式的值，使得查询代价较小。因为查询优化的搜索空间有时非常大，实际系统选择的策略不一定是最优的，而是较优的。
@@ -35,11 +35,11 @@
 
 设E1和E2为关系代数表达式，F为连接运算条件，则有：
 
-​												E1×E2 ≡ E2×E1
+​ E1×E2 ≡ E2×E1
 
-​												E1⋈E2 ≡ E2⋈E1
+​ E1⋈E2 ≡ E2⋈E1
 
-​												![5.2.1.1-1](images/5.2.1.1-1.png) ≡ ![5.2.1.1-2](images/5.2.1.1-2.png)
+​                                                ![5.2.1.1-1](images/5.2.1.1-1.png) ≡ ![5.2.1.1-2](images/5.2.1.1-2.png)
 
 对于连接和笛卡尔积运算，可以交换前后位置，其结果不变。例如，两表连接算法中有嵌套循环连接算法，对外表和内表有要求，外表尽可能小则有利于做&quot;基于块的嵌套循环连接&quot;，所以通过交换律可以将元组少的表作为外表。
 
@@ -47,41 +47,49 @@
 
 设E1、E2、E3为关系代数表达式，F1、F2为连接运算条件。则有：
 
-​												(E1×E2)×E3 ≡ E1×(E2×E3)
+​                                                (E1×E2)×E3 ≡ E1×(E2×E3)
 
-​												(E1⋈E2)⋈E3 ≡ E1⋈(E2⋈E3)
+​                                                (E1⋈E2)⋈E3 ≡ E1⋈(E2⋈E3)
 
-​												![5.2.1.1-3](images/5.2.1.1-3.png) ≡ ![5.2.1.1-4](images/5.2.1.1-4.png)
+​                                                ![5.2.1.1-3](images/5.2.1.1-3.png) ≡ ![5.2.1.1-4](images/5.2.1.1-4.png)
 
 对于连接、笛卡尔积运算，如果新的结合有利于减少中间关系的大小，则可以优先处理。
 
 1. **投影的串接定律**
 
-设E为关系代数表达式，A<sub>i</sub>（i=1,2,3,…,n），B<sub>j</sub>（j=1,2,3,…,m）是属性名，且{A<sub>1</sub>,A<sub>2</sub>,…,A<sub>n</sub>}为{B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub>}的子集。则有：
+设E为关系代数表达式，A<sub>i</sub>（i=1,2,3,…,n），B<sub>j</sub>（j=1,2,3,…,m）是属性名，且{A<sub>1</sub>,A<sub>2</sub>
+,…,A<sub>n</sub>}为{B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub>}的子集。则有：
 
-​												∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(∏<sub>B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub></sub>(E)) ≡ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E)
+​ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(∏<sub>B<sub>1</sub>,B<sub>2</sub>
+,…,B<sub>m</sub></sub>(E)) ≡ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E)
 
-在同一个关系上，只需做一次投影运算，且一次投影时选择多列同时完成。所以许多数据库优化引擎会为一个关系收集齐该关系上的所有列，即目标列和WHERE、GROUP BY等子句中涉及到的所有该关系的列。
+在同一个关系上，只需做一次投影运算，且一次投影时选择多列同时完成。所以许多数据库优化引擎会为一个关系收集齐该关系上的所有列，即目标列和WHERE、GROUP
+BY等子句中涉及到的所有该关系的列。
 
 1. **选择的串接律**
 
 设E为关系代数表达式，F<sub>1</sub>、F<sub>2</sub>为选择条件。则有：
 
-​												σ<sub>F<sub>1</sub></sub>(σ<sub>F<sub>2</sub></sub>(E)) ≡ σ<sub>F<sub>1</sub></sub>∧<sub>F<sub>2</sub></sub>(E)
+​ σ<sub>F<sub>1</sub></sub>(σ<sub>F<sub>2</sub></sub>(E)) ≡ σ<sub>F<sub>1</sub></sub>∧<sub>F<sub>2</sub></sub>(E)
 
 此变换规则对于优化的意义在于：选择条件可以合并，使得一次选择运算就可检查全部条件，而不必多次过滤元组，所以可以把同层的合取条件收集在一起，统一进行判断。
 
 1. **选择和投影的交换律**
 
-设E为关系代数表达式，F为选择条件，A<sub>i</sub>（i=1,2,3,…,n）是属性名。选择条件F只涉及属性A<sub>1</sub>,A<sub>2</sub>,…,A<sub>n</sub>。则有：
+设E为关系代数表达式，F为选择条件，A<sub>i</sub>（i=1,2,3,…,n）是属性名。选择条件F只涉及属性A<sub>1</sub>,A<sub>2</sub>
+,…,A<sub>n</sub>。则有：
 
-​													σ<sub>F</sub>(∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E)) ≡∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(σ<sub>F</sub>(E))
+​ σ<sub>F</sub>(∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E)) ≡∏<sub>A<sub>
+1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(σ<sub>F</sub>(E))
 
 此变换规则对于优化的意义在于：先投影后选择可以改为先选择后投影，这对于以行为单位来存储关系的主流数据库而言，很有优化意义。按照这种存储方式，系统总是先获取元组，然后才能解析得到其中的列。
 
-设E为关系代数表达式，F为选择条件，Ai（i=1,2,3…,n）是属性名，选择条件F中有不属于A<sub>1</sub>,A<sub>2</sub>,…,A<sub>n</sub>的属性B<sub>1</sub>,B<sub>2</sub>,…,B<sub>n</sub>。则有：
+设E为关系代数表达式，F为选择条件，Ai（i=1,2,3…,n）是属性名，选择条件F中有不属于A<sub>1</sub>,A<sub>2</sub>,…,A<sub>n</sub>
+的属性B<sub>1</sub>,B<sub>2</sub>,…,B<sub>n</sub>。则有：
 
-​										∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(σ<sub>F</sub>(E)) ≡ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(σ<sub>F</sub>(∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>,B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub>(E)))
+​ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(σ<sub>F</sub>(E)) ≡ ∏<sub>A<sub>
+1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(σ<sub>F</sub>(∏<sub>A<sub>1</sub></sub>,<sub>A<sub>
+2</sub></sub><sub>,…,A<sub>n</sub></sub>,B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub>(E)))
 
 此变换规则对于优化的意义在于：先选择后投影可以改为先做带有选择条件中的列的投影，然后选择，最后再完成最外层的投影。这样内层的选择和投影可以同时进行，不会增加过多的计算开销，但能减小中间结果集的规模。
 
@@ -89,11 +97,12 @@
 
 设E<sub>1</sub>、E<sub>2</sub>为关系代数表达式，F为选择条件，F中涉及的属性都是E<sub>1</sub>中的属性，则有：
 
-​										σ<sub>F</sub>(E<sub>1</sub>×E<sub>2</sub>) ≡ <sub>σF</sub>(E<sub>1</sub>)×E<sub>2</sub>
+​ σ<sub>F</sub>(E<sub>1</sub>×E<sub>2</sub>) ≡ <sub>σF</sub>(E<sub>1</sub>)×E<sub>2</sub>
 
 如果F=F<sub>1</sub>∧F<sub>2</sub>，且F<sub>1</sub>只涉及E<sub>1</sub>中的属性，F<sub>2</sub>只涉及E<sub>2</sub>中的属性，则有：
 
-​										σ<sub>F</sub>(E<sub>1</sub>×E<sub>2</sub>) ≡ σ<sub>F<sub>1</sub></sub>(E<sub>1</sub>)×σ<sub>F<sub>2</sub></sub>(E<sub>2</sub>)
+​ σ<sub>F</sub>(E<sub>1</sub>×E<sub>2</sub>) ≡ σ<sub>F<sub>1</sub></sub>(E<sub>1</sub>)×σ<sub>F<sub>2</sub></sub>(E<sub>
+2</sub>)
 
 此变换规则对于优化的意义在于：条件下推到相关的关系上，先做选择后做笛卡尔积运算，这样可以减小中间结果的大小。
 
@@ -101,7 +110,7 @@
 
 如果E<sub>1</sub>和E<sub>2</sub>有相同的属性名，且E= E<sub>1</sub>∪E<sub>2</sub>，则有：
 
-​										σ<sub>F</sub>(E<sub>1</sub>∪E<sub>2</sub>) ≡ σ<sub>F</sub>(E<sub>1</sub>) ∪σ<sub>F</sub> (E<sub>2</sub>)
+​ σ<sub>F</sub>(E<sub>1</sub>∪E<sub>2</sub>) ≡ σ<sub>F</sub>(E<sub>1</sub>) ∪σ<sub>F</sub> (E<sub>2</sub>)
 
 此变换规则对于优化的意义在于：条件下推到相关的关系上，先选择后做并运算，可以减小每个关系输出结果的大小。
 
@@ -109,15 +118,18 @@
 
 如果E<sub>1­</sub>和E<sub>2</sub>有相同的属性名，则：
 
-​										σ<sub>F</sub>(E<sub>1</sub>－E<sub>2</sub>) ≡ σ<sub>F</sub>(E<sub>1</sub>)－σ<sub>F</sub>(E<sub>2</sub>)
+​ σ<sub>F</sub>(E<sub>1</sub>－E<sub>2</sub>) ≡ σ<sub>F</sub>(E<sub>1</sub>)－σ<sub>F</sub>(E<sub>2</sub>)
 
 此变换规则对于优化的意义在于：条件下推到相关的关系上，先选择后做差运算，可以减小每个关系输出结果的大小。
 
 1. **投影与笛卡尔积的交换律**
 
-设<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>是E<sub>1</sub>的属性，<sub>B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub></sub>是E<sub>2</sub>的属性，则有：
+设<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>是E<sub>1</sub>的属性，<sub>B<sub>1</sub>
+,B<sub>2</sub>,…,B<sub>m</sub></sub>是E<sub>2</sub>的属性，则有：
 
-​										∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>,<sub>B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub></sub>(E<sub>1</sub>×E<sub>2</sub>) ≡ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>(E<sub>1</sub>)×∏<sub>B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub></sub>(E<sub>2</sub>)
+​ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub>,<sub>B<sub>1</sub>,B<sub>2</sub>
+,…,B<sub>m</sub></sub>(E<sub>1</sub>×E<sub>2</sub>) ≡ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>
+n</sub></sub>(E<sub>1</sub>)×∏<sub>B<sub>1</sub>,B<sub>2</sub>,…,B<sub>m</sub></sub>(E<sub>2</sub>)
 
 此变换规则对于优化的意义在于：先投影后做笛卡尔积，可减少做笛卡尔积前每个元组的长度，使得计算后得到的新元组的长度也变短。
 
@@ -125,7 +137,9 @@
 
 如果E<sub>1</sub>和E<sub>2</sub>有相同的属性名，则有：
 
-​										∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E<sub>1</sub>∪E<sub>2</sub>) ≡ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E<sub>1</sub>)∪∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E<sub>2</sub>)
+​ ∏<sub>A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E<sub>1</sub>∪E<sub>2</sub>) ≡ ∏<sub>
+A<sub>1</sub></sub>,<sub>A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E<sub>1</sub>)∪∏<sub>A<sub>1</sub></sub>,<sub>
+A<sub>2</sub></sub><sub>,…,A<sub>n</sub></sub> (E<sub>2</sub>)
 
 此变换规则对于优化的意义在于：先投影后做并运算，可减少做并运算前每个元组的长度。
 
@@ -190,9 +204,9 @@
 	</tr>
 </table>
 
-
 1. 如WHERE A.a=B.b AND B.b=C.c可以合并为={A.a,B.b,C.c}而不是两个等式={A.a,B.b}和={B.b,C.c}。
-1. 如WHERE A.a=3 OR A.b\&gt;8,如果A.a、A.b列上分别有索引，也许SELECT \* FROM A WHERE A.a=3 UNION SELECT \* FROM A WHERE A.b>8可以分别利用各自的索引提高查询效率。
+1. 如WHERE A.a=3 OR A.b\&gt;8,如果A.a、A.b列上分别有索引，也许SELECT \* FROM A WHERE A.a=3 UNION SELECT \* FROM A WHERE
+   A.b>8可以分别利用各自的索引提高查询效率。
 
 表5-2 选择下推到集合的运算
 
@@ -291,7 +305,8 @@ EXISTS (SELECT a2 FROM t2 WHERE t2.a2<5 AND (t2.b2=1 OR t2.b2=2)
 
 **(2)**  **子查询展开**
 
-子查询展开又称子查询反嵌套，子查询上拉。实质是把某些子查询重写为等价的多表连接操作。带来好处是，有关的访问路径、连接方法和连接顺序可能被有效使用，使得查询语句的层次尽可能地减少。常见的IN / ANY / SOME / ALL / EXISTS依据情况转为半连接（SEMI JOIN）。例如：
+子查询展开又称子查询反嵌套，子查询上拉。实质是把某些子查询重写为等价的多表连接操作。带来好处是，有关的访问路径、连接方法和连接顺序可能被有效使用，使得查询语句的层次尽可能地减少。常见的IN
+/ ANY / SOME / ALL / EXISTS依据情况转为半连接（SEMI JOIN）。例如：
 
 ```sql
 SELECT *
@@ -453,7 +468,8 @@ outer_expr operator SOME (subquery)
 - EXISTS(subquery)自身有&quot;半连接&quot;的语义，部分DBMS用半连接来实现它；NOT EXISTS通常会被标识为&quot;反半连接&quot;处理。
 - IN(subquery)等子查询可以被转换为EXISTS(subquery)格式。
 
-所谓半连接（Semi Join），是一种特殊的连接类型。如果用&quot;t1.x semi= t2.y&quot;来表示表T1和表T2做半连接，则其含义是：只要在表T2中找到一条记录满足t1.x=t2.y，则马上停止搜索表T2，并直接返回表T1中满足条件t1.x=t2.y的记录，因此半连接的执行效率高于普通的内连接。
+所谓半连接（Semi Join），是一种特殊的连接类型。如果用&quot;t1.x semi=
+t2.y&quot;来表示表T1和表T2做半连接，则其含义是：只要在表T2中找到一条记录满足t1.x=t2.y，则马上停止搜索表T2，并直接返回表T1中满足条件t1.x=t2.y的记录，因此半连接的执行效率高于普通的内连接。
 
 #### 5.2.2.2 等价谓词重写
 
@@ -540,21 +556,24 @@ W为权重因子，表明I/O到CPU的相关性，又称选择率（selectivity�
 - 如果基本表大小为 B 块，全表扫描算法的代价 cost = B；
 - 如果选择条件是&quot;码＝值&quot;，则平均搜索代价 cost = B/2。
 
-​	2. 索引扫描算法的代价估算公式
+​ 2. 索引扫描算法的代价估算公式
 
 - 如果选择条件为&quot;码=值&quot;，则采用该表的主索引，若为B+树，设索引层数为L，需要存取B+树中从根节点到叶节点L块，再加上基本表中该元组所在的那一块，cost=L+1。
 - 如果选择条件涉及非码属性，若为B+树索引，选择条件是相等比较，S为索引选择基数（有S个元组满足条件），假设满足条件的元组保存在不同块上，则最坏情况下cost=L+S。
 - l 若比较条件为>,>=,<,<=，假设有一半元组满足条件，则需要存取一半的叶节点，并通过索引访问一半的表存储块，cost=L+Y/2+B/2。若可以获得更准确的选择基数，可进一步修正Y/2与B/2。
 
-​	3.嵌套循环连接算法的代价估算公式
+​ 3.嵌套循环连接算法的代价估算公式
 
 - 嵌套循环连接算法的代价为：cost=B<sub>r</sub>+B<sub>r</sub>B<sub>s</sub>/(K-1), 且K<B(R)<B(S)，其中K表示缓冲区大小为K块；
-- 若需要把中间结果写回磁盘，则代价为：cost=B<sub>r</sub>+B<sub>r</sub>B<sub>s</sub>/(K-1) +　(F<sub>rs</sub>\*N<sub>r</sub>\*N<sub>s</sub>)/M<sub>rs</sub>。F<sub>rs</sub>为连接选择率，表示连接结果数的比例，Mrs为块因子，表示每块中可以存放的结果元组数目。
+- 若需要把中间结果写回磁盘，则代价为：cost=B<sub>r</sub>+B<sub>r</sub>B<sub>s</sub>/(K-1) +(F<sub>rs</sub>\*N<sub>r</sub>
+  \*N<sub>s</sub>)/M<sub>rs</sub>。F<sub>rs</sub>为连接选择率，表示连接结果数的比例，Mrs为块因子，表示每块中可以存放的结果元组数目。
 
-​    4.排序合并连接算法的代价估算公式
+​ 4.排序合并连接算法的代价估算公式
 
-- 如 果 连 接 表 已 经 按 照 连 接 属 性 排 好 序 ， 则    cost =B<sub>r</sub>+B<sub>s</sub>+(F<sub>rs</sub>\*N<sub>r</sub>\*N<sub>s</sub>)/M<sub>rs</sub>。
-- 如果必须对文件排序，需要在代价函数中加上排序的代价对 于 包 含    B    个 块 的 文 件 排 序 的 代 价 大 约 是：cost =(2\*B)+(2\*B\*log2B)。
+- 如 果 连 接 表 已 经 按 照 连 接 属 性 排 好 序 ， 则 cost =B<sub>r</sub>+B<sub>s</sub>+(F<sub>rs</sub>\*N<sub>r</sub>
+  \*N<sub>s</sub>)/M<sub>rs</sub>。
+- 如果必须对文件排序，需要在代价函数中加上排序的代价对 于 包 含 B 个 块 的 文 件 排 序 的 代 价 大 约 是：cost =(2\*B)+(
+  2\*B\*log2B)。
 
 #### 5.3.1.2 基于代价的连接顺序选择
 
@@ -591,9 +610,9 @@ W为权重因子，表明I/O到CPU的相关性，又称选择率（selectivity�
 
    物理查询优化阶段常用启发式规则如下：
 
-   - 关系R在列X上建立索引，且对R的选择操作发生在列X上，则采用索引扫描方式；
-   - R连接S，其中一个关系上的连接列存在索引，则采用索引连接且此关系作为内表；
-   - R连接S，其中一个关系上的连接列是排序的，则采用排序连接比hash连接好。
+    - 关系R在列X上建立索引，且对R的选择操作发生在列X上，则采用索引扫描方式；
+    - R连接S，其中一个关系上的连接列存在索引，则采用索引连接且此关系作为内表；
+    - R连接S，其中一个关系上的连接列是排序的，则采用排序连接比hash连接好。
 
 3. 贪心算法
 

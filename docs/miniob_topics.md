@@ -2,8 +2,10 @@ miniob 题目
 
 # 背景
 
-这里的题目是2021年OceanBase数据库大赛初赛时提供的赛题。这些赛题的入门门槛较低, 适合所有参赛选手。 面向的对象主要是在校学生，数据库爱好者, 或者对基础技术有一定兴趣的爱好者, 并且考题对诸多模块做了简化，比如不考虑并发操作, 事务比较简单。
-初赛的目标是让不熟悉数据库设计和实现的同学能够快速的了解与深入学习数据库内核，期望通过miniob相关训练之后，能够对各个数据库内核模块的功能与它们之间的关联有所了解，并能够在使用时，设计出高效的SQL,  并帮助降低学习OceanBase 内核的学习门槛。
+这里的题目是2021年OceanBase数据库大赛初赛时提供的赛题。这些赛题的入门门槛较低, 适合所有参赛选手。 面向的对象主要是在校学生，数据库爱好者,
+或者对基础技术有一定兴趣的爱好者, 并且考题对诸多模块做了简化，比如不考虑并发操作, 事务比较简单。
+初赛的目标是让不熟悉数据库设计和实现的同学能够快速的了解与深入学习数据库内核，期望通过miniob相关训练之后，能够对各个数据库内核模块的功能与它们之间的关联有所了解，并能够在使用时，设计出高效的SQL,
+并帮助降低学习OceanBase 内核的学习门槛。
 
 # 题目介绍
 
@@ -25,8 +27,6 @@ miniob 题目
 | 多表查询<br>select-tables     | 10   | 必做。当前系统支持单表查询的功能，需要在此基础上支持多张表的笛卡尔积关联查询。需要实现select * from t1,t2; select t1.\*,t2.\* from t1,t2;以及select t1.id,t2.id from t1,t2;查询可能会带条件。查询结果展示格式参考单表查询。每一列必须带有表信息，比如:<br/>t1.id \|  t2.id <br/>1 \| 1 | select * from t1,t2;<br/>select * from t1,t2 where t1.id=t2.id and t1.age > 10;<br/>select * from t1,t2,t3; |
 | 聚合运算<br>aggregation-func  | 10   | 实现聚合函数 max/min/count/avg.<br/>包含聚合字段时，只会出现聚合字段，不会出现如select id, count(age) from t;这样的测试语句。聚合函数中的参数不会是表达式，比如age +1。 | select max(age) from t1; <br/>select count(*) from t1; <br/>select count(1) from t1; <br/>select count(id) from t1; |
 
-
-
 ## 选做题
 
 | 名称                            | 分值 | 描述                                                         | 测试用例示例                                                 |
@@ -44,17 +44,15 @@ miniob 题目
 | 分组<br>group-by                | 20   | 支持group by功能。group by中的聚合函数也不要求支持表达式     | select t.id, t.name, avg(t.score),avg(t2.age) from t,t2 where t.id=t2.id group by t.id,t.name; |
 
 # 测试常见问题
+
 ## 测试Case
 
 ### 优化buffer pool
 
-
-
 题目中要求实现一个LRU算法。但是LRU算法有很多种，所以大家可以按照自己的想法来实现。因为不具备统一性，所以不做统一测试。
 
-另外，作为练习，除了实现LRU算法之外，还可以考虑对buffer pool做进一步的优化。比如支持更多的页面或无限多的页面（当前buffer pool的实现只能支持固定个数的页面）、支持快速的查找页面（当前的页面查找算法复杂度是O(N)的）等。
-
-
+另外，作为练习，除了实现LRU算法之外，还可以考虑对buffer pool做进一步的优化。比如支持更多的页面或无限多的页面（当前buffer
+pool的实现只能支持固定个数的页面）、支持快速的查找页面（当前的页面查找算法复杂度是O(N)的）等。
 
 ### basic 测试
 
@@ -74,7 +72,8 @@ miniob 题目
 
 date测试需要注意校验日期有效性。比如输入"2021-2-31"，一个非法的日期，应该返回"FAILURE"。
 
-date不需要考虑和string(char)做对比。比如 select * from t where d > '123'; select * from t where d < 'abc'; 不会测试这种场景。但是需要考虑日期与日期的比较，比如select * from t where d > '2021-01-21';。
+date不需要考虑和string(char)做对比。比如 select * from t where d > '123'; select * from t where d < 'abc';
+不会测试这种场景。但是需要考虑日期与日期的比较，比如select * from t where d > '2021-01-21';。
 
 date也不会用来计算平均值。
 
@@ -84,13 +83,13 @@ select * form t where d=’2021-02-30‘； 这种场景在mysql下面是返回�
 
 ### 浮点数展示问题
 
-按照输出要求，浮点数最多保留两位小数，并且去掉多余的0。目前没有直接的接口能够输出这种格式。比如 printf("%.2f", f); 会输出 1.00，printf("%g", f); 虽然会删除多余的0，但是数据比较大或者小数位比较多时展示结果也不符合要求。
-
-
+按照输出要求，浮点数最多保留两位小数，并且去掉多余的0。目前没有直接的接口能够输出这种格式。比如 printf("%.2f", f); 会输出
+1.00，printf("%g", f); 虽然会删除多余的0，但是数据比较大或者小数位比较多时展示结果也不符合要求。
 
 ### 浮点数与整数转换问题
 
-比如 create table t(a int, b float); 在当前的实现代码中，是不支持insert into t values(1,1); 这种做法的，因为1是整数，而字段`b`是浮点数。那么，我们在比赛中，也不需要考虑这两种转换。
+比如 create table t(a int, b float); 在当前的实现代码中，是不支持insert into t values(1,1);
+这种做法的，因为1是整数，而字段`b`是浮点数。那么，我们在比赛中，也不需要考虑这两种转换。
 
 但是有一种例外情况，比如聚合函数运算：`select avg(a) from t;`,需要考虑整数运算出来结果，是一个浮点数。
 
@@ -140,10 +139,6 @@ update t set name='abc' where col1=0 and col2=0;
 - 查询条件查出来的数据集合是空（应该什么都不做，返回成功）
 - 使用无法转换的类型更新某个字段，比如使用字符串更新整型字段
 
-
-
-
-
 ### 多表查询
 
 多表查询的输入SQL，只要是字段，都会带表名。比如不会存在 select id from t1,t2;
@@ -152,13 +147,12 @@ update t set name='abc' where col1=0 and col2=0;
 
 带字段：select t1.id, t1.age, t2.name from t1,t2 where t1.id=t2.id;
 
-或者：select t1.* ,  t2.name from t1,t2 where t1.id=t2.id;
+或者：select t1.* , t2.name from t1,t2 where t1.id=t2.id;
 
-多表查询，查询出来单个字段时，也需要加上表名字。原始代码中，会把表名给删除掉。比如select t1.id from t1,t2; 应该输出列名： t1.id。这里需要调整原始代码。输出列名的规则是：单表查询不带表名，多表查询带表名。
+多表查询，查询出来单个字段时，也需要加上表名字。原始代码中，会把表名给删除掉。比如select t1.id from t1,t2; 应该输出列名：
+t1.id。这里需要调整原始代码。输出列名的规则是：单表查询不带表名，多表查询带表名。
 
 不要仅仅使用最简单的笛卡尔积运算，否则可能会内存不足。
-
-
 
 ### 聚合运算
 
@@ -168,7 +162,7 @@ update t set name='abc' where col1=0 and col2=0;
 
 字符串可以不考虑AVG运算。
 
-最少需要考虑的场景： 
+最少需要考虑的场景：
 
 假设有一张表 create table t(id int, name char, price float);
 
@@ -178,13 +172,13 @@ select count(id) from t;
 
 select min(id) from t;
 
-select min(name) from t;  -- 字符串
+select min(name) from t; -- 字符串
 
-select max(id) from t;  
+select max(id) from t;
 
 select max(name) from t;
 
-select avg(id) from t;  -- 整数做AVG运算，输出可能是浮点数，所以要注意浮点数输出格式
+select avg(id) from t; -- 整数做AVG运算，输出可能是浮点数，所以要注意浮点数输出格式
 
 select avg(price) from t;
 
@@ -198,8 +192,6 @@ select count() from t;
 
 select count(not_exists_col) from t;
 
-
-
 ### 支持NULL类型
 
 NULL的测试case描述的太过简单，这里做一下补充说明。
@@ -208,15 +200,17 @@ NULL的功能在设计时，参考了mariadb的做法。包括NULL的比较规�
 因为miniob的特殊性，字段默认都是不能作为NULL的，所以这个测试用例中，要求增加关键字`nullable`，表示字段可以是NULL。
 
 需要考虑的场景
+
 - 建表
-create table t(id int, num int nullable, birthday date nullable);
-表示创建一个表t,字段num和birthday可以是NULL, 而id不能是NULL。
+  create table t(id int, num int nullable, birthday date nullable);
+  表示创建一个表t,字段num和birthday可以是NULL, 而id不能是NULL。
 
 建索引
 create index i_num on t(num);
 支持在可以为NULL的字段上建索引
 
 需要支持增删改查
+
 ```sql
 insert into t values(1, 2, '2020-01-01');
 insert into t values(1, null, null);
@@ -252,8 +246,7 @@ select avg(num) from t;
 
 > 字段值是NULL时，比较特殊，不需要统计在内。如果是AVG，不会增加统计行数，也不需要默认值。
 
-
-### inner-join 
+### inner-join
 
 inner-join 与 多表查询类似，很多同学做完多表查询就开始做inner-join了。
 inner-join出现非常多的一个问题就是下面的语句，返回了空数据，或者没有任何返回，可能是测试时程序coredump，或者长时间没有返回结果，比如死循环。测试语句是：
@@ -263,4 +256,5 @@ select * from join_table_large_1 inner join join_table_large_2 on join_table_lar
 ```
 
 ### 表达式
+
 表达式需要考虑整数和浮点数的比较。比如 t.id > 1.1 或者 5/4 = 1等。

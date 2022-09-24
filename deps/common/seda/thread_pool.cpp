@@ -256,7 +256,7 @@ void *Threadpool::run_thread(void *pool_ptr)
   // this is not portable, but is easier to map to LWP
   s64_t threadid = gettid();
   LOG_INFO("threadid = %llx, threadname = %s\n", threadid, pool->get_name().c_str());
-#ifdef __APPLE__ 
+#ifdef __APPLE__
   pthread_setname_np(pool->get_name().c_str());
 #else
   pthread_setname_np(pthread_self(), pool->get_name().c_str());

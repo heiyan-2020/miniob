@@ -1,5 +1,7 @@
 # 环境准备
+
 ## 运行环境
+
 * 操作系统
 
 ```bash
@@ -17,9 +19,11 @@ PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-poli
 VERSION_CODENAME=focal
 UBUNTU_CODENAME=focal
 ```
+
 注：这里直接用的windows的WSL，
 
 ## 软件要求
+
 1. vscode
 2. cmake
 3. make
@@ -30,26 +34,31 @@ UBUNTU_CODENAME=focal
 8. git
 
 ## 获取代码
+
 ```bash
 git clone https://github.com/oceanbase/miniob.git
 ```
+
 ## 安装软件
+
 可以参考miniob/docs/how\_to\_build.md。
 
-
-
 # vscode配置
+
 使用vscode打开miniob工程目录。
 
 ```bash
 cd miniob
 code .
 ```
+
 ## 安装插件
+
 |![image](images/vscode_search_plugs.png)|![image](images/vscode_C++_plugs_detail.png)<br>|
 | ----- | ----- |
 
 ## 配置编译tasks.json
+
 > 在工程的.vscode目录下新建tasks.json
 
 ```json
@@ -81,12 +90,14 @@ code .
     "version": "2.0.0"
 }
 ```
+
 注意：
 
 * options：cmake临时文件的目录
 * args：cmake需要的参数
 
 ## 配置调试launch.json
+
 > 在工程的.vscode目录下新建launch.json
 
 ```json
@@ -124,15 +135,15 @@ code .
     ]
 }
 ```
+
 注意：
 
 * program：编译出来的可执行文件
 * args：运行参数
 * preLaunchTask：`"label": "CMake Build"` 对应
 
-
-
 # 演示
+
 * 重新使用vscode打开，打开后会自动运行tasks的cmake。
 
 ![image](images/vscode_cmake.png)
@@ -153,6 +164,7 @@ code .
             ]
         },
 ```
+
 args中配置相当于make -j 4
 
 终端输出如下：

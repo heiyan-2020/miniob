@@ -30,7 +30,7 @@ TEST(test_record_page_handler, test_record_page_handler)
   DiskBufferPool *bp = nullptr;
   RC rc = bpm->create_file(record_manager_file);
   ASSERT_EQ(rc, RC::SUCCESS);
-  
+
   rc = bpm->open_file(record_manager_file, bp);
   ASSERT_EQ(rc, RC::SUCCESS);
 
@@ -115,7 +115,7 @@ TEST(test_record_page_handler, test_record_file_iterator)
   DiskBufferPool *bp = nullptr;
   RC rc = bpm->create_file(record_manager_file);
   ASSERT_EQ(rc, RC::SUCCESS);
-  
+
   rc = bpm->open_file(record_manager_file, bp);
   ASSERT_EQ(rc, RC::SUCCESS);
 
@@ -136,7 +136,7 @@ TEST(test_record_page_handler, test_record_file_iterator)
   }
   file_scanner.close_scan();
   ASSERT_EQ(count, 0);
-  
+
   const int record_insert_num = 1000;
   char record_data[20];
   std::vector<RID> rids;
@@ -158,7 +158,7 @@ TEST(test_record_page_handler, test_record_file_iterator)
   }
   file_scanner.close_scan();
   ASSERT_EQ(count, rids.size());
-  
+
   for (int i = 0; i < record_insert_num; i += 2) {
     rc = file_handler.delete_record(&rids[i]);
     ASSERT_EQ(rc, RC::SUCCESS);
@@ -175,7 +175,7 @@ TEST(test_record_page_handler, test_record_file_iterator)
   }
   file_scanner.close_scan();
   ASSERT_EQ(count, rids.size() / 2);
-  
+
   bpm->close_file(record_manager_file);
 }
 

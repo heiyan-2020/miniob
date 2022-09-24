@@ -23,7 +23,7 @@ See the Mulan PSL v2 for more details. */
 #define MAX_ERROR_MESSAGE 20
 #define MAX_DATA 50
 
-//属性结构体
+// 属性结构体
 typedef struct {
   char *relation_name;   // relation name (may be NULL) 表名
   char *attribute_name;  // attribute name              属性名
@@ -39,16 +39,10 @@ typedef enum {
   NO_OP
 } CompOp;
 
-//属性值类型
-typedef enum
-{
-  UNDEFINED,
-  CHARS,
-  INTS,
-  FLOATS
-} AttrType;
+// 属性值类型
+typedef enum { UNDEFINED, CHARS, INTS, FLOATS } AttrType;
 
-//属性值
+// 属性值
 typedef struct _Value {
   AttrType type;  // type of value
   void *data;     // value

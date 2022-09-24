@@ -124,13 +124,13 @@ void test_insert()
         LOG_INFO("Begin to check duplicated insert the page's num %s", rid.to_string().c_str());
       }
     } else {
-      LOG_INFO("check duplicate Insert %d. rid=%s. i%TIMES=%d", i, rid.to_string().c_str(), i%TIMES);
+      LOG_INFO("check duplicate Insert %d. rid=%s. i%TIMES=%d", i, rid.to_string().c_str(), i % TIMES);
     }
     rc = handler->insert_entry((const char *)&i, &rid);
     int t = i % TIMES;
     if (t == 0 || t == 1 || t == 2) {
       if (rc != RC::RECORD_DUPLICATE_KEY) {
-	LOG_WARN("insert duplicate key success");
+        LOG_WARN("insert duplicate key success");
       }
       ASSERT_EQ(RC::RECORD_DUPLICATE_KEY, rc);
     } else {
@@ -186,7 +186,7 @@ void test_delete()
 
       rc = handler->delete_entry((const char *)&i, &rid);
       if (rc != RC::SUCCESS) {
-	LOG_WARN("failed to delete entry. i=%d, rid=%s", i, rid.to_string().c_str());
+        LOG_WARN("failed to delete entry. i=%d, rid=%s", i, rid.to_string().c_str());
       }
       ASSERT_EQ(RC::SUCCESS, rc);
 
@@ -235,12 +235,12 @@ void test_delete()
       ASSERT_EQ(0, rids.size());
     } else {
       if (rids.size() != 1) {
-	LOG_WARN("invalid. i=%d, rid=%s, check rid=%s", i, rid.to_string().c_str(), check_rid.to_string().c_str());
+        LOG_WARN("invalid. i=%d, rid=%s, check rid=%s", i, rid.to_string().c_str(), check_rid.to_string().c_str());
       }
       ASSERT_EQ(1, rids.size());
       check_rid = rids.front();
       if (rid != check_rid) {
-	LOG_WARN("invalid. i=%d, rid=%s, check rid=%s", i, rid.to_string().c_str(), check_rid.to_string().c_str());
+        LOG_WARN("invalid. i=%d, rid=%s, check rid=%s", i, rid.to_string().c_str(), check_rid.to_string().c_str());
       }
       ASSERT_EQ(rid.page_num, check_rid.page_num);
       ASSERT_EQ(rid.slot_num, check_rid.slot_num);
@@ -421,7 +421,7 @@ TEST(test_bplus_tree, test_internal_index_node_handle)
 
   for (int i = 1; i < 5; i++) {
     key = i * 2 + 1;
-    int real_key = *(int*)internal_node.key_at(i);
+    int real_key = *(int *)internal_node.key_at(i);
     ASSERT_EQ(key, real_key);
   }
 
@@ -481,17 +481,11 @@ TEST(test_bplus_tree, test_chars)
   handler = new BplusTreeHandler();
   handler->create(index_name, CHARS, 8, ORDER, ORDER);
 
-  char keys[][9] = {
-    "abcdefg",
-    "12345678",
-    "12345678",
-    "abcdefg",
-    "abcdefga"
-  };
+  char keys[][9] = {"abcdefg", "12345678", "12345678", "abcdefg", "abcdefga"};
 
   RID rid;
   RC rc = RC::SUCCESS;
-  for (size_t i = 0; i < sizeof(keys)/sizeof(keys[0]); i++) {
+  for (size_t i = 0; i < sizeof(keys) / sizeof(keys[0]); i++) {
     rid.page_num = 0;
     rid.slot_num = i;
     rc = handler->insert_entry(keys[i], &rid);
@@ -560,7 +554,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = -100;
   end = 1;
-  rc = scanner.open((const char *)&begin, 4, false, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, false, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   rc = scanner.next_entry(&rid);
   ASSERT_EQ(RC::SUCCESS, rc);
@@ -571,7 +565,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 1;
   end = 3;
-  rc = scanner.open((const char *)&begin, 4, false, (const char *)&end, 4, false/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, false, (const char *)&end, 4, false /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   rc = scanner.next_entry(&rid);
   ASSERT_EQ(RC::RECORD_EOF, rc);
@@ -580,7 +574,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 1;
   end = 3;
-  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
     count++;
@@ -592,7 +586,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 0;
   end = 3;
-  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
@@ -605,7 +599,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 11;
   end = 21;
-  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
@@ -618,7 +612,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 11;
   end = 91;
-  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
@@ -631,7 +625,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 191;
   end = 199;
-  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
@@ -644,7 +638,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 191;
   end = 201;
-  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
@@ -657,7 +651,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 200;
   end = 301;
-  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   rc = scanner.next_entry(&rid);
   ASSERT_EQ(RC::RECORD_EOF, rc);
@@ -666,14 +660,14 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 300;
   end = 201;
-  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::INVALID_ARGUMENT, rc);
 
   scanner.close();
 
   begin = 300;
   end = 201;
-  rc = scanner.open(nullptr, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open(nullptr, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
@@ -686,7 +680,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 300;
   end = 10;
-  rc = scanner.open(nullptr, 4, true, (const char *)&end, 4, true/*inclusive*/);
+  rc = scanner.open(nullptr, 4, true, (const char *)&end, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
@@ -699,7 +693,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 190;
   end = 10;
-  rc = scanner.open((const char *)&begin, 4, true, nullptr, 4, true/*inclusive*/);
+  rc = scanner.open((const char *)&begin, 4, true, nullptr, 4, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {
@@ -712,7 +706,7 @@ TEST(test_bplus_tree, test_scanner)
 
   begin = 190;
   end = 10;
-  rc = scanner.open(nullptr, 0, true, nullptr, 0, true/*inclusive*/);
+  rc = scanner.open(nullptr, 0, true, nullptr, 0, true /*inclusive*/);
   ASSERT_EQ(RC::SUCCESS, rc);
   count = 0;
   while ((rc = scanner.next_entry(&rid)) == RC::SUCCESS) {

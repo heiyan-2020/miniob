@@ -25,7 +25,7 @@ See the Mulan PSL v2 for more details. */
 namespace common {
 
 //********************************************************************
-//#means comments
+// #means comments
 // Ini configuration format
 //[section]
 // VARNAME=VALUE

@@ -69,7 +69,7 @@ void test_alloc(BPFrameManager &frame_manager)
 
   const int file_desc = 0;
   size_t size = 0;
-  for ( ; true; size++) {
+  for (; true; size++) {
     Frame *item = frame_manager.alloc(file_desc, size);
     if (item != nullptr) {
       item->set_file_desc(file_desc);
@@ -90,7 +90,7 @@ void test_alloc(BPFrameManager &frame_manager)
   }
 
   for (size_t i = size * 2; i < size * 10; i++) {
-    if (i % 2 == 0) { // from size * 2, that free one frame first
+    if (i % 2 == 0) {  // from size * 2, that free one frame first
       Frame *item = used_list.front();
       used_list.pop_front();
 

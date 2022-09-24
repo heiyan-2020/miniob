@@ -5,6 +5,7 @@
 假设系统上已经安装了make等编译工具。
 
 MiniOB 需要使用：
+
 - cmake 版本 >= 3.10
 - gcc/clang gcc建议8.3以上，编译器需要支持c++14等新标准
 
@@ -13,6 +14,7 @@ MiniOB 需要使用：
 需要安装了3.10或以上版本的cmake，可以跳过此步骤。
 在[cmake官网](https://cmake.org/download/) 下载对应系统的cmake然后安装。
 比如
+
 ```bash
 wget https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0-linux-x86_64.sh
 bash cmake-3.24.0-linux-x86_64.sh
@@ -27,24 +29,28 @@ brew install cmake
 2. install gcc
 
 如果是个人学习使用，clang通常没有问题，但是如果是参加比赛或者OceanBase官网训练营使用，建议安装GCC。因为clang也某些情况下的表现会与GCC不一致。
-另外，如果GCC的版本比较旧，也需要安装较新版本的GCC。有些比较旧的操作系统，比如CentOS 7，自带的编译器版本是4.8.5，对C++14等新标准，支持不太好，建议升级GCC。
+另外，如果GCC的版本比较旧，也需要安装较新版本的GCC。有些比较旧的操作系统，比如CentOS
+7，自带的编译器版本是4.8.5，对C++14等新标准，支持不太好，建议升级GCC。
 在Linux系统上，通常使用 `yum install gcc gcc-g++` 就可以安装gcc，但是有些时候安装的编译器版本比较旧，还需要手动。
 
 - 如何查看GCC版本
+
 ```bash
 gcc --version
 ```
 
 - 下载GCC源码
 
-
-可以在[GCC 官网](https://gcc.gnu.org/)浏览，找到镜像入口，选择速度比较快的镜像，比如 [Russia, Novosibirsk GCC镜像链接](http://mirror.linux-ia64.org/gnu/gcc/releases/)，然后选择自己的版本。
+可以在[GCC 官网](https://gcc.gnu.org/)
+浏览，找到镜像入口，选择速度比较快的镜像，比如 [Russia, Novosibirsk GCC镜像链接](http://mirror.linux-ia64.org/gnu/gcc/releases/)
+，然后选择自己的版本。
 建议选择8.3或以上版本。
 因为miniob是为了学习使用，所以可以选择比较新的GCC，不追求稳定。
 
 - 编译GCC源码
 
-> NOTE: 编译高版本的GCC时，需要本地也有一个稍高一点版本的GCC。比如编译GCC 11，本地的GCC需要能够支持stdc++11才能编译。可以先编译GCC 5.4，然后再编译高版本。
+> NOTE: 编译高版本的GCC时，需要本地也有一个稍高一点版本的GCC。比如编译GCC 11，本地的GCC需要能够支持stdc++11才能编译。可以先编译GCC
+> 5.4，然后再编译高版本。
 
 如果你看到这里想放弃，可以选择MiniOB提供的[docker镜像](https://hub.docker.com/r/oceanbase/miniob)，其中自带GCC 11。
 
@@ -85,6 +91,7 @@ export CXX=/your/new/gcc/path/bin/g++
 ```
 
 如果./contrib/download_prerequisites 下载时特别慢或下载失败，可以手动从官网上下载依赖，然后解压相应的包到gcc的目录下。
+
 ```
 ftp://ftp.gnu.org/gnu/gmp
 https://mpfr.loria.fr/mpfr-current/#download
