@@ -113,7 +113,7 @@ void ParseStage::callback_event(StageEvent *event, CallbackContext *context)
   LOG_TRACE("Enter\n");
   SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
   sql_event->session_event()->done_immediate();
-  sql_event->done_immediate();
+//  sql_event->done_immediate();
   LOG_TRACE("Exit\n");
   return;
 }

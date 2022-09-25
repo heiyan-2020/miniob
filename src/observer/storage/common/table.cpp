@@ -873,3 +873,38 @@ RC Table::sync()
   LOG_INFO("Sync table over. table=%s", name());
   return rc;
 }
+
+RC Table::drop(const char *table_name)
+{
+  LOG_INFO("Begin to drop table %s", table_name);
+  int res;
+
+  // drop meta file
+  std::string meta_file = table_meta_file(base_dir_.c_str(), table_name);
+  LOG_INFO("Begin to drop meta file %s", meta_file.c_str());
+  res = remove(meta_file.c_str());
+  if (res != 0) {
+    LOG_ERROR("Failed to drop meta file %s, err %s", meta_file.c_str(), strerror(errno));
+  }
+
+  // drop data file
+  std::string data_file = table_data_file(base_dir_.c_str(), table_name);
+  LOG_INFO("Begin to drop data file %s", data_file.c_str());
+  res = remove(data_file.c_str());
+  if (res != 0) {
+    LOG_ERROR("Failed to drop data file %s, err %s", data_file.c_str(), strerror(errno));
+  }
+
+  // drop index file
+  for (Index *index: indexes_) {
+    std::string index_file = table_index_file(base_dir_.c_str(), table_name,
+        index->index_meta().name());
+    LOG_INFO("Begin to drop index file %s", index_file.c_str());
+    res = remove(index_file.c_str());
+    if (res != 0) {
+      LOG_ERROR("Failed to drop index file %s, err %s", index_file.c_str(), strerror(errno));
+    }
+  }
+
+  return RC::SUCCESS;
+}
