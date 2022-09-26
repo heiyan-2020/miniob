@@ -163,6 +163,9 @@ RC Db::drop_table(const char *table_name)
     return rc;
   }
 
+  delete table;
   this->opened_tables_.erase(table_name);
+
+  LOG_INFO("Successfully drop table %s", table_name);
   return RC::SUCCESS;
 }
