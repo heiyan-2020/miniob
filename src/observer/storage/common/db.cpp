@@ -164,8 +164,5 @@ RC Db::drop_table(const char *table_name)
   }
 
   this->opened_tables_.erase(table_name);
-
-  // TODO: buffer pool
-
   return RC::SUCCESS;
 }

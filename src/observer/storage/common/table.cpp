@@ -877,11 +877,15 @@ RC Table::sync()
 RC Table::drop(const char *table_name)
 {
   LOG_INFO("Begin to drop table %s", table_name);
+
   int res;
+  BufferPoolManager &bpm = BufferPoolManager::instance();
+  // before removing file, trying to close file by bpm
 
   // drop meta file
   std::string meta_file = table_meta_file(base_dir_.c_str(), table_name);
   LOG_INFO("Begin to drop meta file %s", meta_file.c_str());
+  bpm.close_file(meta_file.c_str());  // ignore rc
   res = remove(meta_file.c_str());
   if (res != 0) {
     LOG_ERROR("Failed to drop meta file %s, err %s", meta_file.c_str(), strerror(errno));
@@ -890,6 +894,7 @@ RC Table::drop(const char *table_name)
   // drop data file
   std::string data_file = table_data_file(base_dir_.c_str(), table_name);
   LOG_INFO("Begin to drop data file %s", data_file.c_str());
+  bpm.close_file(data_file.c_str());  // ignore rc
   res = remove(data_file.c_str());
   if (res != 0) {
     LOG_ERROR("Failed to drop data file %s, err %s", data_file.c_str(), strerror(errno));
@@ -900,6 +905,7 @@ RC Table::drop(const char *table_name)
     std::string index_file = table_index_file(base_dir_.c_str(), table_name,
         index->index_meta().name());
     LOG_INFO("Begin to drop index file %s", index_file.c_str());
+    bpm.close_file(index_file.c_str());  // ignore rc
     res = remove(index_file.c_str());
     if (res != 0) {
       LOG_ERROR("Failed to drop index file %s, err %s", index_file.c_str(), strerror(errno));
