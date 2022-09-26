@@ -147,3 +147,25 @@ RC Db::sync()
   LOG_INFO("Successfully sync db. db=%s", name_.c_str());
   return rc;
 }
+
+RC Db::drop_table(const char *table_name)
+{
+  Table *table = this->find_table(table_name);
+  if (table == nullptr) {
+    return RC::SCHEMA_TABLE_NOT_EXIST;
+  }
+
+  // drop table meta / data / index file
+  RC rc = table->drop(table_name);
+  if (rc != RC::SUCCESS) {
+    // TODO: intermediate state
+    LOG_ERROR("Failed to drop table %s", table_name);
+    return rc;
+  }
+
+  delete table;
+  this->opened_tables_.erase(table_name);
+
+  LOG_INFO("Successfully drop table %s", table_name);
+  return RC::SUCCESS;
+}
