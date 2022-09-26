@@ -89,6 +89,11 @@ RC BplusTreeIndex::close()
 
 RC BplusTreeIndex::insert_entry(const char *record, const RID *rid)
 {
+  std::list<RID> rids{};
+  index_handler_.get_entry(record + field_meta_.offset(), field_meta_.len() + sizeof(RID), rids);
+  if (!rids.empty() && index_meta_.is_unique()) {
+    return RC::CONSTRAINT_UNIQUE;
+  }
   return index_handler_.insert_entry(record + field_meta_.offset(), rid);
 }
 

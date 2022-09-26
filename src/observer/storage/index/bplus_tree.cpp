@@ -1434,7 +1434,8 @@ RC BplusTreeHandler::insert_entry(const char *user_key, const RID *rid)
 RC BplusTreeHandler::get_entry(const char *user_key, int key_len, std::list<RID> &rids)
 {
   BplusTreeScanner scanner(*this);
-  RC rc = scanner.open(user_key, key_len, true /*left_inclusive*/, user_key, key_len, true /*right_inclusive*/);
+  RC rc = scanner.open(user_key, key_len, true /* left_inclusive */,
+      user_key, key_len, true /* right_inclusive */);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to open scanner. rc=%d:%s", rc, strrc(rc));
     return rc;
