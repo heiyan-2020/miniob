@@ -99,7 +99,7 @@ typedef struct {
   size_t length;  // Length of attribute
 } AttrInfo;
 
-// struct of craete_table
+// struct of create_table
 typedef struct {
   char *relation_name;           // Relation name
   size_t attribute_count;        // Length of attribute

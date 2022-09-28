@@ -381,8 +381,7 @@ update:
 	{
 		CONTEXT->ssql->flag = SCF_UPDATE;
 		Value *value = &CONTEXT->values[0];
-		updates_init(&CONTEXT->ssql->sstr.update, $2, $4, value,
-		CONTEXT->conditions, CONTEXT->condition_length);
+		updates_init(&CONTEXT->ssql->sstr.update, $2, $4, value, CONTEXT->conditions, CONTEXT->condition_length);
 		CONTEXT->condition_length = 0;
 	}
 ;
