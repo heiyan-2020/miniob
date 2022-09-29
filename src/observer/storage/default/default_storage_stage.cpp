@@ -253,7 +253,7 @@ RC insert_record_from_file(
         }
       } break;
       case CHARS: {
-        value_init_string(&record_values[i], file_value.c_str());
+        value_init_char(&record_values[i], file_value.c_str());
       } break;
       default: {
         errmsg << "Unsupported field type to loading: " << field->type();

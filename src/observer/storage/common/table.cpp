@@ -12,8 +12,8 @@ See the Mulan PSL v2 for more details. */
 // Created by Meiyi & Wangyunlai on 2021/5/13.
 //
 
-#include <limits.h>
-#include <string.h>
+#include <climits>
+#include <cstring>
 #include <algorithm>
 
 #include "common/defs.h"
@@ -28,6 +28,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/index.h"
 #include "storage/index/bplus_tree_index.h"
 #include "storage/trx/trx.h"
+#include "util/date.h"
 
 Table::~Table()
 {
@@ -326,6 +327,9 @@ RC Table::make_record(int value_num, const Value *values, char *&record_out)
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     const Value &value = values[i];
+    if (value.data == nullptr) {
+      return RC::DATE;
+    }
     size_t copy_len = field->len();
     if (field->type() == CHARS) {
       const size_t data_len = strlen((const char *)value.data);

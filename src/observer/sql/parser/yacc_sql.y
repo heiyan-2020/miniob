@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 
 typedef struct ParserContext {
   Query * ssql;
@@ -63,6 +64,7 @@ ParserContext *get_context(yyscan_t scanner)
 %parse-param { void *scanner }
 
 // 标识 tokens
+// 终结符
 %token  SEMICOLON
         CREATE
         DROP
@@ -83,8 +85,9 @@ ParserContext *get_context(yyscan_t scanner)
         TRX_COMMIT
         TRX_ROLLBACK
         INT_T
-        STRING_T
+        CHAR_T
         FLOAT_T
+        DATE_T
         HELP
         EXIT
         DOT // QUOTE
@@ -117,15 +120,16 @@ ParserContext *get_context(yyscan_t scanner)
   int boolean;
 }
 
-%token <number> NUMBER
-%token <floats> FLOAT 
-%token <string> ID
-%token <string> PATH
-%token <string> SSS
-%token <string> STAR
-%token <string> STRING_V
-// 非终结符
+%token <number> INT
+%token <floats> FLOAT
+%token <string> CHAR
+%token <string> DATE
 
+%token <string> STAR
+%token <string> ID
+
+
+// 非终结符
 %type <number> type
 %type <condition_t> condition
 %type <value_t> value
@@ -272,6 +276,13 @@ attr_def:
 	ID_get type LBRACE number RBRACE
 	{
 		AttrInfo attribute;
+		switch ($2) {
+			case CHARS:
+				break;
+			default:
+				// TODO: error handle
+				assert(0);
+		}
 		attr_info_init(&attribute, CONTEXT->id, $2, $4);
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 		// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name =(char*)malloc(sizeof(char));
@@ -283,7 +294,21 @@ attr_def:
 |	ID_get type
 	{
 		AttrInfo attribute;
-		attr_info_init(&attribute, CONTEXT->id, $2, 4);
+		size_t len;
+		switch ($2) {
+			case CHARS:
+			case INTS:
+			case FLOATS:
+				len = 4;
+				break;
+			case DATES:
+				len = 12;
+				break;
+			default:
+				// TODO: error handle
+				assert(0);
+		}
+		attr_info_init(&attribute, CONTEXT->id, $2, len);
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 		// CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name=(char*)malloc(sizeof(char));
 		// strcpy(CONTEXT->ssql->sstr.create_table.attributes[CONTEXT->value_length].name, CONTEXT->id);
@@ -294,7 +319,7 @@ attr_def:
 ;
 
 number:
-	NUMBER
+	INT
 	{
 		$$ = $1;
 	}
@@ -305,13 +330,17 @@ type:
 	{
 		$$ = INTS;
 	}
-| 	STRING_T
+| 	CHAR_T
 	{
 		$$ = CHARS;
 	}
 | 	FLOAT_T
 	{
 		$$ = FLOATS;
+	}
+|	DATE_T
+	{
+		$$ = DATES;
 	}
 ;
 
@@ -350,7 +379,7 @@ value_list:
 ;
 
 value:
-	NUMBER
+	INT
 	{
 		value_init_integer(&CONTEXT->values[CONTEXT->value_length++], $1);
 	}
@@ -358,10 +387,15 @@ value:
 	{
 		value_init_float(&CONTEXT->values[CONTEXT->value_length++], $1);
 	}
-|	SSS
+|	CHAR
 	{
-		$1 = substr($1,1,strlen($1)-2);
-		value_init_string(&CONTEXT->values[CONTEXT->value_length++], $1);
+		$1 = substr($1,1,strlen($1)-2);  // remove quote
+		value_init_char(&CONTEXT->values[CONTEXT->value_length++], $1);
+	}
+|	DATE
+	{
+		$1 = substr($1,1,strlen($1)-2);  // remove quote
+		value_init_date(&CONTEXT->values[CONTEXT->value_length++], $1);
 	}
 ;
     
@@ -622,7 +656,7 @@ comOp:
 ;
 
 load_data:
-	LOAD DATA INFILE SSS INTO TABLE ID SEMICOLON
+	LOAD DATA INFILE CHAR INTO TABLE ID SEMICOLON
 	{
 		CONTEXT->ssql->flag = SCF_LOAD_DATA;
 		load_data_init(&CONTEXT->ssql->sstr.load_data, $7, $4);
