@@ -17,25 +17,21 @@ See the Mulan PSL v2 for more details. */
 
 #include <stddef.h>
 
-#define MAX_NUM 20
-#define MAX_REL_NAME 20
-#define MAX_ATTR_NAME 20
-#define MAX_ERROR_MESSAGE 20
-#define MAX_DATA 50
+#define MAX_NUM 32
 
 // 属性结构体
 typedef struct {
-  char *relation_name;   // relation name (may be NULL) 表名
-  char *attribute_name;  // attribute name              属性名
+  char *relation_name;   // relation name (maybe NULL) - 表名
+  char *attribute_name;  // attribute name             - 属性名
 } RelAttr;
 
 typedef enum {
-  EQUAL_TO,     //"="     0
-  LESS_EQUAL,   //"<="    1
-  NOT_EQUAL,    //"<>"    2
-  LESS_THAN,    //"<"     3
-  GREAT_EQUAL,  //">="    4
-  GREAT_THAN,   //">"     5
+  EQUAL_TO,     // "="  - 0
+  LESS_EQUAL,   // "<=" - 1
+  NOT_EQUAL,    // "<>" - 2
+  LESS_THAN,    // "<"  - 3
+  GREAT_EQUAL,  // ">=" - 4
+  GREAT_THAN,   // ">"  - 5
   NO_OP
 } CompOp;
 
@@ -50,13 +46,13 @@ typedef struct _Value {
 
 typedef struct _Condition {
   int left_is_attr;    // TRUE if left-hand side is an attribute
-                       // 1时，操作符左边是属性名，0时，是属性值
   Value left_value;    // left-hand side value if left_is_attr = FALSE
   RelAttr left_attr;   // left-hand side attribute
+
   CompOp comp;         // comparison operator
+
   int right_is_attr;   // TRUE if right-hand side is an attribute
-                       // 1时，操作符右边是属性名，0时，是属性值
-  RelAttr right_attr;  // right-hand side attribute if right_is_attr = TRUE 右边的属性
+  RelAttr right_attr;  // right-hand side attribute
   Value right_value;   // right-hand side value if right_is_attr = FALSE
 } Condition;
 
@@ -64,7 +60,7 @@ typedef struct _Condition {
 typedef struct {
   size_t attr_num;                // Length of attrs in Select clause
   RelAttr attributes[MAX_NUM];    // attrs in Select clause
-  size_t relation_num;            // Length of relations in Fro clause
+  size_t relation_num;            // Length of relations in From clause
   char *relations[MAX_NUM];       // relations in From clause
   size_t condition_num;           // Length of conditions in Where clause
   Condition conditions[MAX_NUM];  // conditions in Where clause
@@ -113,9 +109,10 @@ typedef struct {
 
 // struct of create_index
 typedef struct {
-  char *index_name;      // Index name
-  char *relation_name;   // Relation name
-  char *attribute_name;  // Attribute name
+  char *index_name;               // Index name
+  char *relation_name;            // Relation name
+  char *attribute_name[MAX_NUM];  // Attribute names
+  size_t attribute_count;         // Length of attribute
   int is_unique;
 } CreateIndex;
 
@@ -147,7 +144,7 @@ union Queries {
   char *errors;
 };
 
-// 修改yacc中相关数字编码为宏定义
+// 修改 yacc 中相关数字编码为宏定义
 enum SqlCommandFlag {
   SCF_ERROR = 0,
   SCF_SELECT,
@@ -218,8 +215,8 @@ void create_table_destroy(CreateTable *create_table);
 void drop_table_init(DropTable *drop_table, const char *relation_name);
 void drop_table_destroy(DropTable *drop_table);
 
-void create_index_init(
-    CreateIndex *create_index, const char *index_name, const char *relation_name, const char *attr_name, int is_unique);
+void create_index_init(CreateIndex *create_index, const char *index_name, const char *relation_name, int is_unique);
+void create_index_append_attribute(CreateIndex *create_index, const char *attr_name);
 void create_index_destroy(CreateIndex *create_index);
 
 void drop_index_init(DropIndex *drop_index, const char *index_name);

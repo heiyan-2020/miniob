@@ -101,7 +101,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     left = new FieldExpr(table, field);
   } else {
     const Value &value = condition.left_value;
-    if (value.data == nullptr) {
+    if (value.type == DATES && value.data == nullptr) {
       return RC::DATE;
     }
     left = new ValueExpr(value);
@@ -119,7 +119,7 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     right = new FieldExpr(table, field);
   } else {
     const Value &value = condition.right_value;
-    if (value.data == nullptr) {
+    if (value.type == DATES && value.data == nullptr) {
       return RC::DATE;
     }
     right = new ValueExpr(value);
