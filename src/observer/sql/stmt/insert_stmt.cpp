@@ -24,8 +24,8 @@ InsertStmt::InsertStmt(Table *table, const Value *values, int value_amount)
 RC InsertStmt::create(Db *db, const Inserts &inserts, Stmt *&stmt)
 {
   const char *table_name = inserts.relation_name;
-  if (nullptr == db || nullptr == table_name || inserts.value_num <= 0) {
-    LOG_WARN("invalid argument. db=%p, table_name=%p, value_num=%d", db, table_name, inserts.value_num);
+  if (nullptr == db || nullptr == table_name || inserts.unit_cnt <= 0) {
+    LOG_WARN("invalid argument. db=%p, table_name=%p, value_num=%d", db, table_name, inserts.units[0].value_num);
     return RC::INVALID_ARGUMENT;
   }
 
@@ -37,8 +37,8 @@ RC InsertStmt::create(Db *db, const Inserts &inserts, Stmt *&stmt)
   }
 
   // check the fields number
-  const Value *values = inserts.values;
-  const int value_num = inserts.value_num;
+  const Value *values = inserts.units[0].values;
+  const int value_num = inserts.units[0].value_num;
   const TableMeta &table_meta = table->table_meta();
   const int field_num = table_meta.field_num() - table_meta.sys_field_num();
   if (field_num != value_num) {
