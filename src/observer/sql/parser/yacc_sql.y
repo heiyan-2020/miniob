@@ -21,7 +21,6 @@ typedef struct ParserContext {
   Value values[MAX_NUM];
   Condition conditions[MAX_NUM];
   CompOp comp;
-  char id[MAX_NUM];
 } ParserContext;
 
 // 获取子串
@@ -272,21 +271,14 @@ attr_def_list:
 ;
 
 attr_def:
-	id_get type LBRACE number RBRACE
+	ID CHAR_T LBRACE number RBRACE
 	{
 		AttrInfo attribute;
-		switch ($2) {
-			case CHARS:
-				break;
-			default:
-				// TODO: error handle
-				assert(0);
-		}
-		attr_info_init(&attribute, CONTEXT->id, $2, $4);
+		attr_info_init(&attribute, $1, CHARS, $4);
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 		CONTEXT->value_length++;
 	}
-|	id_get type
+|	ID type
 	{
 		AttrInfo attribute;
 		size_t len;
@@ -303,7 +295,7 @@ attr_def:
 				// TODO: error handle
 				assert(0);
 		}
-		attr_info_init(&attribute, CONTEXT->id, $2, len);
+		attr_info_init(&attribute, $1, $2, len);
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 		CONTEXT->value_length++;
 	}
@@ -332,14 +324,6 @@ type:
 |	DATE_T
 	{
 		$$ = DATES;
-	}
-;
-
-id_get:
-	ID 
-	{
-		char *temp = $1;
-		snprintf(CONTEXT->id, sizeof(CONTEXT->id), "%s", temp);
 	}
 ;
 

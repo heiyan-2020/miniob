@@ -1,7 +1,3 @@
-//
-// Created by vgalaxy on 22-9-28.
-//
-
 #include "update_operator.h"
 #include "sql/stmt/update_stmt.h"
 
