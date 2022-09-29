@@ -556,12 +556,16 @@ RC ExecuteStage::do_insert(SQLStageEvent *sql_event)
   InsertStmt *insert_stmt = (InsertStmt *)stmt;
 
   Table *table = insert_stmt->table();
-  RC rc = table->insert_record(nullptr, insert_stmt->value_amount(), insert_stmt->values());
-  if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS\n");
-  } else {
-    session_event->set_response("FAILURE\n");
+  RC rc = RC::SUCCESS;
+  for (int k = 0; k < insert_stmt->unit_amount(); k++) {
+    rc = table->insert_record(nullptr, insert_stmt->value_amount(), insert_stmt->values(k));
+
+    if (rc != RC::SUCCESS) {
+      session_event->set_response("FAILURE\n");
+      //TODO: rollback previously inserted records.
+    }
   }
+  session_event->set_response("SUCCESS\n");
   return rc;
 }
 
