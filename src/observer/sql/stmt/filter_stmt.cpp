@@ -100,7 +100,11 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     }
     left = new FieldExpr(table, field);
   } else {
-    left = new ValueExpr(condition.left_value);
+    const Value &value = condition.left_value;
+    if (value.data == nullptr) {
+      return RC::DATE;
+    }
+    left = new ValueExpr(value);
   }
 
   if (condition.right_is_attr) {
@@ -114,7 +118,11 @@ RC FilterStmt::create_filter_unit(Db *db, Table *default_table, std::unordered_m
     }
     right = new FieldExpr(table, field);
   } else {
-    right = new ValueExpr(condition.right_value);
+    const Value &value = condition.right_value;
+    if (value.data == nullptr) {
+      return RC::DATE;
+    }
+    right = new ValueExpr(value);
   }
 
   filter_unit = new FilterUnit;

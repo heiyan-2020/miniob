@@ -12,10 +12,27 @@ See the Mulan PSL v2 for more details. */
 // Created by wangyunlai on 2021/6/11.
 //
 
-#include <string.h>
+#include <cstring>
 #include <algorithm>
+#include "date.h"
 
 const double epsilon = 1E-6;
+
+int compare_date(void *arg1, void *arg2)
+{
+  Date lhs{arg1};
+  Date rhs{arg2};
+  if (!lhs.validate() || !rhs.validate()) {
+    return -1;  // TODO: return rc?
+  }
+  if (lhs < rhs) {
+    return -1;
+  } else if (lhs > rhs) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 
 int compare_int(void *arg1, void *arg2)
 {
