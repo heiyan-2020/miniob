@@ -41,6 +41,7 @@ void yyerror(yyscan_t scanner, const char *str)
   context->ssql->flag = SCF_ERROR;
   context->condition_length = 0;
   context->value_length = 0;
+  context->ssql->sstr.insertion.unit_cnt = 0;
   printf("parse sql failed. error=%s", str);
 }
 
@@ -332,13 +333,25 @@ type:
 ;
 
 insert:
-	INSERT INTO ID VALUES LBRACE value value_list RBRACE SEMICOLON
+	INSERT INTO ID VALUES value_brace value_brace_list SEMICOLON
 	{
 		CONTEXT->ssql->flag = SCF_INSERT;
-		inserts_init(&CONTEXT->ssql->sstr.insertion, $3, CONTEXT->values, CONTEXT->value_length);
-		// reset
-		CONTEXT->value_length = 0;
+		CONTEXT->ssql->sstr.insertion.relation_name = strdup($3);
 	}
+;
+
+value_brace_list:
+		 /* empty */
+| 		 COMMA value_brace value_brace_list
+ 		 {}
+;
+
+value_brace:
+	    LBRACE value value_list RBRACE
+	    {
+		inserts_init(&CONTEXT->ssql->sstr.insertion, CONTEXT->values, CONTEXT->value_length);
+		CONTEXT->value_length = 0;
+	    }
 ;
 
 value_list:

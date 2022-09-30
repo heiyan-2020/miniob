@@ -163,25 +163,33 @@ void selects_destroy(Selects *selects)
   selects->condition_num = 0;
 }
 
-void inserts_init(Inserts *inserts, const char *relation_name, Value values[], size_t value_num)
-{
-  assert(value_num <= sizeof(inserts->values) / sizeof(inserts->values[0]));
+void mark() {
+  std::cout << "hello, I'm invoked." << std::endl;
+}
 
-  inserts->relation_name = strdup(relation_name);
+void inserts_init(Inserts *inserts, Value values[], size_t value_num)
+{
+  assert(value_num <= sizeof(inserts->units[0].values) / sizeof(inserts->units[0].values[0]));
+
   for (size_t i = 0; i < value_num; i++) {
-    inserts->values[i] = values[i];
+    inserts->units[inserts->unit_cnt].values[i] = values[i];
   }
-  inserts->value_num = value_num;
+  inserts->units[inserts->unit_cnt].value_num = value_num;
+
+  /* increment in order to distinct difference pairs */
+  inserts->unit_cnt++;
 }
 void inserts_destroy(Inserts *inserts)
 {
   free(inserts->relation_name);
   inserts->relation_name = nullptr;
 
-  for (size_t i = 0; i < inserts->value_num; i++) {
-    value_destroy(&inserts->values[i]);
+  for (size_t k = 0; k < inserts->unit_cnt; k++) {
+    for (size_t i = 0; i < inserts->units[k].value_num; i++) {
+      value_destroy(&inserts->units[k].values[i]);
+    }
+    inserts->units[k].value_num = 0;
   }
-  inserts->value_num = 0;
 }
 
 void deletes_init_relation(Deletes *deletes, const char *relation_name)
