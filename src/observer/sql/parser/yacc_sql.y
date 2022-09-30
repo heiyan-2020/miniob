@@ -13,20 +13,17 @@
 #include <assert.h>
 
 typedef struct ParserContext {
-  Query * ssql;
-  size_t select_length;
+  Query *ssql;
   size_t condition_length;
-  size_t from_length;
   size_t value_length;
   Value values[MAX_NUM];
   Condition conditions[MAX_NUM];
   CompOp comp;
-  char id[MAX_NUM];
 } ParserContext;
 
 // 获取子串
 // 从 s 中提取下标为 n1 ~ n2 的字符组成一个新字符串，然后返回这个新串的首地址
-char *substr(const char *s,int n1,int n2)
+char *substr(const char *s, int n1, int n2)
 {
   char *sp = malloc(sizeof(char) * (n2 - n1 + 2));
   int i, j = 0;
@@ -43,8 +40,6 @@ void yyerror(yyscan_t scanner, const char *str)
   query_reset(context->ssql);
   context->ssql->flag = SCF_ERROR;
   context->condition_length = 0;
-  context->from_length = 0;
-  context->select_length = 0;
   context->value_length = 0;
   context->ssql->sstr.insertion.unit_cnt = 0;
   printf("parse sql failed. error=%s", str);
@@ -229,11 +224,24 @@ desc_table:
 ;
 
 create_index:
-	CREATE unique_opt INDEX ID ON ID LBRACE ID RBRACE SEMICOLON
+	CREATE unique_opt INDEX ID ON ID LBRACE attr_ref attr_ref_list RBRACE SEMICOLON
 	{
 		CONTEXT->ssql->flag = SCF_CREATE_INDEX;
-		create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6, $8, $2);
+		create_index_init(&CONTEXT->ssql->sstr.create_index, $4, $6, $2);
 	}
+;
+
+attr_ref:
+	ID
+	{
+		create_index_append_attribute(&CONTEXT->ssql->sstr.create_index, $1);
+	}
+;
+
+attr_ref_list:
+	/* empty */
+|	COMMA attr_ref attr_ref_list
+	{}
 ;
 
 unique_opt:
@@ -260,8 +268,6 @@ create_table:
 	{
 		CONTEXT->ssql->flag = SCF_CREATE_TABLE;
 		create_table_init_name(&CONTEXT->ssql->sstr.create_table, $3);
-		// reset
-		CONTEXT->value_length = 0;
 	}
 ;
 
@@ -272,21 +278,13 @@ attr_def_list:
 ;
 
 attr_def:
-	id_get type LBRACE number RBRACE
+	ID CHAR_T LBRACE number RBRACE
 	{
 		AttrInfo attribute;
-		switch ($2) {
-			case CHARS:
-				break;
-			default:
-				// TODO: error handle
-				assert(0);
-		}
-		attr_info_init(&attribute, CONTEXT->id, $2, $4);
+		attr_info_init(&attribute, $1, CHARS, $4);
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
-		CONTEXT->value_length++;
 	}
-|	id_get type
+|	ID type
 	{
 		AttrInfo attribute;
 		size_t len;
@@ -303,9 +301,8 @@ attr_def:
 				// TODO: error handle
 				assert(0);
 		}
-		attr_info_init(&attribute, CONTEXT->id, $2, len);
+		attr_info_init(&attribute, $1, $2, len);
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
-		CONTEXT->value_length++;
 	}
 ;
 
@@ -332,14 +329,6 @@ type:
 |	DATE_T
 	{
 		$$ = DATES;
-	}
-;
-
-id_get:
-	ID 
-	{
-		char *temp = $1;
-		snprintf(CONTEXT->id, sizeof(CONTEXT->id), "%s", temp);
 	}
 ;
 
@@ -398,6 +387,7 @@ delete:
 		CONTEXT->ssql->flag = SCF_DELETE;
 		deletes_init_relation(&CONTEXT->ssql->sstr.deletion, $3);
 		deletes_set_conditions(&CONTEXT->ssql->sstr.deletion, CONTEXT->conditions, CONTEXT->condition_length);
+		// reset
 		CONTEXT->condition_length = 0;
 	}
 ;
@@ -408,6 +398,8 @@ update:
 		CONTEXT->ssql->flag = SCF_UPDATE;
 		Value *value = &CONTEXT->values[0];
 		updates_init(&CONTEXT->ssql->sstr.update, $2, $4, value, CONTEXT->conditions, CONTEXT->condition_length);
+		// reset
+		CONTEXT->value_length = 0;
 		CONTEXT->condition_length = 0;
 	}
 ;
@@ -418,11 +410,8 @@ select:
 		selects_append_relation(&CONTEXT->ssql->sstr.selection, $4);
 		selects_append_conditions(&CONTEXT->ssql->sstr.selection, CONTEXT->conditions, CONTEXT->condition_length);
 		CONTEXT->ssql->flag = SCF_SELECT;
-
 		// reset
 		CONTEXT->condition_length = 0;
-		CONTEXT->from_length = 0;
-		CONTEXT->select_length = 0;
 		CONTEXT->value_length = 0;
 	}
 ;

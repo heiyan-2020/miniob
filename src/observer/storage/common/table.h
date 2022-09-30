@@ -37,7 +37,7 @@ public:
 
   /**
    * 创建一个表
-   * @param path 元数据保存的文件(完整路径)
+   * @param path 元数据保存的文件 (完整路径)
    * @param name 表名
    * @param base_dir 表数据存放的路径
    * @param attribute_count 字段个数
@@ -66,7 +66,7 @@ public:
   RC scan_record(Trx *trx, ConditionFilter *filter, int limit, void *context,
       void (*record_reader)(const char *data, void *context));
 
-  RC create_index(Trx *trx, const char *index_name, const char *attribute_name, int is_unique);
+  RC create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique);
 
   RC get_record_scanner(RecordFileScanner &scanner);
 
@@ -98,6 +98,8 @@ private:
 
   RC insert_record(Trx *trx, Record *record);
 
+  RC check_unique_constraint(const char *record_data);
+
 private:
   friend class RecordUpdater;
   friend class RecordDeleter;
@@ -110,13 +112,13 @@ private:
   RC make_record(int value_num, const Value *values, char *&record_out);
 
 public:
-  Index *find_index(const char *index_name) const;
-  Index *find_index_by_field(const char *field_name) const;
+  Index *find_index(const std::string &index_name) const;
+  Index *find_index_by_field(const std::string &field_name) const;
 
 private:
   std::string base_dir_;
   TableMeta table_meta_;
-  DiskBufferPool *data_buffer_pool_ = nullptr;   /// 数据文件关联的buffer pool
+  DiskBufferPool *data_buffer_pool_ = nullptr;   /// 数据文件关联的 buffer pool
   RecordFileHandler *record_handler_ = nullptr;  /// 记录操作
   std::vector<Index *> indexes_;
 };

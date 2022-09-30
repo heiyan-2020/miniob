@@ -72,8 +72,10 @@ void value_init_date(Value *value, const char *v)
 void value_destroy(Value *value)
 {
   value->type = UNDEFINED;
-  free(value->data);
-  value->data = nullptr;
+  if (value->data != nullptr) {
+    free(value->data);
+    value->data = nullptr;
+  }
 }
 
 void condition_init(Condition *condition, CompOp comp, int left_is_attr, RelAttr *left_attr, Value *left_value,
@@ -120,7 +122,10 @@ void attr_info_destroy(AttrInfo *attr_info)
   attr_info->name = nullptr;
 }
 
-void selects_init(Selects *selects, ...);
+void selects_init(Selects *selects, ...)
+{
+
+}
 void selects_append_attribute(Selects *selects, RelAttr *rel_attr)
 {
   selects->attributes[selects->attr_num++] = *rel_attr;
@@ -148,7 +153,7 @@ void selects_destroy(Selects *selects)
 
   for (size_t i = 0; i < selects->relation_num; i++) {
     free(selects->relations[i]);
-    selects->relations[i] = NULL;
+    selects->relations[i] = nullptr;
   }
   selects->relation_num = 0;
 
@@ -271,23 +276,33 @@ void drop_table_destroy(DropTable *drop_table)
 }
 
 void create_index_init(
-    CreateIndex *create_index, const char *index_name, const char *relation_name, const char *attr_name, int is_unique)
+    CreateIndex *create_index, const char *index_name, const char *relation_name, int is_unique)
 {
   create_index->index_name = strdup(index_name);
   create_index->relation_name = strdup(relation_name);
-  create_index->attribute_name = strdup(attr_name);
   create_index->is_unique = is_unique;
+}
+
+void create_index_append_attribute(CreateIndex *create_index, const char *attr_name)
+{
+  create_index->attribute_name[create_index->attribute_count++] = strdup(attr_name);
 }
 
 void create_index_destroy(CreateIndex *create_index)
 {
   free(create_index->index_name);
   free(create_index->relation_name);
-  free(create_index->attribute_name);
 
   create_index->index_name = nullptr;
   create_index->relation_name = nullptr;
-  create_index->attribute_name = nullptr;
+
+  for (size_t i = 0; i < create_index->attribute_count; i++) {
+    free(create_index->attribute_name[i]);
+    create_index->attribute_name[i] = nullptr;
+  }
+  create_index->attribute_count = 0;
+
+  create_index->is_unique = 0;
 }
 
 void drop_index_init(DropIndex *drop_index, const char *index_name)

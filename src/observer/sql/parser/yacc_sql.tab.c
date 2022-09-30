@@ -81,20 +81,17 @@
 #include <assert.h>
 
 typedef struct ParserContext {
-  Query * ssql;
-  size_t select_length;
+  Query *ssql;
   size_t condition_length;
-  size_t from_length;
   size_t value_length;
   Value values[MAX_NUM];
   Condition conditions[MAX_NUM];
   CompOp comp;
-  char id[MAX_NUM];
 } ParserContext;
 
 // 获取子串
 // 从 s 中提取下标为 n1 ~ n2 的字符组成一个新字符串，然后返回这个新串的首地址
-char *substr(const char *s,int n1,int n2)
+char *substr(const char *s, int n1, int n2)
 {
   char *sp = malloc(sizeof(char) * (n2 - n1 + 2));
   int i, j = 0;
@@ -111,8 +108,6 @@ void yyerror(yyscan_t scanner, const char *str)
   query_reset(context->ssql);
   context->ssql->flag = SCF_ERROR;
   context->condition_length = 0;
-  context->from_length = 0;
-  context->select_length = 0;
   context->value_length = 0;
   context->ssql->sstr.insertion.unit_cnt = 0;
   printf("parse sql failed. error=%s", str);
@@ -706,7 +701,7 @@ static const yytype_int16 yypact[] =
      means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
-       2,     0,     1,    31,     0,     0,     0,     0,     0,     0,
+       2,     0,     1,    34,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     3,    20,
       19,    14,    15,    16,    17,     9,    10,    11,    12,    13,
        8,     5,     7,     6,     4,    18,     0,    32,     0,     0,
@@ -1617,7 +1612,7 @@ yyreduce:
 #line 233 "yacc_sql.y"
         {
 		CONTEXT->ssql->flag = SCF_CREATE_INDEX;
-		create_index_init(&CONTEXT->ssql->sstr.create_index, (yyvsp[-6].string), (yyvsp[-4].string), (yyvsp[-2].string), (yyvsp[-8].boolean));
+		create_index_init(&CONTEXT->ssql->sstr.create_index, (yyvsp[-7].string), (yyvsp[-5].string), (yyvsp[-9].boolean));
 	}
 #line 1623 "yacc_sql.tab.c"
     break;
@@ -1652,8 +1647,6 @@ yyreduce:
         {
 		CONTEXT->ssql->flag = SCF_CREATE_TABLE;
 		create_table_init_name(&CONTEXT->ssql->sstr.create_table, (yyvsp[-5].string));
-		// reset
-		CONTEXT->value_length = 0;
 	}
 #line 1659 "yacc_sql.tab.c"
     break;
@@ -1668,16 +1661,8 @@ yyreduce:
 #line 276 "yacc_sql.y"
         {
 		AttrInfo attribute;
-		switch ((yyvsp[-3].number)) {
-			case CHARS:
-				break;
-			default:
-				// TODO: error handle
-				assert(0);
-		}
-		attr_info_init(&attribute, CONTEXT->id, (yyvsp[-3].number), (yyvsp[-1].number));
+		attr_info_init(&attribute, (yyvsp[-4].string), CHARS, (yyvsp[-1].number));
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
-		CONTEXT->value_length++;
 	}
 #line 1683 "yacc_sql.tab.c"
     break;
@@ -1700,9 +1685,8 @@ yyreduce:
 				// TODO: error handle
 				assert(0);
 		}
-		attr_info_init(&attribute, CONTEXT->id, (yyvsp[0].number), len);
+		attr_info_init(&attribute, (yyvsp[-1].string), (yyvsp[0].number), len);
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
-		CONTEXT->value_length++;
 	}
 #line 1708 "yacc_sql.tab.c"
     break;
@@ -1826,6 +1810,7 @@ yyreduce:
 		CONTEXT->ssql->flag = SCF_DELETE;
 		deletes_init_relation(&CONTEXT->ssql->sstr.deletion, (yyvsp[-2].string));
 		deletes_set_conditions(&CONTEXT->ssql->sstr.deletion, CONTEXT->conditions, CONTEXT->condition_length);
+		// reset
 		CONTEXT->condition_length = 0;
 	}
 #line 1832 "yacc_sql.tab.c"
@@ -1837,6 +1822,8 @@ yyreduce:
 		CONTEXT->ssql->flag = SCF_UPDATE;
 		Value *value = &CONTEXT->values[0];
 		updates_init(&CONTEXT->ssql->sstr.update, (yyvsp[-6].string), (yyvsp[-4].string), value, CONTEXT->conditions, CONTEXT->condition_length);
+		// reset
+		CONTEXT->value_length = 0;
 		CONTEXT->condition_length = 0;
 	}
 #line 1843 "yacc_sql.tab.c"
@@ -1848,11 +1835,8 @@ yyreduce:
 		selects_append_relation(&CONTEXT->ssql->sstr.selection, (yyvsp[-3].string));
 		selects_append_conditions(&CONTEXT->ssql->sstr.selection, CONTEXT->conditions, CONTEXT->condition_length);
 		CONTEXT->ssql->flag = SCF_SELECT;
-
 		// reset
 		CONTEXT->condition_length = 0;
-		CONTEXT->from_length = 0;
-		CONTEXT->select_length = 0;
 		CONTEXT->value_length = 0;
 	}
 #line 1859 "yacc_sql.tab.c"

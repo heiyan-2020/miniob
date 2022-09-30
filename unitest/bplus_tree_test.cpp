@@ -323,14 +323,20 @@ TEST(test_bplus_tree, test_leaf_index_node_handle)
   index_file_header.root_page = BP_INVALID_PAGE_NUM;
   index_file_header.internal_max_size = 5;
   index_file_header.leaf_max_size = 5;
-  index_file_header.attr_length = 4;
+  index_file_header.attr_total_length = 4;
   index_file_header.key_length = 4 + sizeof(RID);
-  index_file_header.attr_type = INTS;
+  index_file_header.attr_num = 1;
+  index_file_header.attr_type[0] = INTS;
+  index_file_header.attr_length[0] = 4;
 
   Frame frame;
 
   KeyComparator key_comparator;
-  key_comparator.init(INTS, 4);
+  std::vector<AttrType> attr_types;
+  attr_types.emplace_back(INTS);
+  std::vector<int> attr_lengths;
+  attr_lengths.emplace_back(4);
+  key_comparator.init(attr_types, attr_lengths);
 
   LeafIndexNodeHandler leaf_node(index_file_header, &frame);
   leaf_node.init_empty();
@@ -382,14 +388,20 @@ TEST(test_bplus_tree, test_internal_index_node_handle)
   index_file_header.root_page = BP_INVALID_PAGE_NUM;
   index_file_header.internal_max_size = 5;
   index_file_header.leaf_max_size = 5;
-  index_file_header.attr_length = 4;
+  index_file_header.attr_total_length = 4;
   index_file_header.key_length = 4 + sizeof(RID);
-  index_file_header.attr_type = INTS;
+  index_file_header.attr_num = 1;
+  index_file_header.attr_type[0] = INTS;
+  index_file_header.attr_length[0] = 4;
 
   Frame frame;
 
   KeyComparator key_comparator;
-  key_comparator.init(INTS, 4);
+  std::vector<AttrType> attr_types;
+  attr_types.emplace_back(INTS);
+  std::vector<int> attr_lengths;
+  attr_lengths.emplace_back(4);
+  key_comparator.init(attr_types, attr_lengths);
 
   InternalIndexNodeHandler internal_node(index_file_header, &frame);
   internal_node.init_empty();
@@ -479,7 +491,7 @@ TEST(test_bplus_tree, test_chars)
   const char *index_name = "chars.btree";
   ::remove(index_name);
   handler = new BplusTreeHandler();
-  handler->create(index_name, CHARS, 8, ORDER, ORDER);
+  handler->create(index_name, std::vector<AttrType>{CHARS}, std::vector<int>{8}, ORDER, ORDER);
 
   char keys[][9] = {"abcdefg", "12345678", "12345678", "abcdefg", "abcdefga"};
 
@@ -516,7 +528,7 @@ TEST(test_bplus_tree, test_scanner)
   const char *index_name = "scanner.btree";
   ::remove(index_name);
   handler = new BplusTreeHandler();
-  handler->create(index_name, INTS, sizeof(int), ORDER, ORDER);
+  handler->create(index_name, std::vector<AttrType>{INTS}, std::vector<int>{4}, ORDER, ORDER);
 
   int count = 0;
   RC rc = RC::SUCCESS;
@@ -724,7 +736,7 @@ TEST(test_bplus_tree, test_bplus_tree_insert)
 
   ::remove(index_name);
   handler = new BplusTreeHandler();
-  handler->create(index_name, INTS, sizeof(int), ORDER, ORDER);
+  handler->create(index_name, std::vector<AttrType>{INTS}, std::vector<int>{4}, ORDER, ORDER);
 
   test_insert();
 

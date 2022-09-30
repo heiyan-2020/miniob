@@ -1,9 +1,4 @@
-//
-// Created by vgalaxy on 22-9-28.
-//
-
-#ifndef MINIDB_UPDATE_OPERATOR_H
-#define MINIDB_UPDATE_OPERATOR_H
+#pragma once
 
 #include "operator.h"
 
@@ -28,5 +23,3 @@ public:
 private:
   UpdateStmt *update_stmt_ = nullptr;
 };
-
-#endif  // MINIDB_UPDATE_OPERATOR_H
