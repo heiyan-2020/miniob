@@ -150,20 +150,31 @@ int TableMeta::sys_field_num() const
   return sys_fields_.size();
 }
 
-const IndexMeta *TableMeta::index(const std::string &name) const
+const IndexMeta *TableMeta::index(const std::string &index_name) const
 {
   for (const IndexMeta &index : indexes_) {
-    if (index.name() == name) {
+    if (index.name() == index_name) {
       return &index;
     }
   }
   return nullptr;
 }
 
-const IndexMeta *TableMeta::find_index_by_fields(const std::vector<std::string> &fields) const
+const IndexMeta *TableMeta::find_index_by_field(const std::string &field_name) const
+{
+//  for (const IndexMeta &index : indexes_) {
+//    // 只有多列索引的第一个字段出现在查询条件中，该索引才可能被使用
+//    if (index.fields().at(0) == field_name) {
+//      return &index;
+//    }
+//  }
+  return nullptr;
+}
+
+const IndexMeta *TableMeta::find_index_by_fields(const std::vector<std::string> &field_names) const
 {
   for (const IndexMeta &index : indexes_) {
-    if (index.fields() == fields) {
+    if (index.fields() == field_names) {
       return &index;
     }
   }

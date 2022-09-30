@@ -803,19 +803,24 @@ RC Table::delete_entry_of_indexes(const char *record, const RID &rid, bool error
   return rc;
 }
 
-Index *Table::find_index(const char *index_name) const
+Index *Table::find_index(const std::string &index_name) const
 {
   for (Index *index : indexes_) {
-    if (0 == strcmp(index->index_meta().name().c_str(), index_name)) {
+    if (index->index_meta().name() == index_name) {
       return index;
     }
   }
   return nullptr;
 }
 
-Index *Table::find_index_by_field(const char *field_name) const
+Index *Table::find_index_by_field(const std::string &field_name) const
 {
-  // TODO
+//  for (Index *index : indexes_) {
+//    // 只有多列索引的第一个字段出现在查询条件中，该索引才可能被使用
+//    if (index->index_meta().fields().at(0) == field_name) {
+//      return index;
+//    }
+//  }
   return nullptr;
 }
 
@@ -840,13 +845,12 @@ IndexScanner *Table::find_index_for_scan(const DefaultConditionFilter &filter)
     return nullptr;
   }
 
-  std::vector<std::string> fields{field_meta->name()};
-  const IndexMeta *index_meta = table_meta_.find_index_by_fields(fields);
+  const IndexMeta *index_meta = table_meta_.find_index_by_field(field_meta->name());
   if (nullptr == index_meta) {
     return nullptr;
   }
 
-  Index *index = find_index(index_meta->name().c_str());
+  Index *index = find_index(index_meta->name());
   if (nullptr == index) {
     return nullptr;
   }
@@ -899,18 +903,18 @@ IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter)
   }
 
   // remove dynamic_cast
-  const DefaultConditionFilter *default_condition_filter = dynamic_cast<const DefaultConditionFilter *>(filter);
+  const auto *default_condition_filter = dynamic_cast<const DefaultConditionFilter *>(filter);
   if (default_condition_filter != nullptr) {
     return find_index_for_scan(*default_condition_filter);
   }
 
-  const CompositeConditionFilter *composite_condition_filter = dynamic_cast<const CompositeConditionFilter *>(filter);
+  const auto *composite_condition_filter = dynamic_cast<const CompositeConditionFilter *>(filter);
   if (composite_condition_filter != nullptr) {
     int filter_num = composite_condition_filter->filter_num();
     for (int i = 0; i < filter_num; i++) {
       IndexScanner *scanner = find_index_for_scan(&composite_condition_filter->filter(i));
       if (scanner != nullptr) {
-        return scanner;  // 可以找到一个最优的，比如比较符号是=
+        return scanner;  // 可以找到一个最优的，比如比较符号是 =
       }
     }
   }
