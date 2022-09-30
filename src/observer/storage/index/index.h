@@ -45,6 +45,7 @@ public:
 
   virtual RC insert_entry(const char *record, const RID *rid) = 0;
   virtual RC delete_entry(const char *record, const RID *rid) = 0;
+  virtual RC check_unique_constraint(const char *record) = 0;
 
   virtual IndexScanner *create_scanner(
       const char *left_key, int left_len, bool left_inclusive,

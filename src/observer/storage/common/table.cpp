@@ -29,6 +29,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/bplus_tree_index.h"
 #include "storage/trx/trx.h"
 #include "util/date.h"
+#include "common/lang/defer.h"
 
 Table::~Table()
 {
@@ -278,9 +279,17 @@ RC Table::insert_record(Trx *trx, int value_num, const Value *values)
   }
 
   char *record_data;
+  DEFER([&]() { delete[] record_data; });
   RC rc = make_record(value_num, values, record_data);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to create a record. rc=%d:%s", rc, strrc(rc));
+    return rc;
+  }
+
+  // TODO: listener
+  rc = check_unique_constraint(record_data);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to insert a record due to violate unique constraint");
     return rc;
   }
 
@@ -288,7 +297,6 @@ RC Table::insert_record(Trx *trx, int value_num, const Value *values)
   record.set_data(record_data);
   // record.valid = true;
   rc = insert_record(trx, &record);
-  delete[] record_data;
   return rc;
 }
 
@@ -304,6 +312,9 @@ const TableMeta &Table::table_meta() const
 
 RC Table::make_record(int value_num, const Value *values, char *&record_out)
 {
+  int record_size = table_meta_.record_size();
+  char *record = new char[record_size];
+
   // 检查字段类型是否一致
   if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
     LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name());
@@ -325,9 +336,6 @@ RC Table::make_record(int value_num, const Value *values, char *&record_out)
   }
 
   // 复制所有字段的值
-  int record_size = table_meta_.record_size();
-  char *record = new char[record_size];
-
   for (int i = 0; i < value_num; i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     const Value &value = values[i];
@@ -382,7 +390,7 @@ RC Table::get_record_scanner(RecordFileScanner &scanner)
 }
 
 /**
- * 为了不把Record暴露出去，封装一下
+ * 为了不把 Record 暴露出去，封装一下
  */
 class RecordReaderScanAdapter {
 public:
@@ -585,6 +593,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
     LOG_ERROR("Failed to add index (%s) on table (%s). error=%d:%s", index_name, name(), rc, strrc(rc));
     return rc;
   }
+
   // 创建元数据临时文件
   std::string tmp_file = table_meta_file(base_dir_.c_str(), name()) + ".tmp";
   std::fstream fs;
@@ -754,6 +763,18 @@ RC Table::rollback_delete(Trx *trx, const RID &rid)
   }
 
   return trx->rollback_delete(this, record);  // update record in place
+}
+
+RC Table::check_unique_constraint(const char *record_data)
+{
+  RC rc = RC::SUCCESS;
+  for (Index *index : indexes_) {
+    rc = index->check_unique_constraint(record_data);
+    if (rc != RC::SUCCESS) {
+      break;
+    }
+  }
+  return rc;
 }
 
 RC Table::insert_entry_of_indexes(const char *record, const RID &rid)

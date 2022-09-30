@@ -98,6 +98,8 @@ private:
 
   RC insert_record(Trx *trx, Record *record);
 
+  RC check_unique_constraint(const char *record_data);
+
 private:
   friend class RecordUpdater;
   friend class RecordDeleter;

@@ -29,6 +29,7 @@ public:
 
   RC insert_entry(const char *record, const RID *rid) override;
   RC delete_entry(const char *record, const RID *rid) override;
+  RC check_unique_constraint(const char *record) override;
 
   /**
    * 扫描指定范围的数据

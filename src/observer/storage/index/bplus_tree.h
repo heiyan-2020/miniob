@@ -197,9 +197,9 @@ struct IndexFileHeader {
   int32_t leaf_max_size;
   int32_t attr_total_length;
   int32_t key_length;  // attr total length + sizeof(RID)
+  int32_t attr_num;
   AttrType attr_type[MAX_ATTR_NUM]; // TODO: support up to 4 multi index
   int32_t attr_length[MAX_ATTR_NUM];
-  int32_t attr_num;
 
   std::string to_string() const
   {
@@ -207,6 +207,7 @@ struct IndexFileHeader {
 
     ss << "attr_total_length:" << attr_total_length << ","
        << "key_length:" << key_length << ","
+       << "attr_num:" << attr_num << ","
        << "attr_type:";
     for (auto i = 0; i < attr_num; ++i) {
       ss << attr_type[i] << ",";
