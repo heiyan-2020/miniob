@@ -83,6 +83,7 @@ ParserContext *get_context(yyscan_t scanner)
         CHAR_T
         FLOAT_T
         DATE_T
+        TEXT_T
         HELP
         EXIT
         DOT // QUOTE
@@ -288,6 +289,7 @@ attr_def:
 	{
 		AttrInfo attribute;
 		size_t len;
+		AttrType type = $2;
 		switch ($2) {
 			case CHARS:
 			case INTS:
@@ -297,11 +299,15 @@ attr_def:
 			case DATES:
 				len = 12;
 				break;
+			case TEXTS:
+				type = CHARS;
+				len = 4096;
+				break;
 			default:
 				// TODO: error handle
 				assert(0);
 		}
-		attr_info_init(&attribute, $1, $2, len);
+		attr_info_init(&attribute, $1, type, len);
 		create_table_append_attribute(&CONTEXT->ssql->sstr.create_table, &attribute);
 	}
 ;
@@ -329,6 +335,10 @@ type:
 |	DATE_T
 	{
 		$$ = DATES;
+	}
+|	TEXT_T
+	{
+		$$ = TEXTS;
 	}
 ;
 

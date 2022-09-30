@@ -255,6 +255,7 @@ RC insert_record_from_file(
       case CHARS: {
         value_init_char(&record_values[i], file_value.c_str());
       } break;
+      // TODO: other field types
       default: {
         errmsg << "Unsupported field type to loading: " << field->type();
         rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
