@@ -573,6 +573,7 @@ RC ExecuteStage::do_insert(SQLStageEvent *sql_event)
     if (rc != RC::SUCCESS) {
       session_event->set_response("FAILURE\n");
       // TODO: rollback previously inserted records.
+      return rc;
     }
   }
   session_event->set_response("SUCCESS\n");

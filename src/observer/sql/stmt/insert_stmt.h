@@ -24,7 +24,7 @@ class Db;
 class InsertStmt : public Stmt {
 public:
   InsertStmt() = default;
-  InsertStmt(Table *table, std::vector<const Value *> valuePtrs, int unit_cnt, int value_amount);
+  InsertStmt(Table *table, std::vector<const Value *> value_ptrs, int unit_cnt, int value_amount);
 
   StmtType type() const override
   {

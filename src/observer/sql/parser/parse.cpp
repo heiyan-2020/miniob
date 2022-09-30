@@ -183,7 +183,7 @@ void inserts_destroy(Inserts *inserts)
   free(inserts->relation_name);
   inserts->relation_name = nullptr;
 
-  for (size_t k = 0; k < inserts->unit_cnt; k++) {
+  for (int k = 0; k < inserts->unit_cnt; k++) {
     for (size_t i = 0; i < inserts->units[k].value_num; i++) {
       value_destroy(&inserts->units[k].values[i]);
     }
