@@ -17,8 +17,7 @@ bool Date::validate() const
   if (month > 12 || month < 1) {
     return false;
   } else {
-    if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0)
-    {
+    if ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0) {
       if (month == 2) {
         if (day > 29 || day < 1)
           return false;

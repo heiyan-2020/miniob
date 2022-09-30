@@ -90,9 +90,7 @@ RC BplusTreeIndex::open(const char *file_name, IndexMeta index_meta, std::vector
 RC BplusTreeIndex::close()
 {
   if (inited_) {
-    LOG_INFO("Begin to close index, index:%s, fields:%s",
-        index_meta_.name().c_str(),
-        index_meta_.fields_str().c_str());
+    LOG_INFO("Begin to close index, index:%s, fields:%s", index_meta_.name().c_str(), index_meta_.fields_str().c_str());
     index_handler_.close();
     inited_ = false;
   }

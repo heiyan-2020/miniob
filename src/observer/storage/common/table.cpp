@@ -537,7 +537,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
     return RC::INVALID_ARGUMENT;
   }
 
-  for (const auto& attribute_name : attribute_names) {
+  for (const auto &attribute_name : attribute_names) {
     if (common::is_blank(attribute_name.c_str())) {
       LOG_INFO("Invalid input arguments, table name is %s, attribute_name is blank", name());
       return RC::INVALID_ARGUMENT;
@@ -550,7 +550,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   }
 
   std::vector<FieldMeta> field_metas{};
-  for (const auto& attribute_name : attribute_names) {
+  for (const auto &attribute_name : attribute_names) {
     const FieldMeta *field_meta = table_meta_.field(attribute_name.c_str());
     if (!field_meta) {
       LOG_INFO("Invalid input arguments, there is no field of %s in table %s", attribute_name.c_str(), name());
@@ -974,7 +974,7 @@ RC Table::drop(const char *table_name)
   }
 
   // drop index file
-  for (Index *index: indexes_) {
+  for (Index *index : indexes_) {
     std::string index_file = table_index_file(base_dir_.c_str(), table_name, index->index_meta().name().c_str());
     LOG_INFO("Begin to drop index file %s", index_file.c_str());
     bpm.close_file(index_file.c_str());  // ignore rc

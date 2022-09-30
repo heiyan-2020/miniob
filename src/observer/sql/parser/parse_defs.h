@@ -45,11 +45,11 @@ typedef struct _Value {
 } Value;
 
 typedef struct _Condition {
-  int left_is_attr;    // TRUE if left-hand side is an attribute
-  Value left_value;    // left-hand side value if left_is_attr = FALSE
-  RelAttr left_attr;   // left-hand side attribute
+  int left_is_attr;   // TRUE if left-hand side is an attribute
+  Value left_value;   // left-hand side value if left_is_attr = FALSE
+  RelAttr left_attr;  // left-hand side attribute
 
-  CompOp comp;         // comparison operator
+  CompOp comp;  // comparison operator
 
   int right_is_attr;   // TRUE if right-hand side is an attribute
   RelAttr right_attr;  // right-hand side attribute
@@ -68,12 +68,12 @@ typedef struct {
 
 typedef struct {
   size_t value_num;
-  Value  values[MAX_NUM];
+  Value values[MAX_NUM];
 } InsertUnit;
 
 // struct of insert
 typedef struct {
-  char *relation_name;    // Relation to insert into
+  char *relation_name;  // Relation to insert into
   int unit_cnt;
   InsertUnit units[MAX_NUM];
 } Inserts;

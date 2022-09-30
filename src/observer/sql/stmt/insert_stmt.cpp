@@ -18,10 +18,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/table.h"
 
 InsertStmt::InsertStmt(Table *table, std::vector<const Value *> valuePtrs, int unit_cnt, int value_amount)
-    : table_(table), value_ptrs_(valuePtrs), unit_amount_(unit_cnt), value_amount_(value_amount)
-{
-
-}
+    : table_(table), value_ptrs_(valuePtrs), value_amount_(value_amount), unit_amount_(unit_cnt)
+{}
 
 RC InsertStmt::create(Db *db, const Inserts &inserts, Stmt *&stmt)
 {
@@ -42,7 +40,7 @@ RC InsertStmt::create(Db *db, const Inserts &inserts, Stmt *&stmt)
   const int field_num = table_meta.field_num() - table_meta.sys_field_num();
   const int sys_field_num = table_meta.sys_field_num();
 
-  for (size_t k = 0; k < inserts.unit_cnt; k++) {
+  for (int k = 0; k < inserts.unit_cnt; k++) {
     /* check value numbers are correct in each unit. */
     const Value *values = inserts.units[k].values;
     const int value_num = inserts.units[0].value_num;
@@ -68,7 +66,7 @@ RC InsertStmt::create(Db *db, const Inserts &inserts, Stmt *&stmt)
   }
   // everything alright
   std::vector<const Value *> valuePtrs;
-  for (size_t k = 0; k < inserts.unit_cnt; k++) {
+  for (int k = 0; k < inserts.unit_cnt; k++) {
     valuePtrs.push_back(inserts.units[k].values);
   }
   stmt = new InsertStmt(table, valuePtrs, inserts.unit_cnt, inserts.units[0].value_num);

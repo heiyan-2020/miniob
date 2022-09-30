@@ -123,9 +123,7 @@ void attr_info_destroy(AttrInfo *attr_info)
 }
 
 void selects_init(Selects *selects, ...)
-{
-
-}
+{}
 void selects_append_attribute(Selects *selects, RelAttr *rel_attr)
 {
   selects->attributes[selects->attr_num++] = *rel_attr;
@@ -163,7 +161,8 @@ void selects_destroy(Selects *selects)
   selects->condition_num = 0;
 }
 
-void mark() {
+void mark()
+{
   std::cout << "hello, I'm invoked." << std::endl;
 }
 
@@ -275,8 +274,7 @@ void drop_table_destroy(DropTable *drop_table)
   drop_table->relation_name = nullptr;
 }
 
-void create_index_init(
-    CreateIndex *create_index, const char *index_name, const char *relation_name, int is_unique)
+void create_index_init(CreateIndex *create_index, const char *index_name, const char *relation_name, int is_unique)
 {
   create_index->index_name = strdup(index_name);
   create_index->relation_name = strdup(relation_name);

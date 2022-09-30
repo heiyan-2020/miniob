@@ -500,8 +500,7 @@ RC ExecuteStage::do_create_index(SQLStageEvent *sql_event)
     return RC::GENERIC_ERROR;  // TODO: support up to 4 multi index
   }
 
-  RC rc = table->create_index(nullptr,
-      create_index.index_name, attribute_names, create_index.is_unique);
+  RC rc = table->create_index(nullptr, create_index.index_name, attribute_names, create_index.is_unique);
   sql_event->session_event()->set_response(rc == RC::SUCCESS ? "SUCCESS\n" : "FAILURE\n");
   return rc;
 }
@@ -573,7 +572,7 @@ RC ExecuteStage::do_insert(SQLStageEvent *sql_event)
 
     if (rc != RC::SUCCESS) {
       session_event->set_response("FAILURE\n");
-      //TODO: rollback previously inserted records.
+      // TODO: rollback previously inserted records.
     }
   }
   session_event->set_response("SUCCESS\n");

@@ -34,9 +34,8 @@ public:
   /**
    * 扫描指定范围的数据
    */
-  IndexScanner *create_scanner(
-      const char *left_key, int left_len, bool left_inclusive,
-      const char *right_key, int right_len, bool right_inclusive) override;
+  IndexScanner *create_scanner(const char *left_key, int left_len, bool left_inclusive, const char *right_key,
+      int right_len, bool right_inclusive) override;
 
   RC sync() override;
 

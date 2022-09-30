@@ -751,8 +751,7 @@ RC BplusTreeHandler::sync()
   return disk_buffer_pool_->flush_all_pages();
 }
 
-RC BplusTreeHandler::create(
-    const char *file_name, std::vector<AttrType> attr_types, std::vector<int> attr_lengths,
+RC BplusTreeHandler::create(const char *file_name, std::vector<AttrType> attr_types, std::vector<int> attr_lengths,
     int internal_max_size, int leaf_max_size)
 {
   assert(attr_types.size() == attr_lengths.size());
@@ -1460,8 +1459,7 @@ RC BplusTreeHandler::get_entry(const char *user_key, int key_len, std::list<RID>
 {
   BplusTreeScanner scanner(*this);
   // TODO: key_len unused
-  RC rc = scanner.open(user_key, key_len, true /* left_inclusive */,
-      user_key, key_len, true /* right_inclusive */);
+  RC rc = scanner.open(user_key, key_len, true /* left_inclusive */, user_key, key_len, true /* right_inclusive */);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to open scanner. rc=%d:%s", rc, strrc(rc));
     return rc;

@@ -27,7 +27,6 @@ See the Mulan PSL v2 for more details. */
 #include "util/comparator.h"
 #include "util/date.h"
 
-
 class AttrComparator {
 public:
   void init(AttrType type, int length)
@@ -198,7 +197,7 @@ struct IndexFileHeader {
   int32_t attr_total_length;
   int32_t key_length;  // attr total length + sizeof(RID)
   int32_t attr_num;
-  AttrType attr_type[MAX_ATTR_NUM]; // TODO: support up to 4 multi index
+  AttrType attr_type[MAX_ATTR_NUM];  // TODO: support up to 4 multi index
   int32_t attr_length[MAX_ATTR_NUM];
 
   std::string to_string() const
@@ -413,9 +412,7 @@ private:
 
 class BplusTreeHandler {
 public:
-
-  RC create(
-      const char *file_name, std::vector<AttrType> attr_types, std::vector<int> attr_lengths,
+  RC create(const char *file_name, std::vector<AttrType> attr_types, std::vector<int> attr_lengths,
       int internal_max_size = -1, int leaf_max_size = -1);
 
   RC open(const char *file_name);
@@ -516,9 +513,8 @@ public:
    * @param right_len right_user_key 的内存大小 - 只有在变长字段中才会关注
    * @param right_inclusive 右边界的值是否包含在内
    */
-  RC open(
-      const char *left_user_key, int left_len, bool left_inclusive,
-      const char *right_user_key, int right_len, bool right_inclusive);
+  RC open(const char *left_user_key, int left_len, bool left_inclusive, const char *right_user_key, int right_len,
+      bool right_inclusive);
 
   RC next_entry(RID *rid);
 
