@@ -35,7 +35,7 @@ struct RID {
   RID(const PageNum _page_num, const SlotNum _slot_num) : page_num(_page_num), slot_num(_slot_num)
   {}
 
-  const std::string to_string() const
+  std::string to_string() const
   {
     std::stringstream ss;
 

@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_COMMON_INDEX_H_
 #define __OBSERVER_STORAGE_COMMON_INDEX_H_
 
-#include <stddef.h>
+#include <cstddef>
 #include <vector>
 
 #include "rc.h"
@@ -46,17 +46,18 @@ public:
   virtual RC insert_entry(const char *record, const RID *rid) = 0;
   virtual RC delete_entry(const char *record, const RID *rid) = 0;
 
-  virtual IndexScanner *create_scanner(const char *left_key, int left_len, bool left_inclusive, const char *right_key,
-      int right_len, bool right_inclusive) = 0;
+  virtual IndexScanner *create_scanner(
+      const char *left_key, int left_len, bool left_inclusive,
+      const char *right_key, int right_len, bool right_inclusive) = 0;
 
   virtual RC sync() = 0;
 
 protected:
-  RC init(const IndexMeta &index_meta, const FieldMeta &field_meta);
+  RC init(IndexMeta index_meta, std::vector<FieldMeta> field_metas);
 
 protected:
   IndexMeta index_meta_;
-  FieldMeta field_meta_;  /// 当前实现仅考虑一个字段的索引
+  std::vector<FieldMeta> field_metas_;
 };
 
 class IndexScanner {
@@ -66,7 +67,7 @@ public:
 
   /**
    * 遍历元素数据
-   * 如果没有更多的元素，返回RECORD_EOF
+   * 如果没有更多的元素，返回 RECORD_EOF
    */
   virtual RC next_entry(RID *rid) = 0;
   virtual RC destroy() = 0;

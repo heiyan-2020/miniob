@@ -49,8 +49,8 @@ public:
   int field_num() const;  // sys field included
   int sys_field_num() const;
 
-  const IndexMeta *index(const char *name) const;
-  const IndexMeta *find_index_by_field(const char *field) const;
+  const IndexMeta *index(const std::string &name) const;
+  const IndexMeta *find_index_by_field(const std::vector<std::string> &fields) const;
   const IndexMeta *index(int i) const;
   int index_num() const;
 
@@ -68,12 +68,12 @@ protected:
 
 protected:
   std::string name_;
-  std::vector<FieldMeta> fields_;  // 包含sys_fields
+  std::vector<FieldMeta> fields_;  // 包含 sys_fields
   std::vector<IndexMeta> indexes_;
 
   int record_size_ = 0;
 
-  //@@@ TODO why used static variable?
+  // TODO: why used static variable?
   static std::vector<FieldMeta> sys_fields_;
 };
 

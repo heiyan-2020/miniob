@@ -231,16 +231,16 @@ create_index:
 ;
 
 attr_ref:
-	/* empty */
-|	COMMA attr_ref attr_ref_list
-	{}
-;
-
-attr_ref_list:
 	ID
 	{
 		create_index_append_attribute(&CONTEXT->ssql->sstr.create_index, $1);
 	}
+;
+
+attr_ref_list:
+	/* empty */
+|	COMMA attr_ref attr_ref_list
+	{}
 ;
 
 unique_opt:

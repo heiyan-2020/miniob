@@ -148,26 +148,30 @@ RC Table::open(const char *meta_file, const char *base_dir)
 
   const int index_num = table_meta_.index_num();
   for (int i = 0; i < index_num; i++) {
+    std::vector<FieldMeta> field_metas{};
     const IndexMeta *index_meta = table_meta_.index(i);
-    const FieldMeta *field_meta = table_meta_.field(index_meta->field());
-    if (field_meta == nullptr) {
-      LOG_ERROR("Found invalid index meta info which has a non-exists field. table=%s, index=%s, field=%s",
-          name(),
-          index_meta->name(),
-          index_meta->field());
-      // skip cleanup
-      //  do all cleanup action in destructive Table function
-      return RC::GENERIC_ERROR;
+    for (const auto &field_name : index_meta->fields()) {
+      const FieldMeta *field_meta = table_meta_.field(field_name.c_str());
+      if (field_meta == nullptr) {
+        LOG_ERROR("Found invalid index meta info which has a non-exists field. table=%s, index=%s, fields=%s",
+            name(),
+            index_meta->name().c_str(),
+            field_name.c_str());
+        // skip cleanup
+        // do all cleanup action in destructive Table function
+        return RC::GENERIC_ERROR;
+      }
+      field_metas.push_back(*field_meta);
     }
 
-    BplusTreeIndex *index = new BplusTreeIndex();
-    std::string index_file = table_index_file(base_dir, name(), index_meta->name());
-    rc = index->open(index_file.c_str(), *index_meta, *field_meta);
+    auto *index = new BplusTreeIndex();
+    std::string index_file = table_index_file(base_dir, name(), index_meta->name().c_str());
+    rc = index->open(index_file.c_str(), *index_meta, field_metas);
     if (rc != RC::SUCCESS) {
       delete index;
       LOG_ERROR("Failed to open index. table=%s, index=%s, file=%s, rc=%d:%s",
           name(),
-          index_meta->name(),
+          index_meta->name().c_str(),
           index_file.c_str(),
           rc,
           strrc(rc));
@@ -311,7 +315,7 @@ RC Table::make_record(int value_num, const Value *values, char *&record_out)
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     const Value &value = values[i];
     if (field->type() != value.type) {
-      LOG_ERROR("Invalid value type. table name =%s, field name=%s, type=%d, but given=%d",
+      LOG_ERROR("Invalid value type. table name =%s, fields name=%s, type=%d, but given=%d",
           table_meta_.name(),
           field->name(),
           field->type(),
@@ -518,38 +522,46 @@ static RC insert_index_record_reader_adapter(Record *record, void *context)
   return inserter.insert_index(record);
 }
 
-RC Table::create_index(Trx *trx, const char *index_name, const char *attribute_name, int is_unique)
+RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique)
 {
-  if (common::is_blank(index_name) || common::is_blank(attribute_name)) {
-    LOG_INFO("Invalid input arguments, table name is %s, index_name is blank or attribute_name is blank", name());
+  if (common::is_blank(index_name)) {
+    LOG_INFO("Invalid input arguments, table name is %s, index_name is blank", name());
     return RC::INVALID_ARGUMENT;
   }
-  if (table_meta_.index(index_name) != nullptr || table_meta_.find_index_by_field((attribute_name))) {
-    LOG_INFO("Invalid input arguments, table name is %s, index %s exist or attribute %s exist index",
-        name(),
-        index_name,
-        attribute_name);
+
+  for (const auto& attribute_name : attribute_names) {
+    if (common::is_blank(attribute_name.c_str())) {
+      LOG_INFO("Invalid input arguments, table name is %s, attribute_name is blank", name());
+      return RC::INVALID_ARGUMENT;
+    }
+  }
+
+  if (table_meta_.index(index_name) != nullptr || table_meta_.find_index_by_field(attribute_names)) {
+    LOG_INFO("Invalid input arguments, table name is %s, index exist or attributes exist on index", name());
     return RC::SCHEMA_INDEX_EXIST;
   }
 
-  const FieldMeta *field_meta = table_meta_.field(attribute_name);
-  if (!field_meta) {
-    LOG_INFO("Invalid input arguments, there is no field of %s in table:%s.", attribute_name, name());
-    return RC::SCHEMA_FIELD_MISSING;
+  std::vector<FieldMeta> field_metas{};
+  for (const auto& attribute_name : attribute_names) {
+    const FieldMeta *field_meta = table_meta_.field(attribute_name.c_str());
+    if (!field_meta) {
+      LOG_INFO("Invalid input arguments, there is no field of %s in table %s", attribute_name.c_str(), name());
+      return RC::SCHEMA_FIELD_MISSING;
+    }
+    field_metas.emplace_back(*field_meta);
   }
 
   IndexMeta new_index_meta;
-  RC rc = new_index_meta.init(index_name, *field_meta, is_unique);
+  RC rc = new_index_meta.init(index_name, attribute_names, is_unique);
   if (rc != RC::SUCCESS) {
-    LOG_INFO("Failed to init IndexMeta in table:%s, index_name:%s, field_name:%s, is_unique:%d",
-        name(), index_name, attribute_name, is_unique);
+    LOG_INFO("Failed to init IndexMeta in table %s", name());
     return rc;
   }
 
   // 创建索引相关数据
-  BplusTreeIndex *index = new BplusTreeIndex();
+  auto *index = new BplusTreeIndex();
   std::string index_file = table_index_file(base_dir_.c_str(), name(), index_name);
-  rc = index->create(index_file.c_str(), new_index_meta, *field_meta);
+  rc = index->create(index_file.c_str(), new_index_meta, field_metas);
   if (rc != RC::SUCCESS) {
     delete index;
     LOG_ERROR("Failed to create bplus tree index. file name=%s, rc=%d:%s", index_file.c_str(), rc, strrc(rc));
@@ -773,19 +785,16 @@ RC Table::delete_entry_of_indexes(const char *record, const RID &rid, bool error
 Index *Table::find_index(const char *index_name) const
 {
   for (Index *index : indexes_) {
-    if (0 == strcmp(index->index_meta().name(), index_name)) {
+    if (0 == strcmp(index->index_meta().name().c_str(), index_name)) {
       return index;
     }
   }
   return nullptr;
 }
+
 Index *Table::find_index_by_field(const char *field_name) const
 {
-  const TableMeta &table_meta = this->table_meta();
-  const IndexMeta *index_meta = table_meta.find_index_by_field(field_name);
-  if (index_meta != nullptr) {
-    return this->find_index(index_meta->name());
-  }
+  // TODO
   return nullptr;
 }
 
@@ -806,16 +815,17 @@ IndexScanner *Table::find_index_for_scan(const DefaultConditionFilter &filter)
 
   const FieldMeta *field_meta = table_meta_.find_field_by_offset(field_cond_desc->attr_offset);
   if (nullptr == field_meta) {
-    LOG_PANIC("Cannot find field by offset %d. table=%s", field_cond_desc->attr_offset, name());
+    LOG_PANIC("Cannot find fields by offset %d. table=%s", field_cond_desc->attr_offset, name());
     return nullptr;
   }
 
-  const IndexMeta *index_meta = table_meta_.find_index_by_field(field_meta->name());
+  std::vector<std::string> fields{field_meta->name()};
+  const IndexMeta *index_meta = table_meta_.find_index_by_field(fields);
   if (nullptr == index_meta) {
     return nullptr;
   }
 
-  Index *index = find_index(index_meta->name());
+  Index *index = find_index(index_meta->name().c_str());
   if (nullptr == index) {
     return nullptr;
   }
@@ -899,7 +909,7 @@ RC Table::sync()
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Failed to flush index's pages. table=%s, index=%s, rc=%d:%s",
           name(),
-          index->index_meta().name(),
+          index->index_meta().name().c_str(),
           rc,
           strrc(rc));
       return rc;
@@ -937,8 +947,7 @@ RC Table::drop(const char *table_name)
 
   // drop index file
   for (Index *index: indexes_) {
-    std::string index_file = table_index_file(base_dir_.c_str(), table_name,
-        index->index_meta().name());
+    std::string index_file = table_index_file(base_dir_.c_str(), table_name, index->index_meta().name().c_str());
     LOG_INFO("Begin to drop index file %s", index_file.c_str());
     bpm.close_file(index_file.c_str());  // ignore rc
     res = remove(index_file.c_str());

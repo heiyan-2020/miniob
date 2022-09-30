@@ -17,7 +17,7 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_COMMON_INDEX_MANAGER_H_
 #define __OBSERVER_STORAGE_COMMON_INDEX_MANAGER_H_
 
-#include <string.h>
+#include <cstring>
 #include <sstream>
 #include <functional>
 
@@ -27,8 +27,6 @@ See the Mulan PSL v2 for more details. */
 #include "util/comparator.h"
 #include "util/date.h"
 
-#define EMPTY_RID_PAGE_NUM -1
-#define EMPTY_RID_SLOT_NUM -1
 
 class AttrComparator {
 public:
@@ -72,30 +70,34 @@ private:
 
 class KeyComparator {
 public:
-  void init(AttrType type, int length)
+  void init(std::vector<AttrType> attr_types, std::vector<int> attr_lengths)
   {
-    attr_comparator_.init(type, length);
-  }
-
-  const AttrComparator &attr_comparator() const
-  {
-    return attr_comparator_;
+    assert(attr_types.size() == attr_lengths.size());
+    AttrComparator comparator{};
+    for (std::vector<AttrType>::size_type i = 0; i < attr_types.size(); ++i) {
+      comparator.init(attr_types[i], attr_lengths[i]);
+      attr_comparators_.push_back(comparator);
+    }
   }
 
   int operator()(const char *v1, const char *v2) const
   {
-    int result = attr_comparator_(v1, v2);
-    if (result != 0) {
-      return result;
+    int attr_length{};
+    for (auto comparator : attr_comparators_) {
+      int result = comparator(v1 + attr_length, v2 + attr_length);
+      if (result != 0) {
+        return result;
+      }
+      attr_length += comparator.attr_length();
     }
 
-    const RID *rid1 = (const RID *)(v1 + attr_comparator_.attr_length());
-    const RID *rid2 = (const RID *)(v2 + attr_comparator_.attr_length());
+    const RID *rid1 = (const RID *)(v1 + attr_length);
+    const RID *rid2 = (const RID *)(v2 + attr_length);
     return RID::compare(rid1, rid2);
   }
 
 private:
-  AttrComparator attr_comparator_;
+  std::vector<AttrComparator> attr_comparators_;
 };
 
 class AttrPrinter {
@@ -148,34 +150,41 @@ private:
 
 class KeyPrinter {
 public:
-  void init(AttrType type, int length)
+  void init(std::vector<AttrType> attr_types, std::vector<int> attr_lengths)
   {
-    attr_printer_.init(type, length);
-  }
-
-  const AttrPrinter &attr_printer() const
-  {
-    return attr_printer_;
+    assert(attr_types.size() == attr_lengths.size());
+    AttrPrinter printer{};
+    for (std::vector<AttrType>::size_type i = 0; i < attr_types.size(); ++i) {
+      printer.init(attr_types[i], attr_lengths[i]);
+      attr_printers_.push_back(printer);
+    }
   }
 
   std::string operator()(const char *v) const
   {
     std::stringstream ss;
-    ss << "{key:" << attr_printer_(v) << ",";
+    ss << "{key:";
 
-    const RID *rid = (const RID *)(v + attr_printer_.attr_length());
+    int attr_length{};
+    for (auto printer : attr_printers_) {
+      ss << printer(v + attr_length) << ",";
+      attr_length += printer.attr_length();
+    }
+
+    const RID *rid = (const RID *)(v + attr_length);
     ss << "rid:{" << rid->to_string() << "}}";
     return ss.str();
   }
 
 private:
-  AttrPrinter attr_printer_;
+  std::vector<AttrPrinter> attr_printers_;
 };
+
+#define MAX_ATTR_NUM 4
 
 /**
  * the meta information of bplus tree
  * this is the first page of bplus tree.
- * only one field can be supported, can you extend it to multi-fields?
  */
 struct IndexFileHeader {
   IndexFileHeader()
@@ -186,18 +195,27 @@ struct IndexFileHeader {
   PageNum root_page;
   int32_t internal_max_size;
   int32_t leaf_max_size;
-  int32_t attr_length;
-  int32_t key_length;  // attr length + sizeof(RID)
-  AttrType attr_type;
+  int32_t attr_total_length;
+  int32_t key_length;  // attr total length + sizeof(RID)
+  AttrType attr_type[MAX_ATTR_NUM]; // TODO: support up to 4 multi index
+  int32_t attr_length[MAX_ATTR_NUM];
+  int32_t attr_num;
 
-  const std::string to_string()
+  std::string to_string() const
   {
     std::stringstream ss;
 
-    ss << "attr_length:" << attr_length << ","
+    ss << "attr_total_length:" << attr_total_length << ","
        << "key_length:" << key_length << ","
-       << "attr_type:" << attr_type << ","
-       << "root_page:" << root_page << ","
+       << "attr_type:";
+    for (auto i = 0; i < attr_num; ++i) {
+      ss << attr_type[i] << ",";
+    }
+    ss << "attr_length:";
+    for (auto i = 0; i < attr_num; ++i) {
+      ss << attr_length[i] << ",";
+    }
+    ss << "root_page:" << root_page << ","
        << "internal_max_size:" << internal_max_size << ","
        << "leaf_max_size:" << leaf_max_size << ";";
 
@@ -205,9 +223,8 @@ struct IndexFileHeader {
   }
 };
 
-#define RECORD_RESERVER_PAIR_NUM 2
 /**
- * the common part of page describtion of bplus tree
+ * the common part of page description of bplus tree
  * storage format:
  * | page type | item number | parent page id |
  */
@@ -395,50 +412,28 @@ private:
 
 class BplusTreeHandler {
 public:
-  /**
-   * 此函数创建一个名为fileName的索引。
-   * attrType描述被索引属性的类型，attrLength描述被索引属性的长度
-   */
-  RC create(
-      const char *file_name, AttrType attr_type, int attr_length, int internal_max_size = -1, int leaf_max_size = -1);
 
-  /**
-   * 打开名为fileName的索引文件。
-   * 如果方法调用成功，则indexHandle为指向被打开的索引句柄的指针。
-   * 索引句柄用于在索引中插入或删除索引项，也可用于索引的扫描
-   */
+  RC create(
+      const char *file_name, std::vector<AttrType> attr_types, std::vector<int> attr_lengths,
+      int internal_max_size = -1, int leaf_max_size = -1);
+
   RC open(const char *file_name);
 
-  /**
-   * 关闭句柄indexHandle对应的索引文件
-   */
   RC close();
 
-  /**
-   * 此函数向IndexHandle对应的索引中插入一个索引项。
-   * 参数user_key指向要插入的属性值，参数rid标识该索引项对应的元组，
-   * 即向索引中插入一个值为（user_key，rid）的键值对
-   * @note 这里假设user_key的内存大小与attr_length 一致
-   */
   RC insert_entry(const char *user_key, const RID *rid);
 
-  /**
-   * 从IndexHandle句柄对应的索引中删除一个值为（*pData，rid）的索引项
-   * @return RECORD_INVALID_KEY 指定值不存在
-   * @note 这里假设user_key的内存大小与attr_length 一致
-   */
   RC delete_entry(const char *user_key, const RID *rid);
 
   bool is_empty() const;
 
-  /**
-   * 获取指定值的record
-   * @param key_len user_key的长度
-   * @param rid  返回值，记录记录所在的页面号和slot
-   */
   RC get_entry(const char *user_key, int key_len, std::list<RID> &rids);
 
   RC sync();
+
+  void *alloc();
+
+  void free(void *buf);
 
   /**
    * Check whether current B+ tree is invalid or not.
@@ -513,32 +508,27 @@ public:
 
   /**
    * 扫描指定范围的数据
-   * @param left_user_key 扫描范围的左边界，如果是null，则没有左边界
-   * @param left_len left_user_key 的内存大小(只有在变长字段中才会关注)
+   * @param left_user_key 扫描范围的左边界，如果是 null，则没有左边界
+   * @param left_len left_user_key 的内存大小 - 只有在变长字段中才会关注
    * @param left_inclusive 左边界的值是否包含在内
-   * @param right_user_key 扫描范围的右边界。如果是null，则没有右边界
-   * @param right_len right_user_key 的内存大小(只有在变长字段中才会关注)
+   * @param right_user_key 扫描范围的右边界。如果是 null，则没有右边界
+   * @param right_len right_user_key 的内存大小 - 只有在变长字段中才会关注
    * @param right_inclusive 右边界的值是否包含在内
    */
-  RC open(const char *left_user_key, int left_len, bool left_inclusive, const char *right_user_key, int right_len,
-      bool right_inclusive);
+  RC open(
+      const char *left_user_key, int left_len, bool left_inclusive,
+      const char *right_user_key, int right_len, bool right_inclusive);
 
   RC next_entry(RID *rid);
 
   RC close();
 
 private:
-  /**
-   * 如果key的类型是CHARS, 扩展或缩减user_key的大小刚好是schema中定义的大小
-   */
-  RC fix_user_key(const char *user_key, int key_len, bool want_greater, char **fixed_key, bool *should_inclusive);
-
-private:
   bool inited_ = false;
   BplusTreeHandler &tree_handler_;
 
-  /// 使用左右叶子节点和位置来表示扫描的起始位置和终止位置
-  /// 起始位置和终止位置都是有效的数据
+  // 使用左右叶子节点和位置来表示扫描的起始位置和终止位置
+  // 起始位置和终止位置都是有效的数据
   Frame *left_frame_ = nullptr;
   Frame *right_frame_ = nullptr;
   int iter_index_ = -1;
