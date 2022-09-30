@@ -77,7 +77,7 @@ RC TableMeta::init(const char *name, int field_num, const AttrInfo attributes[])
     fields_[i] = sys_fields_[i];
   }
 
-  // 当前实现下，所有类型都是4字节对齐的，所以不再考虑字节对齐问题
+  // 当前实现下，所有类型都是 4 字节对齐的，所以不再考虑字节对齐问题
   int field_offset = sys_fields_.back().offset() + sys_fields_.back().len();
 
   for (int i = 0; i < field_num; i++) {
@@ -94,7 +94,7 @@ RC TableMeta::init(const char *name, int field_num, const AttrInfo attributes[])
   record_size_ = field_offset;
 
   name_ = name;
-  LOG_INFO("Sussessfully initialized table meta. table name=%s", name);
+  LOG_INFO("Successfully initialized table meta. table name=%s", name);
   return RC::SUCCESS;
 }
 
@@ -160,7 +160,7 @@ const IndexMeta *TableMeta::index(const std::string &name) const
   return nullptr;
 }
 
-const IndexMeta *TableMeta::find_index_by_field(const std::vector<std::string> &fields) const
+const IndexMeta *TableMeta::find_index_by_fields(const std::vector<std::string> &fields) const
 {
   for (const IndexMeta &index : indexes_) {
     if (index.fields() == fields) {

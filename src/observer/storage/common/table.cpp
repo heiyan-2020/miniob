@@ -42,7 +42,7 @@ Table::~Table()
     data_buffer_pool_ = nullptr;
   }
 
-  for (std::vector<Index *>::iterator it = indexes_.begin(); it != indexes_.end(); ++it) {
+  for (auto it = indexes_.begin(); it != indexes_.end(); ++it) {
     Index *index = *it;
     delete index;
   }
@@ -68,7 +68,7 @@ RC Table::create(
 
   RC rc = RC::SUCCESS;
 
-  // 使用 table_name.table记录一个表的元数据
+  // 使用 table_name.table 记录一个表的元数据
   // 判断表文件是否已经存在
   int fd = ::open(path, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
   if (fd < 0) {
@@ -536,7 +536,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
     }
   }
 
-  if (table_meta_.index(index_name) != nullptr || table_meta_.find_index_by_field(attribute_names)) {
+  if (table_meta_.index(index_name) != nullptr || table_meta_.find_index_by_fields(attribute_names)) {
     LOG_INFO("Invalid input arguments, table name is %s, index exist or attributes exist on index", name());
     return RC::SCHEMA_INDEX_EXIST;
   }
@@ -820,7 +820,7 @@ IndexScanner *Table::find_index_for_scan(const DefaultConditionFilter &filter)
   }
 
   std::vector<std::string> fields{field_meta->name()};
-  const IndexMeta *index_meta = table_meta_.find_index_by_field(fields);
+  const IndexMeta *index_meta = table_meta_.find_index_by_fields(fields);
   if (nullptr == index_meta) {
     return nullptr;
   }

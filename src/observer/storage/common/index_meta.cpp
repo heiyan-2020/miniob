@@ -72,13 +72,13 @@ RC IndexMeta::from_json(const TableMeta &table, const Json::Value &json_value, I
   int field_num = static_cast<int>(fields_value.size());
   for (int i = 0; i < field_num; i++) {
     const Json::Value &field_value = fields_value[i];
-    if (!fields_value.isString()) {
+    if (!field_value.isString()) {
       LOG_ERROR("Field name of index [%s] is not a string. json value=%s",
           name_value.asCString(),
           field_value.toStyledString().c_str());
       return RC::GENERIC_ERROR;
     }
-    fields.emplace_back(fields_value.asCString());
+    fields.emplace_back(field_value.asCString());
   }
 
   if (!is_unique_value.isInt()) {
