@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "rc.h"
 #include "sql/stmt/stmt.h"
+#include <vector>
 
 class Table;
 class Db;
@@ -23,7 +24,7 @@ class Db;
 class InsertStmt : public Stmt {
 public:
   InsertStmt() = default;
-  InsertStmt(Table *table, const Value *values, int value_amount);
+  InsertStmt(Table *table, std::vector<const Value *> valuePtrs, int unit_cnt, int value_amount);
 
   StmtType type() const override
   {
@@ -38,17 +39,24 @@ public:
   {
     return table_;
   }
-  const Value *values() const
-  {
-    return values_;
-  }
   int value_amount() const
   {
     return value_amount_;
   }
 
+  const Value *values(int k) const
+  {
+    return value_ptrs_[k];
+  }
+
+  int unit_amount() const
+  {
+    return unit_amount_;
+  }
+
 private:
   Table *table_ = nullptr;
-  const Value *values_ = nullptr;
+  std::vector<const Value *> value_ptrs_;
   int value_amount_ = 0;
+  int unit_amount_ = 0;
 };
