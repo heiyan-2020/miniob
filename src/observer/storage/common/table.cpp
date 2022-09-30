@@ -771,7 +771,7 @@ RC Table::check_unique_constraint(const char *record_data)
   for (Index *index : indexes_) {
     rc = index->check_unique_constraint(record_data);
     if (rc != RC::SUCCESS) {
-      break;
+      return rc;
     }
   }
   return rc;
