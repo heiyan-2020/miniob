@@ -815,12 +815,13 @@ Index *Table::find_index(const std::string &index_name) const
 
 Index *Table::find_index_by_field(const std::string &field_name) const
 {
-//  for (Index *index : indexes_) {
-//    // 只有多列索引的第一个字段出现在查询条件中，该索引才可能被使用
-//    if (index->index_meta().fields().at(0) == field_name) {
-//      return index;
-//    }
-//  }
+  for (Index *index : indexes_) {
+    // 只有多列索引的第一个字段出现在查询条件中，该索引才可能被使用
+    // 目前只考虑单列索引
+    if (index->index_meta().fields().size() == 1 && index->index_meta().fields().at(0) == field_name) {
+      return index;
+    }
+  }
   return nullptr;
 }
 
@@ -893,6 +894,8 @@ IndexScanner *Table::find_index_for_scan(const DefaultConditionFilter &filter)
     left_len = left_key != nullptr ? strlen(left_key) : 0;
     right_len = right_key != nullptr ? strlen(right_key) : 0;
   }
+
+  // TODO: support multi index
   return index->create_scanner(left_key, left_len, left_inclusive, right_key, right_len, right_inclusive);
 }
 

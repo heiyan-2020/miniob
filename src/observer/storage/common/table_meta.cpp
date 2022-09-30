@@ -162,12 +162,13 @@ const IndexMeta *TableMeta::index(const std::string &index_name) const
 
 const IndexMeta *TableMeta::find_index_by_field(const std::string &field_name) const
 {
-//  for (const IndexMeta &index : indexes_) {
-//    // 只有多列索引的第一个字段出现在查询条件中，该索引才可能被使用
-//    if (index.fields().at(0) == field_name) {
-//      return &index;
-//    }
-//  }
+  for (const IndexMeta &index : indexes_) {
+    // 只有多列索引的第一个字段出现在查询条件中，该索引才可能被使用
+    // 目前只考虑单列索引
+    if (index.fields().size() == 1 && index.fields().at(0) == field_name) {
+      return &index;
+    }
+  }
   return nullptr;
 }
 
