@@ -23,7 +23,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/lang/string.h"
 #include "storage/default/disk_buffer_pool.h"
 #include "storage/record/record_manager.h"
-#include "storage/common/condition_filter.h"
 #include "storage/common/meta_util.h"
 #include "storage/index/index.h"
 #include "storage/index/bplus_tree_index.h"
@@ -382,7 +381,7 @@ RC Table::init_record_handler(const char *base_dir)
 
 RC Table::get_record_scanner(RecordFileScanner &scanner)
 {
-  RC rc = scanner.open_scan(*data_buffer_pool_, nullptr);
+  RC rc = scanner.open_scan(*data_buffer_pool_);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("failed to open scanner. rc=%d:%s", rc, strrc(rc));
   }
@@ -415,15 +414,13 @@ static RC scan_record_reader_adapter(Record *record, void *context)
   return RC::SUCCESS;
 }
 
-RC Table::scan_record(
-    Trx *trx, ConditionFilter *filter, int limit, void *context, void (*record_reader)(const char *data, void *context))
+RC Table::scan_record(Trx *trx, int limit, void *context, void (*record_reader)(const char *, void *))
 {
   RecordReaderScanAdapter adapter(record_reader, context);
-  return scan_record(trx, filter, limit, (void *)&adapter, scan_record_reader_adapter);
+  return scan_record(trx, limit, (void *)&adapter, scan_record_reader_adapter);
 }
 
-RC Table::scan_record(
-    Trx *trx, ConditionFilter *filter, int limit, void *context, RC (*record_reader)(Record *record, void *context))
+RC Table::scan_record(Trx *trx, int limit, void *context, RC (*record_reader)(Record *, void *))
 {
   if (nullptr == record_reader) {
     return RC::INVALID_ARGUMENT;
@@ -437,14 +434,9 @@ RC Table::scan_record(
     limit = INT_MAX;
   }
 
-  IndexScanner *index_scanner = find_index_for_scan(filter);
-  if (index_scanner != nullptr) {
-    return scan_record_by_index(trx, index_scanner, filter, limit, context, record_reader);
-  }
-
   RC rc = RC::SUCCESS;
   RecordFileScanner scanner;
-  rc = scanner.open_scan(*data_buffer_pool_, filter);
+  rc = scanner.open_scan(*data_buffer_pool_);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("failed to open scanner. rc=%d:%s", rc, strrc(rc));
     return rc;
@@ -468,45 +460,6 @@ RC Table::scan_record(
   }
 
   scanner.close_scan();
-  return rc;
-}
-
-RC Table::scan_record_by_index(Trx *trx, IndexScanner *scanner, ConditionFilter *filter, int limit, void *context,
-    RC (*record_reader)(Record *, void *))
-{
-  RC rc = RC::SUCCESS;
-  RID rid;
-  Record record;
-  int record_count = 0;
-  while (record_count < limit) {
-    rc = scanner->next_entry(&rid);
-    if (rc != RC::SUCCESS) {
-      if (RC::RECORD_EOF == rc) {
-        rc = RC::SUCCESS;
-        break;
-      }
-      LOG_ERROR("Failed to scan table by index. rc=%d:%s", rc, strrc(rc));
-      break;
-    }
-
-    rc = record_handler_->get_record(&rid, &record);
-    if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to fetch record of rid=%d:%d, rc=%d:%s", rid.page_num, rid.slot_num, rc, strrc(rc));
-      break;
-    }
-
-    if ((trx == nullptr || trx->is_visible(this, &record)) && (filter == nullptr || filter->filter(record))) {
-      rc = record_reader(&record, context);
-      if (rc != RC::SUCCESS) {
-        LOG_TRACE("Record reader break the table scanning. rc=%d:%s", rc, strrc(rc));
-        break;
-      }
-    }
-
-    record_count++;
-  }
-
-  scanner->destroy();
   return rc;
 }
 
@@ -578,7 +531,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
 
   // 遍历当前的所有数据，插入这个索引
   IndexInserter index_inserter(index);
-  rc = scan_record(trx, nullptr, -1, &index_inserter, insert_index_record_reader_adapter);
+  rc = scan_record(trx, -1, &index_inserter, insert_index_record_reader_adapter);
   if (rc != RC::SUCCESS) {
     // rollback
     delete index;
@@ -630,12 +583,6 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   return rc;
 }
 
-RC Table::update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num,
-    const Condition conditions[], int *updated_count)
-{
-  return RC::GENERIC_ERROR;
-}
-
 RC Table::update_record(Trx *trx, Record *old_record, Record *new_record)
 {
   RC rc = RC::SUCCESS;
@@ -662,48 +609,6 @@ RC Table::update_record(Trx *trx, Record *old_record, Record *new_record)
     }
 
     rc = record_handler_->update_record(new_record);
-  }
-  return rc;
-}
-
-class RecordDeleter {
-public:
-  RecordDeleter(Table &table, Trx *trx) : table_(table), trx_(trx)
-  {}
-
-  RC delete_record(Record *record)
-  {
-    RC rc = RC::SUCCESS;
-    rc = table_.delete_record(trx_, record);
-    if (rc == RC::SUCCESS) {
-      deleted_count_++;
-    }
-    return rc;
-  }
-
-  int deleted_count() const
-  {
-    return deleted_count_;
-  }
-
-private:
-  Table &table_;
-  Trx *trx_;
-  int deleted_count_ = 0;
-};
-
-static RC record_reader_delete_adapter(Record *record, void *context)
-{
-  RecordDeleter &record_deleter = *(RecordDeleter *)context;
-  return record_deleter.delete_record(record);
-}
-
-RC Table::delete_record(Trx *trx, ConditionFilter *filter, int *deleted_count)
-{
-  RecordDeleter deleter(*this, trx);
-  RC rc = scan_record(trx, filter, -1, &deleter, record_reader_delete_adapter);
-  if (deleted_count != nullptr) {
-    *deleted_count = deleter.deleted_count();
   }
   return rc;
 }
@@ -742,7 +647,7 @@ RC Table::commit_delete(Trx *trx, const RID &rid)
         rid.page_num,
         rid.slot_num,
         rc,
-        strrc(rc));  // panic?
+        strrc(rc));  // TODO: panic?
   }
 
   rc = record_handler_->delete_record(&rid);
@@ -820,105 +725,6 @@ Index *Table::find_index_by_field(const std::string &field_name) const
     // 目前只考虑单列索引
     if (index->index_meta().fields().size() == 1 && index->index_meta().fields().at(0) == field_name) {
       return index;
-    }
-  }
-  return nullptr;
-}
-
-IndexScanner *Table::find_index_for_scan(const DefaultConditionFilter &filter)
-{
-  const ConDesc *field_cond_desc = nullptr;
-  const ConDesc *value_cond_desc = nullptr;
-  if (filter.left().is_attr && !filter.right().is_attr) {
-    field_cond_desc = &filter.left();
-    value_cond_desc = &filter.right();
-  } else if (filter.right().is_attr && !filter.left().is_attr) {
-    field_cond_desc = &filter.right();
-    value_cond_desc = &filter.left();
-  }
-  if (field_cond_desc == nullptr || value_cond_desc == nullptr) {
-    return nullptr;
-  }
-
-  const FieldMeta *field_meta = table_meta_.find_field_by_offset(field_cond_desc->attr_offset);
-  if (nullptr == field_meta) {
-    LOG_PANIC("Cannot find fields by offset %d. table=%s", field_cond_desc->attr_offset, name());
-    return nullptr;
-  }
-
-  const IndexMeta *index_meta = table_meta_.find_index_by_field(field_meta->name());
-  if (nullptr == index_meta) {
-    return nullptr;
-  }
-
-  Index *index = find_index(index_meta->name());
-  if (nullptr == index) {
-    return nullptr;
-  }
-
-  const char *left_key = nullptr;
-  const char *right_key = nullptr;
-  int left_len = 4;
-  int right_len = 4;
-  bool left_inclusive = false;
-  bool right_inclusive = false;
-  switch (filter.comp_op()) {
-    case EQUAL_TO: {
-      left_key = (const char *)value_cond_desc->value;
-      right_key = (const char *)value_cond_desc->value;
-      left_inclusive = true;
-      right_inclusive = true;
-    } break;
-    case LESS_EQUAL: {
-      right_key = (const char *)value_cond_desc->value;
-      right_inclusive = true;
-    } break;
-    case GREAT_EQUAL: {
-      left_key = (const char *)value_cond_desc->value;
-      left_inclusive = true;
-    } break;
-    case LESS_THAN: {
-      right_key = (const char *)value_cond_desc->value;
-      right_inclusive = false;
-    } break;
-    case GREAT_THAN: {
-      left_key = (const char *)value_cond_desc->value;
-      left_inclusive = false;
-    } break;
-    default: {
-      return nullptr;
-    }
-  }
-
-  if (filter.attr_type() == CHARS) {
-    left_len = left_key != nullptr ? strlen(left_key) : 0;
-    right_len = right_key != nullptr ? strlen(right_key) : 0;
-  }
-
-  // TODO: support multi index
-  return index->create_scanner(left_key, left_len, left_inclusive, right_key, right_len, right_inclusive);
-}
-
-IndexScanner *Table::find_index_for_scan(const ConditionFilter *filter)
-{
-  if (nullptr == filter) {
-    return nullptr;
-  }
-
-  // remove dynamic_cast
-  const auto *default_condition_filter = dynamic_cast<const DefaultConditionFilter *>(filter);
-  if (default_condition_filter != nullptr) {
-    return find_index_for_scan(*default_condition_filter);
-  }
-
-  const auto *composite_condition_filter = dynamic_cast<const CompositeConditionFilter *>(filter);
-  if (composite_condition_filter != nullptr) {
-    int filter_num = composite_condition_filter->filter_num();
-    for (int i = 0; i < filter_num; i++) {
-      IndexScanner *scanner = find_index_for_scan(&composite_condition_filter->filter(i));
-      if (scanner != nullptr) {
-        return scanner;  // 可以找到一个最优的，比如比较符号是 =
-      }
     }
   }
   return nullptr;

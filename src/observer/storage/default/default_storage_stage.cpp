@@ -12,7 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by Meiyi & Longda on 2021/4/13.
 //
 
-#include <string.h>
+#include <cstring>
 #include <string>
 
 #include "storage/default/default_storage_stage.h"
@@ -25,7 +25,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/metrics/metrics_registry.h"
 #include "rc.h"
 #include "storage/default/default_handler.h"
-#include "storage/common/condition_filter.h"
 #include "storage/common/table.h"
 #include "storage/common/table_meta.h"
 #include "storage/trx/trx.h"
@@ -139,7 +138,7 @@ void DefaultStorageStage::cleanup()
 
 void DefaultStorageStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
   TimerStat timerStat(*query_metric_);
 
   SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
@@ -182,15 +181,15 @@ void DefaultStorageStage::handle_event(StageEvent *event)
 
   session_event->set_response(response);
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
 }
 
 void DefaultStorageStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
   StorageEvent *storage_event = static_cast<StorageEvent *>(event);
   storage_event->sql_event()->done_immediate();
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 

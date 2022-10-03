@@ -253,7 +253,7 @@ enum RC {
   SCHEMA_INDEX_NOT_EXIST = (SCHEMA | (RCSchema::INDEX_NOT_EXIST << 8)),
   SCHEMA_INDEX_NAME_ILLEGAL = (SCHEMA | (RCSchema::INDEX_NAME_ILLEGAL << 8)),
 
-  /*ioerror part*/
+  /* io error part */
   IOERR_READ = (IOERR | (RCIOError::READ << 8)),
   IOERR_SHORT_READ = (IOERR | (RCIOError::SHORT_READ << 8)),
   IOERR_WRITE = (IOERR | (RCIOError::WRITE << 8)),
@@ -284,7 +284,7 @@ enum RC {
   IOERR_CORRUPTFS = (IOERR | (RCIOError::CORRUPTFS << 8)),
   IOERR_OPEN_TOO_MANY_FILES = (IOERR | RCIOError::OPEN_TOO_MANY_FILES << 8),
 
-  /* Lock part*/
+  /* Lock part */
   LOCKED_LOCK = (LOCKED | (RCLock::LOCK << 8)),
   LOCKED_UNLOCK = (LOCKED | (RCLock::UNLOCK << 8)),
   LOCKED_SHAREDCACHE = (LOCKED | (RCLock::SHAREDCACHE << 8)),
@@ -310,7 +310,7 @@ enum RC {
   // CORRUPT_SEQUENCE = (CORRUPT | (RCCorrupt::CORRUPT_SEQUENCE << 8)),
   // CORRUPT_INDEX = (CORRUPT | (RCCorrupt::CORRUPT_INDEX << 8)),
 
-  /*readonly part*/
+  /* readonly part */
   READONLY_RECOVERY = (READONLY | (RCReadonly::RO_RECOVERY << 8)),
   READONLY_CANTLOCK = (READONLY | (RCReadonly::CANTLOCK << 8)),
   READONLY_ROLLBACK = (READONLY | (RCReadonly::RO_ROLLBACK << 8)),
@@ -333,12 +333,12 @@ enum RC {
   CONSTRAINT_ROWID = (CONSTRAINT | (RCContraint::ROWID << 8)),
   CONSTRAINT_PINNED = (CONSTRAINT | (RCContraint::PINNED << 8)),
 
-  /* notic part */
+  /* notice part */
   NOTICE_RECOVER_WAL = (NOTICE | (RCNotice::RECOVER_WAL << 8)),
   NOTICE_RECOVER_ROLLBACK = (NOTICE | (RCNotice::RECOVER_ROLLBACK << 8)),
   NOTICE_AUTOINDEX = (NOTICE | (RCNotice::AUTOINDEX << 8)),
 
-  /* auth part*/
+  /* auth part */
   AUTH_USER = (AUTH | (RCAuth::USER << 8)),
 };
 

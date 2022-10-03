@@ -81,17 +81,17 @@ void QueryCacheStage::cleanup()
 
 void QueryCacheStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
   optimize_stage_->handle_event(event);
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 
 void QueryCacheStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Enter");
+  LOG_TRACE("Exit");
   return;
 }

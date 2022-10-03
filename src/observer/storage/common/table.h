@@ -29,7 +29,6 @@ class IndexScanner;
 class RecordDeleter;
 class Trx;
 
-// TODO remove the routines with condition
 class Table {
 public:
   Table() = default;
@@ -55,16 +54,10 @@ public:
   RC drop(const char *table_name);
 
   RC insert_record(Trx *trx, int value_num, const Value *values);
+  RC update_record(Trx *trx, Record *old_record, Record *new_record);
+  RC delete_record(Trx *trx, Record *record);
 
-  RC update_record(Trx *trx, const char *attribute_name, const Value *value, int condition_num,
-      const Condition conditions[], int *updated_count);               // for DefaultHandler
-  RC update_record(Trx *trx, Record *old_record, Record *new_record);  // for UpdateOperator
-
-  RC delete_record(Trx *trx, ConditionFilter *filter, int *deleted_count);  // for DefaultHandler
-  RC delete_record(Trx *trx, Record *record);                               // for DeleteOperator
-
-  RC scan_record(Trx *trx, ConditionFilter *filter, int limit, void *context,
-      void (*record_reader)(const char *data, void *context));
+  RC scan_record(Trx *trx, int limit, void *context, void (*record_reader)(const char *, void *));
 
   RC create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique);
 
@@ -89,12 +82,7 @@ public:
   RC rollback_delete(Trx *trx, const RID &rid);
 
 private:
-  RC scan_record(
-      Trx *trx, ConditionFilter *filter, int limit, void *context, RC (*record_reader)(Record *record, void *context));
-  RC scan_record_by_index(Trx *trx, IndexScanner *scanner, ConditionFilter *filter, int limit, void *context,
-      RC (*record_reader)(Record *record, void *context));
-  IndexScanner *find_index_for_scan(const ConditionFilter *filter);
-  IndexScanner *find_index_for_scan(const DefaultConditionFilter &filter);
+  RC scan_record(Trx *trx, int limit, void *context, RC (*record_reader)(Record *, void *));
 
   RC insert_record(Trx *trx, Record *record);
 

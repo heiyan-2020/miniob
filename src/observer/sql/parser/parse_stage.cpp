@@ -85,7 +85,7 @@ void ParseStage::cleanup()
 
 void ParseStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
   RC rc = handle_request(event);
   if (RC::SUCCESS != rc) {
@@ -104,17 +104,17 @@ void ParseStage::handle_event(StageEvent *event)
   resolve_stage_->handle_event(event);
   event->done_immediate();
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 
 void ParseStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
   SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
   sql_event->session_event()->done_immediate();
   //  sql_event->done_immediate();
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 

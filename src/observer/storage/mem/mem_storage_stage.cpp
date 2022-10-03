@@ -79,19 +79,19 @@ void MemStorageStage::cleanup()
 
 void MemStorageStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
   TimerStat timerStat(*queryMetric);
 
   event->done_immediate();
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 
 void MemStorageStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }

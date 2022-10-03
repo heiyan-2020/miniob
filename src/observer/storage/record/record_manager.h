@@ -56,26 +56,13 @@ class RecordPageHandler {
 public:
   RecordPageHandler() = default;
   ~RecordPageHandler();
+
   RC init(DiskBufferPool &buffer_pool, PageNum page_num);
   RC init_empty_page(DiskBufferPool &buffer_pool, PageNum page_num, int record_size);
   RC cleanup();
 
   RC insert_record(const char *data, RID *rid);
   RC update_record(const Record *rec);
-
-  template <class RecordUpdater>
-  RC update_record_in_place(const RID *rid, RecordUpdater updater)
-  {
-    Record record;
-    RC rc = get_record(rid, &record);
-    if (rc != RC::SUCCESS) {
-      return rc;
-    }
-    rc = updater(record);
-    frame_->mark_dirty();
-    return rc;
-  }
-
   RC delete_record(const RID *rid);
 
   RC get_record(const RID *rid, Record *rec);
@@ -127,19 +114,6 @@ public:
    */
   RC get_record(const RID *rid, Record *rec);
 
-  template <class RecordUpdater>  // 改成普通模式, 不使用模板
-  RC update_record_in_place(const RID *rid, RecordUpdater updater)
-  {
-
-    RC rc = RC::SUCCESS;
-    RecordPageHandler page_handler;
-    if ((rc != page_handler.init(*disk_buffer_pool_, rid->page_num)) != RC::SUCCESS) {
-      return rc;
-    }
-
-    return page_handler.update_record_in_place(rid, updater);
-  }
-
 private:
   RC init_free_pages();
 
@@ -151,18 +125,8 @@ private:
 class RecordFileScanner {
 public:
   RecordFileScanner() = default;
-
-  /**
-   * 打开一个文件扫描。
-   * 如果条件不为空，则要对每条记录进行条件比较，只有满足所有条件的记录才被返回
-   */
-  RC open_scan(DiskBufferPool &buffer_pool, ConditionFilter *condition_filter);
-
-  /**
-   * 关闭一个文件扫描，释放相应的资源
-   */
+  RC open_scan(DiskBufferPool &buffer_pool);
   RC close_scan();
-
   bool has_next();
   RC next(Record &record);
 
@@ -174,7 +138,6 @@ private:
   DiskBufferPool *disk_buffer_pool_ = nullptr;
 
   BufferPoolIterator bp_iterator_;
-  ConditionFilter *condition_filter_ = nullptr;
   RecordPageHandler record_page_handler_;
   RecordPageIterator record_page_iterator_;
   Record next_record_;

@@ -160,16 +160,16 @@ void Server::recv(int fd, short ev, void *arg)
   timer_stat.end();
 
   if (data_len > buf_size) {
-    LOG_WARN("The length of sql exceeds the limitation %d\n", buf_size);
+    LOG_WARN("The length of sql exceeds the limitation %d", buf_size);
     close_connection(client);
     return;
   }
   if (read_len == 0) {
-    LOG_INFO("The peer has been closed %s\n", client->addr);
+    LOG_INFO("The peer has been closed %s", client->addr);
     close_connection(client);
     return;
   } else if (read_len < 0) {
-    LOG_ERROR("Failed to read socket of %s, %s\n", client->addr, strerror(errno));
+    LOG_ERROR("Failed to read socket of %s, %s", client->addr, strerror(errno));
     close_connection(client);
     return;
   }
@@ -238,7 +238,7 @@ void Server::accept(int fd, short ev, void *arg)
     int yes = 1;
     ret = setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
     if (ret < 0) {
-      LOG_ERROR("Failed to set socket of %s option as : TCP_NODELAY %s\n", addr_str.c_str(), strerror(errno));
+      LOG_ERROR("Failed to set socket of %s option as : TCP_NODELAY %s", addr_str.c_str(), strerror(errno));
       ::close(client_fd);
       return;
     }
@@ -270,7 +270,7 @@ void Server::accept(int fd, short ev, void *arg)
   }
 
   client_context->session = new Session(Session::default_session());
-  LOG_INFO("Accepted connection from %s\n", client_context->addr);
+  LOG_INFO("Accepted connection from %s", client_context->addr);
 }
 
 int Server::start()

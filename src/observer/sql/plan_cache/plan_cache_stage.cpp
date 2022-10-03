@@ -82,7 +82,7 @@ void PlanCacheStage::cleanup()
 
 void PlanCacheStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
   // Add callback to update plan cache
   /*
@@ -98,17 +98,17 @@ void PlanCacheStage::handle_event(StageEvent *event)
   // do nothing here, pass the event to the next stage
   parse_stage_->handle_event(event);
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 
 void PlanCacheStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
   // update execute plan here
   // event->done_immediate();
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }

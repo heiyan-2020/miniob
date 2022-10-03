@@ -99,18 +99,18 @@ void SessionStage::cleanup()
 
 void SessionStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
   // right now, we just support only one event.
   handle_request(event);
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 
 void SessionStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
   SessionEvent *sev = dynamic_cast<SessionEvent *>(event);
   if (nullptr == sev) {
@@ -132,7 +132,7 @@ void SessionStage::callback_event(StageEvent *event, CallbackContext *context)
   }
 
   // sev->done();
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 

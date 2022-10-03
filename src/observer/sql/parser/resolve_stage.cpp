@@ -85,7 +85,7 @@ void ResolveStage::cleanup()
 
 void ResolveStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
   SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
   if (nullptr == sql_event) {
@@ -114,14 +114,14 @@ void ResolveStage::handle_event(StageEvent *event)
 
   query_cache_stage_->handle_event(sql_event);
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }
 
 void ResolveStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
-  LOG_TRACE("Exit\n");
+  LOG_TRACE("Exit");
   return;
 }

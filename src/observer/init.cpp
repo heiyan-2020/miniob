@@ -227,7 +227,7 @@ int init(ProcessParam *process_param)
 
   std::string conf_data;
   get_properties()->to_string(conf_data);
-  LOG_INFO("Output configuration \n%s", conf_data.c_str());
+  LOG_INFO("Output configuration:\n%s", conf_data.c_str());
 
   rc = init_global_objects();
   if (rc != 0) {

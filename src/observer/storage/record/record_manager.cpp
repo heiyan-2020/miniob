@@ -15,7 +15,6 @@ See the Mulan PSL v2 for more details. */
 #include "rc.h"
 #include "common/log/log.h"
 #include "common/lang/bitmap.h"
-#include "storage/common/condition_filter.h"
 
 using namespace common;
 
@@ -393,7 +392,7 @@ RC RecordFileHandler::get_record(const RID *rid, Record *rec)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RC RecordFileScanner::open_scan(DiskBufferPool &buffer_pool, ConditionFilter *condition_filter)
+RC RecordFileScanner::open_scan(DiskBufferPool &buffer_pool)
 {
   close_scan();
 
@@ -404,7 +403,6 @@ RC RecordFileScanner::open_scan(DiskBufferPool &buffer_pool, ConditionFilter *co
     LOG_WARN("failed to init bp iterator. rc=%d:%s", rc, strrc(rc));
     return rc;
   }
-  condition_filter_ = condition_filter;
 
   rc = fetch_next_record();
   if (rc == RC::RECORD_EOF) {
@@ -417,10 +415,7 @@ RC RecordFileScanner::fetch_next_record()
 {
   RC rc = RC::SUCCESS;
   if (record_page_iterator_.is_valid()) {
-    rc = fetch_next_record_in_page();
-    if (rc == RC::SUCCESS || rc != RC::RECORD_EOF) {
-      return rc;
-    }
+    return fetch_next_record_in_page();
   }
 
   while (bp_iterator_.has_next()) {
@@ -433,27 +428,17 @@ RC RecordFileScanner::fetch_next_record()
     }
 
     record_page_iterator_.init(record_page_handler_);
-    rc = fetch_next_record_in_page();
-    if (rc == RC::SUCCESS || rc != RC::RECORD_EOF) {
-      return rc;
-    }
+    return fetch_next_record_in_page();
   }
+
   next_record_.rid().slot_num = -1;
   return RC::RECORD_EOF;
 }
 
 RC RecordFileScanner::fetch_next_record_in_page()
 {
-  RC rc = RC::SUCCESS;
   while (record_page_iterator_.has_next()) {
-    rc = record_page_iterator_.next(next_record_);
-    if (rc != RC::SUCCESS) {
-      return rc;
-    }
-
-    if (condition_filter_ == nullptr || condition_filter_->filter(next_record_)) {
-      return rc;
-    }
+    return record_page_iterator_.next(next_record_);
   }
 
   next_record_.rid().slot_num = -1;
@@ -464,10 +449,6 @@ RC RecordFileScanner::close_scan()
 {
   if (disk_buffer_pool_ != nullptr) {
     disk_buffer_pool_ = nullptr;
-  }
-
-  if (condition_filter_ != nullptr) {
-    condition_filter_ = nullptr;
   }
 
   return RC::SUCCESS;
