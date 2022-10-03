@@ -65,9 +65,9 @@ struct RID {
   }
 
   /**
-   * 返回一个不可能出现的最小的RID
-   * 虽然page num 0和slot num 0都是合法的，但是page num 0通常用于存放meta数据，所以对数据部分来说都是
-   * 不合法的. 这里在bplus tree中查找时会用到。
+   * 返回一个不可能出现的最小的 RID
+   * 虽然 page num 0 和 slot num 0 都是合法的，但是 page num 0 通常用于存放 meta 数据，所以对数据部分来说都是不合法的
+   * 这里在 b+ tree 中查找时会用到
    */
   static RID *min()
   {

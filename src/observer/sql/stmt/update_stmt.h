@@ -16,9 +16,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "rc.h"
 #include "sql/stmt/stmt.h"
-#include "filter_stmt.h"
-
-class Table;
+#include "storage/common/table.h"
 
 class UpdateStmt : public Stmt {
 public:
@@ -38,22 +36,19 @@ public:
   {
     return table_;
   }
+
   const Value *value() const
   {
     return value_;
   }
+
   int value_offset() const
   {
     return value_offset_;
-  }
-  FilterStmt *filter_stmt() const
-  {
-    return filter_stmt_;
   }
 
 private:
   Table *table_;
   const Value *value_;
   int value_offset_;
-  FilterStmt *filter_stmt_ = nullptr;
 };

@@ -31,6 +31,11 @@ public:
   RC next() override;
   RC close() override;
 
+  Tuple *current_tuple() override
+  {
+    return nullptr;
+  }
+
 private:
   InsertStmt *insert_stmt_ = nullptr;
 };

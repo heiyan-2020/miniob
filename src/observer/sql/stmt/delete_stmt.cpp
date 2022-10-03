@@ -14,20 +14,11 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/log/log.h"
 #include "sql/stmt/delete_stmt.h"
-#include "sql/stmt/filter_stmt.h"
 #include "storage/common/db.h"
 #include "storage/common/table.h"
 
-DeleteStmt::DeleteStmt(Table *table, FilterStmt *filter_stmt) : table_(table), filter_stmt_(filter_stmt)
+DeleteStmt::DeleteStmt(Table *table) : table_(table)
 {}
-
-DeleteStmt::~DeleteStmt()
-{
-  if (nullptr != filter_stmt_) {
-    delete filter_stmt_;
-    filter_stmt_ = nullptr;
-  }
-}
 
 RC DeleteStmt::create(Db *db, const Deletes &delete_sql, Stmt *&stmt)
 {
@@ -47,13 +38,6 @@ RC DeleteStmt::create(Db *db, const Deletes &delete_sql, Stmt *&stmt)
   std::unordered_map<std::string, Table *> table_map;
   table_map.insert(std::pair<std::string, Table *>(std::string(table_name), table));
 
-  FilterStmt *filter_stmt = nullptr;
-  RC rc = FilterStmt::create(db, table, &table_map, delete_sql.conditions, delete_sql.condition_num, filter_stmt);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to create filter statement. rc=%d:%s", rc, strrc(rc));
-    return rc;
-  }
-
-  stmt = new DeleteStmt(table, filter_stmt);
-  return rc;
+  stmt = new DeleteStmt(table);
+  return RC::SUCCESS;
 }

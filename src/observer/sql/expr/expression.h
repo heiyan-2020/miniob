@@ -14,7 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #pragma once
 
-#include <string.h>
+#include <cstring>
 #include "storage/common/field.h"
 #include "sql/expr/tuple_cell.h"
 

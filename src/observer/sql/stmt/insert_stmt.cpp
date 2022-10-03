@@ -13,12 +13,14 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include "sql/stmt/insert_stmt.h"
+
+#include <utility>
 #include "common/log/log.h"
 #include "storage/common/db.h"
 #include "storage/common/table.h"
 
 InsertStmt::InsertStmt(Table *table, std::vector<const Value *> value_ptrs, int unit_cnt, int value_amount)
-    : table_(table), value_ptrs_(value_ptrs), value_amount_(value_amount), unit_amount_(unit_cnt)
+    : table_(table), value_ptrs_(std::move(value_ptrs)), value_amount_(value_amount), unit_amount_(unit_cnt)
 {}
 
 RC InsertStmt::create(Db *db, const Inserts &inserts, Stmt *&stmt)
@@ -54,7 +56,7 @@ RC InsertStmt::create(Db *db, const Inserts &inserts, Stmt *&stmt)
       const FieldMeta *field_meta = table_meta.field(i + sys_field_num);
       const AttrType field_type = field_meta->type();
       const AttrType value_type = values[i].type;
-      if (field_type != value_type) {  // TODO try to convert the value type to field type
+      if (field_type != value_type) {  // TODO: try to convert the value type to field type
         LOG_WARN("field type mismatch. table=%s, field=%s, field type=%d, value_type=%d",
             table_name,
             field_meta->name(),

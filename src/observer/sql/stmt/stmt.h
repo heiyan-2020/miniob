@@ -37,8 +37,6 @@ enum class StmtType {
   LOAD_DATA,
   HELP,
   EXIT,
-
-  PREDICATE,
 };
 
 class Stmt {

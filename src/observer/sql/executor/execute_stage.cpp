@@ -28,7 +28,6 @@ See the Mulan PSL v2 for more details. */
 #include "event/session_event.h"
 #include "sql/expr/tuple.h"
 #include "sql/operator/table_scan_operator.h"
-#include "sql/operator/predicate_operator.h"
 #include "sql/operator/delete_operator.h"
 #include "sql/operator/project_operator.h"
 #include "sql/stmt/stmt.h"
@@ -36,7 +35,6 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/update_stmt.h"
 #include "sql/stmt/delete_stmt.h"
 #include "sql/stmt/insert_stmt.h"
-#include "sql/stmt/filter_stmt.h"
 #include "storage/common/table.h"
 #include "storage/common/field.h"
 #include "storage/index/index.h"
@@ -44,6 +42,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/trx/trx.h"
 #include "sql/operator/update_operator.h"
 #include "storage/index/bplus_tree.h"
+#include "sql/operator/insert_operator.h"
 
 using namespace common;
 
@@ -168,13 +167,13 @@ void ExecuteStage::handle_request(common::StageEvent *event)
       case SCF_DESC_TABLE: {
         do_desc_table(sql_event);
       } break;
-
       case SCF_DROP_TABLE: {
         do_drop_table(sql_event);
       } break;
       case SCF_DROP_INDEX: {
         LOG_ERROR("Unimplemented command %d", sql->flag);
       } break;
+
       case SCF_LOAD_DATA: {
         default_storage_stage_->handle_event(event);
       } break;
@@ -198,9 +197,7 @@ void ExecuteStage::handle_request(common::StageEvent *event)
         session_event->set_response(strrc(rc));
       } break;
       case SCF_EXIT: {
-        // do nothing
-        const char *response = "Unsupported\n";
-        session_event->set_response(response);
+        session_event->set_response("Unsupported\n");
       } break;
       default: {
         LOG_ERROR("Unsupported command %d", sql->flag);
@@ -263,7 +260,7 @@ void tuple_to_string(std::ostream &os, const Tuple &tuple)
 
 RC ExecuteStage::do_select(SQLStageEvent *sql_event)
 {
-  SelectStmt *select_stmt = (SelectStmt *)(sql_event->stmt());
+  auto *select_stmt = (SelectStmt *)(sql_event->stmt());
   SessionEvent *session_event = sql_event->session_event();
   RC rc = RC::SUCCESS;
   if (select_stmt->tables().size() != 1) {
@@ -272,16 +269,15 @@ RC ExecuteStage::do_select(SQLStageEvent *sql_event)
     return rc;
   }
 
-  Operator *scan_oper  = new TableScanOperator(select_stmt->tables()[0]);
+  Operator *scan_oper = new TableScanOperator(select_stmt->tables()[0]);
   DEFER([&]() { delete scan_oper; });
 
-  PredicateOperator pred_oper(select_stmt->filter_stmt());
-  pred_oper.add_child(scan_oper);
   ProjectOperator project_oper;
-  project_oper.add_child(&pred_oper);
+  project_oper.add_child(scan_oper);
   for (const Field &field : select_stmt->query_fields()) {
     project_oper.add_projection(field.table(), field.meta());
   }
+
   rc = project_oper.open();
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to open operator");
@@ -342,6 +338,7 @@ RC ExecuteStage::do_create_table(SQLStageEvent *sql_event)
   }
   return rc;
 }
+
 RC ExecuteStage::do_create_index(SQLStageEvent *sql_event)
 {
   SessionEvent *session_event = sql_event->session_event();
@@ -362,7 +359,11 @@ RC ExecuteStage::do_create_index(SQLStageEvent *sql_event)
   }
 
   RC rc = table->create_index(nullptr, create_index.index_name, attribute_names, create_index.is_unique);
-  sql_event->session_event()->set_response(rc == RC::SUCCESS ? "SUCCESS\n" : "FAILURE\n");
+  if (rc == RC::SUCCESS) {
+    session_event->set_response("SUCCESS\n");
+  } else {
+    session_event->set_response("FAILURE\n");
+  }
   return rc;
 }
 
@@ -424,20 +425,15 @@ RC ExecuteStage::do_insert(SQLStageEvent *sql_event)
     return RC::GENERIC_ERROR;
   }
 
-  InsertStmt *insert_stmt = (InsertStmt *)stmt;
+  auto *insert_stmt = (InsertStmt *)stmt;
+  InsertOperator insert_oper{insert_stmt};
 
-  Table *table = insert_stmt->table();
-  RC rc = RC::SUCCESS;
-  for (int k = 0; k < insert_stmt->unit_amount(); k++) {
-    rc = table->insert_record(nullptr, insert_stmt->value_amount(), insert_stmt->values(k));
-
-    if (rc != RC::SUCCESS) {
-      session_event->set_response("FAILURE\n");
-      // TODO: rollback previously inserted records.
-      return rc;
-    }
+  RC rc = insert_oper.open();
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE\n");
+  } else {
+    session_event->set_response("SUCCESS\n");
   }
-  session_event->set_response("SUCCESS\n");
   return rc;
 }
 
@@ -451,12 +447,10 @@ RC ExecuteStage::do_delete(SQLStageEvent *sql_event)
     return RC::GENERIC_ERROR;
   }
 
-  DeleteStmt *delete_stmt = (DeleteStmt *)stmt;
+  auto *delete_stmt = (DeleteStmt *)stmt;
   TableScanOperator scan_oper(delete_stmt->table());
-  PredicateOperator pred_oper(delete_stmt->filter_stmt());
-  pred_oper.add_child(&scan_oper);
   DeleteOperator delete_oper(delete_stmt);
-  delete_oper.add_child(&pred_oper);
+  delete_oper.add_child(&scan_oper);
 
   RC rc = delete_oper.open();
   if (rc != RC::SUCCESS) {
@@ -479,10 +473,8 @@ RC ExecuteStage::do_update(SQLStageEvent *sql_event)
 
   auto *update_stmt = (UpdateStmt *)stmt;
   TableScanOperator scan_oper(update_stmt->table());
-  PredicateOperator pred_oper(update_stmt->filter_stmt());
-  pred_oper.add_child(&scan_oper);
   UpdateOperator update_oper(update_stmt);
-  update_oper.add_child(&pred_oper);
+  update_oper.add_child(&scan_oper);
 
   RC rc = update_oper.open();
   if (rc != RC::SUCCESS) {

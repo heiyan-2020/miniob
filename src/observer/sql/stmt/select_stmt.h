@@ -28,7 +28,7 @@ class Table;
 class SelectStmt : public Stmt {
 public:
   SelectStmt() = default;
-  ~SelectStmt() override;
+  ~SelectStmt() override = default;
 
   StmtType type() const override
   {
@@ -43,17 +43,13 @@ public:
   {
     return tables_;
   }
+
   const std::vector<Field> &query_fields() const
   {
     return query_fields_;
-  }
-  FilterStmt *filter_stmt() const
-  {
-    return filter_stmt_;
   }
 
 private:
   std::vector<Field> query_fields_;
   std::vector<Table *> tables_;
-  FilterStmt *filter_stmt_ = nullptr;
 };

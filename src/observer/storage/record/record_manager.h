@@ -19,13 +19,11 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record.h"
 #include "common/lang/bitmap.h"
 
-class ConditionFilter;
-
 struct PageHeader {
   int32_t record_num;           // 当前页面记录的个数
   int32_t record_capacity;      // 最大记录个数
   int32_t record_real_size;     // 每条记录的实际大小
-  int32_t record_size;          // 每条记录占用实际空间大小(可能对齐)
+  int32_t record_size;          // 每条记录占用实际空间大小 (可能对齐)
   int32_t first_record_offset;  // 第一条记录的偏移量
 };
 
@@ -93,25 +91,9 @@ public:
   RC init(DiskBufferPool *buffer_pool);
   void close();
 
-  /**
-   * 更新指定文件中的记录，rec指向的记录结构中的rid字段为要更新的记录的标识符，
-   * pData字段指向新的记录内容
-   */
   RC update_record(const Record *rec);
-
-  /**
-   * 从指定文件中删除标识符为rid的记录
-   */
   RC delete_record(const RID *rid);
-
-  /**
-   * 插入一个新的记录到指定文件中，pData为指向新纪录内容的指针，返回该记录的标识符rid
-   */
   RC insert_record(const char *data, int record_size, RID *rid);
-
-  /**
-   * 获取指定文件中标识符为rid的记录内容到rec指向的记录结构中
-   */
   RC get_record(const RID *rid, Record *rec);
 
 private:

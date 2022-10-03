@@ -44,6 +44,7 @@ RC ProjectOperator::close()
   children_[0]->close();
   return RC::SUCCESS;
 }
+
 Tuple *ProjectOperator::current_tuple()
 {
   tuple_.set_tuple(children_[0]->current_tuple());

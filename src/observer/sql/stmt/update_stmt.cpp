@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/stmt/update_stmt.h"
 #include "common/log/log.h"
 #include "storage/common/db.h"
-#include "filter_stmt.h"
+#include "storage/common/field_meta.h"
 
 UpdateStmt::UpdateStmt(Table *table, const Value *value, int value_offset)
     : table_(table), value_(value), value_offset_(value_offset)
@@ -63,15 +63,7 @@ RC UpdateStmt::create(Db *db, const Updates &update_sql, Stmt *&stmt)
     return RC::SCHEMA_FIELD_TYPE_MISMATCH;
   }
 
-  FilterStmt *filter_stmt = nullptr;
-  RC rc = FilterStmt::create(db, table, &table_map, update_sql.conditions, update_sql.condition_num, filter_stmt);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("cannot construct filter stmt");
-    return rc;
-  }
-
   auto *update_stmt = new UpdateStmt(table, &update_sql.value, field_meta->offset());
-  update_stmt->filter_stmt_ = filter_stmt;
   stmt = update_stmt;
   return RC::SUCCESS;
 }

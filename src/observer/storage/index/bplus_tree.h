@@ -318,9 +318,9 @@ public:
   char *value_at(int index);
 
   /**
-   * 查找指定key的插入位置(注意不是key本身)
-   * 如果key已经存在，会设置found的值
-   * NOTE: 当前lookup的实现效率非常低，你是否可以优化它?
+   * 查找指定 key 的插入位置 (注意不是 key 本身)
+   * 如果 key 已经存在，会设置 found 的值
+   * NOTE: 当前 lookup 的实现效率非常低，你是否可以优化它
    */
   int lookup(const KeyComparator &comparator, const char *key, bool *found = nullptr) const;
 
@@ -374,9 +374,9 @@ public:
   void remove(int index);
 
   /**
-   * 与Leaf节点不同，lookup返回指定key应该属于哪个子节点，返回这个子节点在当前节点中的索引
-   * 如果想要返回插入位置，就提供 `insert_position` 参数
-   * NOTE: 查找效率不高，你可以优化它吗?
+   * 与 Leaf 节点不同，lookup 返回指定 key 应该属于哪个子节点，返回这个子节点在当前节点中的索引
+   * 如果想要返回插入位置，就提供 insert_position 参数
+   * NOTE: 查找效率不高，你可以优化它吗
    */
   int lookup(
       const KeyComparator &comparator, const char *key, bool *found = nullptr, int *insert_position = nullptr) const;
