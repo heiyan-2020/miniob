@@ -8,7 +8,7 @@ public:
   explicit Date(void *data);
   bool validate() const;
   static RC parse_date(void *dst, const char *src);
-  std::string to_string();
+  std::string to_string() const;
 
 private:
   static bool validate_date(void *data);

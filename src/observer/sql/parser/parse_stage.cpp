@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <cstring>
 #include <string>
+#include <regex>
 
 #include "parse_stage.h"
 
@@ -117,8 +118,17 @@ RC ParseStage::handle_request(StageEvent *event)
   if (result.isValid()) {
     sql_event->set_result(std::move(result));
   } else {
-    LOG_ERROR("Failed to parse query.");
-    return RC::INTERNAL;
+    // transform char -> char(4)
+    std::string sql_trans = std::regex_replace(sql, std::regex{"char"}, "char(4)");
+    // parse again
+    result.reset();
+    hsql::SQLParser::parse(sql_trans, &result);
+    if (result.isValid()) {
+      sql_event->set_result(std::move(result));
+    } else {
+      LOG_ERROR("Failed to parse query.");
+      return RC::INTERNAL;
+    }
   }
 
   // original parser
