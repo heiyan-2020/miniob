@@ -12,7 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by Longda on 2021/4/13.
 //
 
-#include <string.h>
+#include <cstring>
 #include <string>
 
 #include "resolve_stage.h"
@@ -40,7 +40,7 @@ ResolveStage::~ResolveStage()
 //! Parse properties, instantiate a stage object
 Stage *ResolveStage::make_stage(const std::string &tag)
 {
-  ResolveStage *stage = new (std::nothrow) ResolveStage(tag.c_str());
+  auto *stage = new (std::nothrow) ResolveStage(tag.c_str());
   if (stage == nullptr) {
     LOG_ERROR("new ResolveStage failed");
     return nullptr;
@@ -52,14 +52,6 @@ Stage *ResolveStage::make_stage(const std::string &tag)
 //! Set properties for this object set in stage specific properties
 bool ResolveStage::set_properties()
 {
-  //  std::string stageNameStr(stage_name_);
-  //  std::map<std::string, std::string> section = g_properties()->get(
-  //    stageNameStr);
-  //
-  //  std::map<std::string, std::string>::iterator it;
-  //
-  //  std::string key;
-
   return true;
 }
 
@@ -67,10 +59,8 @@ bool ResolveStage::set_properties()
 bool ResolveStage::initialize()
 {
   LOG_TRACE("Enter");
-
-  std::list<Stage *>::iterator stgp = next_stage_list_.begin();
+  auto stgp = next_stage_list_.begin();
   query_cache_stage_ = *(stgp++);
-
   LOG_TRACE("Exit");
   return true;
 }
@@ -79,15 +69,13 @@ bool ResolveStage::initialize()
 void ResolveStage::cleanup()
 {
   LOG_TRACE("Enter");
-
   LOG_TRACE("Exit");
 }
 
 void ResolveStage::handle_event(StageEvent *event)
 {
   LOG_TRACE("Enter");
-
-  SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
+  auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   if (nullptr == sql_event) {
     LOG_WARN("failed to get sql stage event");
     return;
@@ -113,15 +101,11 @@ void ResolveStage::handle_event(StageEvent *event)
   sql_event->set_stmt(stmt);
 
   query_cache_stage_->handle_event(sql_event);
-
   LOG_TRACE("Exit");
-  return;
 }
 
 void ResolveStage::callback_event(StageEvent *event, CallbackContext *context)
 {
   LOG_TRACE("Enter");
-
   LOG_TRACE("Exit");
-  return;
 }

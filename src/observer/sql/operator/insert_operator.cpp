@@ -28,6 +28,7 @@ RC InsertOperator::open()
       return rc;
     }
   }
+  return rc;
 }
 
 RC InsertOperator::next()

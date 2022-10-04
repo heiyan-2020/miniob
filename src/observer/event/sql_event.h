@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <string>
 #include "common/seda/stage_event.h"
+#include "sql/parser/hsql/SQLParserResult.h"
 
 class SessionEvent;
 class Stmt;
@@ -44,6 +45,9 @@ public:
   {
     return stmt_;
   }
+  const hsql::SQLParserResult& result() const {
+    return result_;
+  }
 
   void set_sql(const char *sql)
   {
@@ -57,12 +61,17 @@ public:
   {
     stmt_ = stmt;
   }
+  void set_result(hsql::SQLParserResult result)
+  {
+    result_ = std::move(result);
+  }
 
 private:
   SessionEvent *session_event_ = nullptr;
   std::string sql_;
   Query *query_ = nullptr;
   Stmt *stmt_ = nullptr;
+  hsql::SQLParserResult result_;
 };
 
 #endif  //__SRC_OBSERVER_SQL_EVENT_SQLEVENT_H__

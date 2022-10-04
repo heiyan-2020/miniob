@@ -12,7 +12,7 @@ See the Mulan PSL v2 for more details. */
 // Created by Longda on 2021/4/13.
 //
 
-#include <string.h>
+#include <cstring>
 #include <string>
 
 #include "parse_stage.h"
@@ -25,6 +25,8 @@ See the Mulan PSL v2 for more details. */
 #include "event/session_event.h"
 #include "event/sql_event.h"
 #include "sql/parser/parse.h"
+
+#include "hsql/SQLParser.h"
 
 using namespace common;
 
@@ -39,7 +41,7 @@ ParseStage::~ParseStage()
 //! Parse properties, instantiate a stage object
 Stage *ParseStage::make_stage(const std::string &tag)
 {
-  ParseStage *stage = new (std::nothrow) ParseStage(tag.c_str());
+  auto *stage = new (std::nothrow) ParseStage(tag.c_str());
   if (stage == nullptr) {
     LOG_ERROR("new ParseStage failed");
     return nullptr;
@@ -51,14 +53,6 @@ Stage *ParseStage::make_stage(const std::string &tag)
 //! Set properties for this object set in stage specific properties
 bool ParseStage::set_properties()
 {
-  //  std::string stageNameStr(stageName);
-  //  std::map<std::string, std::string> section = theGlobalProperties()->get(
-  //    stageNameStr);
-  //
-  //  std::map<std::string, std::string>::iterator it;
-  //
-  //  std::string key;
-
   return true;
 }
 
@@ -66,11 +60,9 @@ bool ParseStage::set_properties()
 bool ParseStage::initialize()
 {
   LOG_TRACE("Enter");
-
-  std::list<Stage *>::iterator stgp = next_stage_list_.begin();
+  auto stgp = next_stage_list_.begin();
   // optimize_stage_ = *(stgp++);
   resolve_stage_ = *(stgp++);
-
   LOG_TRACE("Exit");
   return true;
 }
@@ -79,21 +71,19 @@ bool ParseStage::initialize()
 void ParseStage::cleanup()
 {
   LOG_TRACE("Enter");
-
   LOG_TRACE("Exit");
 }
 
 void ParseStage::handle_event(StageEvent *event)
 {
   LOG_TRACE("Enter");
-
   RC rc = handle_request(event);
   if (RC::SUCCESS != rc) {
     callback_event(event, nullptr);
     return;
   }
 
-  CompletionCallback *cb = new (std::nothrow) CompletionCallback(this, nullptr);
+  auto *cb = new (std::nothrow) CompletionCallback(this, nullptr);
   if (cb == nullptr) {
     LOG_ERROR("Failed to new callback for SQLStageEvent");
     callback_event(event, nullptr);
@@ -105,24 +95,33 @@ void ParseStage::handle_event(StageEvent *event)
   event->done_immediate();
 
   LOG_TRACE("Exit");
-  return;
 }
 
 void ParseStage::callback_event(StageEvent *event, CallbackContext *context)
 {
   LOG_TRACE("Enter");
-  SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
+  auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   sql_event->session_event()->done_immediate();
   //  sql_event->done_immediate();
   LOG_TRACE("Exit");
-  return;
 }
 
 RC ParseStage::handle_request(StageEvent *event)
 {
-  SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
+  auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   const std::string &sql = sql_event->sql();
 
+  // hyrise parser
+  hsql::SQLParserResult result;
+  hsql::SQLParser::parse(sql, &result);
+  if (result.isValid()) {
+    sql_event->set_result(std::move(result));
+  } else {
+    LOG_ERROR("Failed to parse query.");
+    return RC::INTERNAL;
+  }
+
+  // original parser
   Query *query_result = query_create();
   if (nullptr == query_result) {
     LOG_ERROR("Failed to create query.");
@@ -130,13 +129,14 @@ RC ParseStage::handle_request(StageEvent *event)
   }
 
   RC ret = parse(sql.c_str(), query_result);
-  if (ret != RC::SUCCESS) {
+  if (ret == RC::SUCCESS) {
+    sql_event->set_query(query_result);
+  } else {
     // set error information to event
     sql_event->session_event()->set_response("Failed to parse sql\n");
     query_destroy(query_result);
     return RC::INTERNAL;
   }
 
-  sql_event->set_query(query_result);
   return RC::SUCCESS;
 }

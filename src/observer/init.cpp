@@ -31,7 +31,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/executor/execute_stage.h"
 #include "sql/optimizer/optimize_stage.h"
 #include "sql/parser/parse_stage.h"
-#include "sql/parser/resolve_stage.h"
+#include "sql/binder/resolve_stage.h"
 #include "sql/plan_cache/plan_cache_stage.h"
 #include "sql/query_cache/query_cache_stage.h"
 #include "storage/default/default_storage_stage.h"
