@@ -42,8 +42,7 @@ Table::~Table()
     data_buffer_pool_ = nullptr;
   }
 
-  for (auto it = indexes_.begin(); it != indexes_.end(); ++it) {
-    Index *index = *it;
+  for (auto index : indexes_) {
     delete index;
   }
   indexes_.clear();
@@ -176,7 +175,7 @@ RC Table::open(const char *meta_file, const char *base_dir)
           rc,
           strrc(rc));
       // skip cleanup
-      //  do all cleanup action in destructive Table function.
+      // do all cleanup action in destructive Table function
       return rc;
     }
     indexes_.push_back(index);
@@ -294,7 +293,6 @@ RC Table::insert_record(Trx *trx, int value_num, const Value *values)
 
   Record record;
   record.set_data(record_data);
-  // record.valid = true;
   rc = insert_record(trx, &record);
   return rc;
 }

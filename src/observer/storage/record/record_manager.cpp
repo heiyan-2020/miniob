@@ -159,7 +159,6 @@ RC RecordPageHandler::insert_record(const char *data, RID *rid)
     rid->slot_num = index;
   }
 
-  // LOG_TRACE("Insert record. rid page_num=%d, slot num=%d", get_page_num(), index);
   return RC::SUCCESS;
 }
 
@@ -180,7 +179,6 @@ RC RecordPageHandler::update_record(const Record *rec)
     memcpy(record_data, rec->data(), page_header_->record_real_size);
     bitmap.set_bit(rec->rid().slot_num);
     frame_->mark_dirty();
-    // LOG_TRACE("Update record. file_id=%d, page num=%d,slot=%d", file_id_, rec->rid.page_num, rec->rid.slot_num);
     return RC::SUCCESS;
   }
 }
@@ -270,7 +268,6 @@ RC RecordFileHandler::init_free_pages()
 {
   // 遍历当前文件上所有页面，找到没有满的页面
   // 这个效率很低，会降低启动速度
-
   RC rc = RC::SUCCESS;
   BufferPoolIterator bp_iterator;
   bp_iterator.init(*disk_buffer_pool_);
@@ -296,7 +293,6 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
 {
   RC ret = RC::SUCCESS;
   // 找到没有填满的页面
-
   RecordPageHandler record_page_handler;
   bool page_found = false;
   PageNum current_page_num = 0;

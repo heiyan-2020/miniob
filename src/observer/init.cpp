@@ -35,7 +35,6 @@ See the Mulan PSL v2 for more details. */
 #include "sql/plan_cache/plan_cache_stage.h"
 #include "sql/query_cache/query_cache_stage.h"
 #include "storage/default/default_storage_stage.h"
-#include "storage/mem/mem_storage_stage.h"
 #include "storage/default/disk_buffer_pool.h"
 #include "storage/default/default_handler.h"
 
@@ -139,7 +138,6 @@ void prepare_init_seda()
   static StageFactory optimize_factory("OptimizeStage", &OptimizeStage::make_stage);
   static StageFactory execute_factory("ExecuteStage", &ExecuteStage::make_stage);
   static StageFactory default_storage_factory("DefaultStorageStage", &DefaultStorageStage::make_stage);
-  static StageFactory mem_storage_factory("MemStorageStage", &MemStorageStage::make_stage);
 }
 
 void init_global_objects()

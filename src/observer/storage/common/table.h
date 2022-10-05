@@ -22,11 +22,8 @@ class Record;
 class DiskBufferPool;
 class RecordFileHandler;
 class RecordFileScanner;
-class ConditionFilter;
-class DefaultConditionFilter;
 class Index;
 class IndexScanner;
-class RecordDeleter;
 class Trx;
 
 class Table {
@@ -89,9 +86,6 @@ private:
   RC check_unique_constraint(const char *record_data);
 
 private:
-  friend class RecordUpdater;
-  friend class RecordDeleter;
-
   RC insert_entry_of_indexes(const char *record, const RID &rid);
   RC delete_entry_of_indexes(const char *record, const RID &rid, bool error_on_not_exists);
 
@@ -106,8 +100,8 @@ public:
 private:
   std::string base_dir_;
   TableMeta table_meta_;
-  DiskBufferPool *data_buffer_pool_ = nullptr;   /// 数据文件关联的 buffer pool
-  RecordFileHandler *record_handler_ = nullptr;  /// 记录操作
+  DiskBufferPool *data_buffer_pool_ = nullptr;   // 数据文件关联的 buffer pool
+  RecordFileHandler *record_handler_ = nullptr;  // 记录操作
   std::vector<Index *> indexes_;
 };
 
