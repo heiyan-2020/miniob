@@ -295,7 +295,7 @@ RC DiskBufferPool::allocate_page(Frame **frame)
       if (((file_header_->bitmap[byte]) & (1 << bit)) == 0) {
         (file_header_->allocated_pages)++;
         file_header_->bitmap[byte] |= (1 << bit);
-        // TODO,  do we need clean the loaded page's data?
+        // TODO: do we need clean the loaded page's data?
         hdr_frame_->mark_dirty();
         return get_this_page(i, frame);
       }

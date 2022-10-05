@@ -39,9 +39,6 @@ DefaultHandler &DefaultHandler::get_default()
   return *default_handler;
 }
 
-DefaultHandler::DefaultHandler()
-{}
-
 DefaultHandler::~DefaultHandler() noexcept
 {
   destroy();

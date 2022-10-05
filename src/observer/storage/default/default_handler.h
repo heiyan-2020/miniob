@@ -23,7 +23,7 @@ class Trx;
 
 class DefaultHandler {
 public:
-  DefaultHandler();
+  DefaultHandler() = default;
 
   virtual ~DefaultHandler() noexcept;
 
