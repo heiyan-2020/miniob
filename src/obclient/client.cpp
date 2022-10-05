@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
       break;
     }
 
-    if ((send_bytes = write(sockfd, input_command, strlen(input_command) + 1)) == -1) {  // TODO writen
+    if ((send_bytes = write(sockfd, input_command, strlen(input_command) + 1)) == -1) {  // TODO: writen
       fprintf(stderr, "send error: %d:%s \n", errno, strerror(errno));
       exit(1);
     }
