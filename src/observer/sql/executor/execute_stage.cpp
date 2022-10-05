@@ -170,37 +170,34 @@ void ExecuteStage::handle_request(common::StageEvent *event)
       case SCF_DROP_TABLE: {
         do_drop_table(sql_event);
       } break;
-      case SCF_DROP_INDEX: {
-        LOG_ERROR("Unimplemented command %d", sql->flag);
-      } break;
 
       case SCF_LOAD_DATA: {
         default_storage_stage_->handle_event(event);
       } break;
       case SCF_SYNC: {
         RC rc = DefaultHandler::get_default().sync();
-        session_event->set_response(std::string{strrc(rc)} + "\n");
+        session_event->set_response(strrc(rc));
       } break;
       case SCF_BEGIN: {
-        session_event->set_response("SUCCESS\n");
+        session_event->set_response("SUCCESS");
       } break;
       case SCF_COMMIT: {
         Trx *trx = session->current_trx();
         RC rc = trx->commit();
         session->set_trx_multi_operation_mode(false);
-        session_event->set_response(std::string{strrc(rc)} + "\n");
+        session_event->set_response(strrc(rc));
       } break;
       case SCF_ROLLBACK: {
         Trx *trx = session_event->get_client()->session->current_trx();
         RC rc = trx->rollback();
         session->set_trx_multi_operation_mode(false);
-        session_event->set_response(std::string{strrc(rc)} + "\n");
+        session_event->set_response(strrc(rc));
       } break;
       case SCF_EXIT: {
-        session_event->set_response("Unsupported\n");
+        session_event->set_response("Unsupported");
       } break;
       default: {
-        LOG_ERROR("Unsupported command %d", sql->flag);
+        session_event->set_response("Unsupported");
       }
     }
   }
@@ -306,7 +303,10 @@ RC ExecuteStage::do_select(SQLStageEvent *sql_event)
   } else {
     rc = project_oper.close();
   }
-  session_event->set_response(ss.str());
+
+  std::string res{ss.str()};
+  res = res.substr(0, res.size() - 1); // remove '\n'
+  session_event->set_response(std::move(res));
   return rc;
 }
 
@@ -320,7 +320,7 @@ RC ExecuteStage::do_help(SQLStageEvent *sql_event)
                          "insert into `table` values(`value1`,`value2`);\n"
                          "update `table` set column=value [where `column`=`value`];\n"
                          "delete from `table` [where `column`=`value`];\n"
-                         "select [ * | `columns` ] from `table`;\n";
+                         "select [ * | `columns` ] from `table`;"; // remove '\n'
   session_event->set_response(response);
   return RC::SUCCESS;
 }
@@ -332,9 +332,9 @@ RC ExecuteStage::do_create_table(SQLStageEvent *sql_event)
   Db *db = session_event->session()->get_current_db();
   RC rc = db->create_table(create_table.relation_name, create_table.attribute_count, create_table.attributes);
   if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS\n");
+    session_event->set_response("SUCCESS");
   } else {
-    session_event->set_response("FAILURE\n");
+    session_event->set_response("FAILURE");
   }
   return rc;
 }
@@ -346,7 +346,7 @@ RC ExecuteStage::do_create_index(SQLStageEvent *sql_event)
   const CreateIndex &create_index = sql_event->query()->sstr.create_index;
   Table *table = db->find_table(create_index.relation_name);
   if (nullptr == table) {
-    session_event->set_response("FAILURE\n");
+    session_event->set_response("FAILURE");
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
 
@@ -360,9 +360,9 @@ RC ExecuteStage::do_create_index(SQLStageEvent *sql_event)
 
   RC rc = table->create_index(nullptr, create_index.index_name, attribute_names, create_index.is_unique);
   if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS\n");
+    session_event->set_response("SUCCESS");
   } else {
-    session_event->set_response("FAILURE\n");
+    session_event->set_response("FAILURE");
   }
   return rc;
 }
@@ -374,13 +374,15 @@ RC ExecuteStage::do_show_tables(SQLStageEvent *sql_event)
   std::vector<std::string> all_tables;
   db->all_tables(all_tables);
   if (all_tables.empty()) {
-    session_event->set_response("No table\n");
+    session_event->set_response("No table");
   } else {
     std::stringstream ss;
     for (const auto &table : all_tables) {
       ss << table << std::endl;
     }
-    session_event->set_response(ss.str().c_str());
+    std::string res{ss.str()};
+    res = res.substr(0, res.size() - 1); // remove '\n'
+    session_event->set_response(std::move(res));
   }
   return RC::SUCCESS;
 }
@@ -397,7 +399,10 @@ RC ExecuteStage::do_desc_table(SQLStageEvent *sql_event)
   } else {
     ss << "No such table: " << table_name << std::endl;
   }
-  sql_event->session_event()->set_response(ss.str().c_str());
+
+  std::string res{ss.str()};
+  res = res.substr(0, res.size() - 1); // remove '\n'
+  sql_event->session_event()->set_response(std::move(res));
   return RC::SUCCESS;
 }
 
@@ -408,9 +413,9 @@ RC ExecuteStage::do_drop_table(SQLStageEvent *sql_event)
   Db *db = session_event->session()->get_current_db();
   RC rc = db->drop_table(drop_table.relation_name);
   if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS\n");
+    session_event->set_response("SUCCESS");
   } else {
-    session_event->set_response("FAILURE\n");
+    session_event->set_response("FAILURE");
   }
   return RC::SUCCESS;
 }
@@ -430,9 +435,9 @@ RC ExecuteStage::do_insert(SQLStageEvent *sql_event)
 
   RC rc = insert_oper.open();
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE\n");
+    session_event->set_response("FAILURE");
   } else {
-    session_event->set_response("SUCCESS\n");
+    session_event->set_response("SUCCESS");
   }
   return rc;
 }
@@ -454,9 +459,9 @@ RC ExecuteStage::do_delete(SQLStageEvent *sql_event)
 
   RC rc = delete_oper.open();
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE\n");
+    session_event->set_response("FAILURE");
   } else {
-    session_event->set_response("SUCCESS\n");
+    session_event->set_response("SUCCESS");
   }
   return rc;
 }
@@ -478,9 +483,9 @@ RC ExecuteStage::do_update(SQLStageEvent *sql_event)
 
   RC rc = update_oper.open();
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE\n");
+    session_event->set_response("FAILURE");
   } else {
-    session_event->set_response("SUCCESS\n");
+    session_event->set_response("SUCCESS");
   }
   return rc;
 }

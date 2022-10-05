@@ -21,12 +21,12 @@ See the Mulan PSL v2 for more details. */
 
 class SessionStage : public common::Stage {
 public:
-  ~SessionStage();
+  ~SessionStage() override = default;
   static Stage *make_stage(const std::string &tag);
 
 protected:
   // common function
-  SessionStage(const char *tag);
+  explicit SessionStage(const char *tag);
   bool set_properties() override;
 
   bool initialize() override;
@@ -35,8 +35,6 @@ protected:
   void callback_event(common::StageEvent *event, common::CallbackContext *context) override;
 
 protected:
-  void handle_input(common::StageEvent *event);
-
   void handle_request(common::StageEvent *event);
 
 private:

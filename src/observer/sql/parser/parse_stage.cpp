@@ -127,7 +127,8 @@ RC ParseStage::handle_request(StageEvent *event)
     if (result.isValid()) {
       sql_event->set_result(std::move(result));
     } else {
-      LOG_ERROR("Failed to parse query.");
+      sql_event->session_event()->set_response("Failed to parse sql");
+      result.reset();
       return RC::INTERNAL;
     }
   }
@@ -144,7 +145,7 @@ RC ParseStage::handle_request(StageEvent *event)
     sql_event->set_query(query_result);
   } else {
     // set error information to event
-    sql_event->session_event()->set_response("Failed to parse sql\n");
+    sql_event->session_event()->set_response("Failed to parse sql");
     query_destroy(query_result);
     return RC::INTERNAL;
   }

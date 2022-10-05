@@ -23,7 +23,7 @@ See the Mulan PSL v2 for more details. */
 
 class Server {
 public:
-  Server(ServerParam input_server_param);
+  explicit Server(ServerParam input_server_param);
   ~Server();
 
 public:
