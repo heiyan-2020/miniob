@@ -23,7 +23,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/timer_stage.h"
 #include "common/lang/string.h"
 #include "session/session.h"
-#include "event/storage_event.h"
 #include "event/sql_event.h"
 #include "event/session_event.h"
 #include "sql/expr/tuple.h"
@@ -171,13 +170,11 @@ void ExecuteStage::handle_request(common::StageEvent *event)
         do_drop_table(sql_event);
       } break;
 
-      case SCF_LOAD_DATA: {
-        default_storage_stage_->handle_event(event);
-      } break;
       case SCF_SYNC: {
         RC rc = DefaultHandler::get_default().sync();
         session_event->set_response(strrc(rc));
       } break;
+
       case SCF_BEGIN: {
         session_event->set_response("SUCCESS");
       } break;
@@ -193,9 +190,7 @@ void ExecuteStage::handle_request(common::StageEvent *event)
         session->set_trx_multi_operation_mode(false);
         session_event->set_response(strrc(rc));
       } break;
-      case SCF_EXIT: {
-        session_event->set_response("Unsupported");
-      } break;
+
       default: {
         session_event->set_response("Unsupported");
       }
