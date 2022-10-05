@@ -25,7 +25,7 @@ public:
   ~ServerParam() = default;
 
 public:
-  // accpet client's address, default is INADDR_ANY, means accept every address
+  // accept client's address, default is INADDR_ANY, means accept every address
   long listen_addr;
 
   int max_connection_num;

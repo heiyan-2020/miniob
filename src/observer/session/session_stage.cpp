@@ -72,7 +72,7 @@ bool SessionStage::initialize()
 {
   LOG_TRACE("Enter");
 
-  std::list<Stage *>::iterator stgp = next_stage_list_.begin();
+  auto stgp = next_stage_list_.begin();
   plan_cache_stage_ = *(stgp++);
 
   MetricsRegistry &metricsRegistry = get_metrics_registry();

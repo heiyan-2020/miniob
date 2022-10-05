@@ -119,6 +119,7 @@ RC ParseStage::handle_request(StageEvent *event)
     sql_event->set_result(std::move(result));
   } else {
     // transform char -> char(4)
+    // TODO(vgalaxy): consider coexistence of char and char (xxx)
     std::string sql_trans = std::regex_replace(sql, std::regex{"char"}, "char(4)");
     // parse again
     result.reset();
