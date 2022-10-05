@@ -299,9 +299,7 @@ RC ExecuteStage::do_select(SQLStageEvent *sql_event)
     rc = project_oper.close();
   }
 
-  std::string res{ss.str()};
-  res = res.substr(0, res.size() - 1); // remove '\n'
-  session_event->set_response(std::move(res));
+  session_event->set_response(ss.str());
   return rc;
 }
 
@@ -375,9 +373,7 @@ RC ExecuteStage::do_show_tables(SQLStageEvent *sql_event)
     for (const auto &table : all_tables) {
       ss << table << std::endl;
     }
-    std::string res{ss.str()};
-    res = res.substr(0, res.size() - 1); // remove '\n'
-    session_event->set_response(std::move(res));
+    session_event->set_response(ss.str());
   }
   return RC::SUCCESS;
 }
@@ -394,10 +390,7 @@ RC ExecuteStage::do_desc_table(SQLStageEvent *sql_event)
   } else {
     ss << "No such table: " << table_name << std::endl;
   }
-
-  std::string res{ss.str()};
-  res = res.substr(0, res.size() - 1); // remove '\n'
-  sql_event->session_event()->set_response(std::move(res));
+  sql_event->session_event()->set_response(ss.str());
   return RC::SUCCESS;
 }
 

@@ -110,10 +110,14 @@ void SessionStage::callback_event(StageEvent *event, CallbackContext *context)
   if (response.empty()) {
     response = "no response from server";
   }
-  response += "\n";
+
+  // TODO: assume
+  if ((response.at(response.length() - 1)) != '\n') {
+      response += "\n";
+  }
 
   Server::send(sev->get_client(), response.c_str(),
-      static_cast<int>(response.length() + 1));
+      static_cast<int>(response.length() + 1));  // include '\0'
 
   LOG_TRACE("Exit");
 }
