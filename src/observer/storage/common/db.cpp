@@ -158,7 +158,7 @@ RC Db::drop_table(const char *table_name)
   // drop table meta / data / index file
   RC rc = table->drop(table_name);
   if (rc != RC::SUCCESS) {
-    // TODO: intermediate state
+    // TODO(vgalaxy): intermediate state
     LOG_ERROR("Failed to drop table %s", table_name);
     return rc;
   }

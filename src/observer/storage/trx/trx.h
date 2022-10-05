@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_TRX_TRX_H_
 #define __OBSERVER_STORAGE_TRX_TRX_H_
 
-#include <stddef.h>
+#include <cstddef>
 #include <unordered_map>
 #include <unordered_set>
 #include <mutex>
@@ -74,7 +74,7 @@ public:
 };
 
 /**
- * 这里是一个简单的事务实现，可以支持提交/回滚。但是没有对并发访问做控制
+ * 这里是一个简单的事务实现，可以支持提交 / 回滚，但是没有对并发访问做控制
  * 可以在这个基础上做备份恢复，当然也可以重写
  */
 class Trx {
@@ -86,8 +86,8 @@ public:
   static int trx_field_len();
 
 public:
-  Trx();
-  ~Trx();
+  Trx() = default;
+  ~Trx() = default;
 
 public:
   RC insert_record(Table *table, Record *record);
@@ -99,7 +99,7 @@ public:
   RC commit_insert(Table *table, Record &record);
   RC rollback_delete(Table *table, Record &record);
 
-  bool is_visible(Table *table, const Record *record);
+  bool is_visible(Table *table, const Record *record) const;
 
   void init_trx_info(Table *table, Record &record);
 

@@ -30,7 +30,7 @@ int page_fix_size()
 
 int page_record_capacity(int page_size, int record_size)
 {
-  // (record_capacity * record_size) + record_capacity/8 + 1 <= (page_size - fix_size)
+  // (record_capacity * record_size) + record_capacity / 8 + 1 <= (page_size - fix_size)
   // ==> record_capacity = ((page_size - fix_size) - 1) / (record_size + 0.125)
   return (int)((page_size - page_fix_size() - 1) / (record_size + 0.125));
 }
@@ -45,11 +45,8 @@ int page_header_size(int record_capacity)
   const int bitmap_size = page_bitmap_size(record_capacity);
   return align8(page_fix_size() + bitmap_size);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-RecordPageIterator::RecordPageIterator()
-{}
-RecordPageIterator::~RecordPageIterator()
-{}
 
 void RecordPageIterator::init(RecordPageHandler &record_page_handler)
 {
@@ -59,7 +56,7 @@ void RecordPageIterator::init(RecordPageHandler &record_page_handler)
   next_slot_num_ = bitmap_.next_setted_bit(0);
 }
 
-bool RecordPageIterator::has_next()
+bool RecordPageIterator::has_next() const
 {
   return -1 != next_slot_num_;
 }
@@ -374,7 +371,7 @@ RC RecordFileHandler::delete_record(const RID *rid)
 
 RC RecordFileHandler::get_record(const RID *rid, Record *rec)
 {
-  // lock?
+  // TODO: lock?
   RC ret = RC::SUCCESS;
   if (nullptr == rid || nullptr == rec) {
     LOG_ERROR("Invalid rid %p or rec %p, one of them is null. ", rid, rec);
