@@ -49,16 +49,10 @@ int Trx::trx_field_len()
   return sizeof(int32_t);
 }
 
-Trx::Trx()
-{}
-
-Trx::~Trx()
-{}
-
 RC Trx::insert_record(Table *table, Record *record)
 {
   RC rc = RC::SUCCESS;
-  // 先校验是否以前是否存在过(应该不会存在)
+  // 先校验是否以前是否存在过
   Operation *old_oper = find_operation(table, record->rid());
   if (old_oper != nullptr) {
     return RC::GENERIC_ERROR;  // error code
@@ -66,9 +60,9 @@ RC Trx::insert_record(Table *table, Record *record)
 
   start_if_not_started();
 
-  // 设置record中trx_field为当前的事务号
-  // set_record_trx_id(table, record, trx_id_, false);
-  // 记录到operations中
+  // 设置 record 中 trx_field 为当前的事务号
+  set_record_trx_id(table, *record, trx_id_, false);
+  // 记录到 operations 中
   insert_operation(table, Operation::Type::INSERT, record->rid());
   return rc;
 }
@@ -111,14 +105,14 @@ void Trx::get_record_trx_id(Table *table, const Record &record, int32_t &trx_id,
 
 Operation *Trx::find_operation(Table *table, const RID &rid)
 {
-  std::unordered_map<Table *, OperationSet>::iterator table_operations_iter = operations_.find(table);
+  auto table_operations_iter = operations_.find(table);
   if (table_operations_iter == operations_.end()) {
     return nullptr;
   }
 
   OperationSet &table_operations = table_operations_iter->second;
   Operation tmp(Operation::Type::UNDEFINED, rid);
-  OperationSet::iterator operation_iter = table_operations.find(tmp);
+  auto operation_iter = table_operations.find(tmp);
   if (operation_iter == table_operations.end()) {
     return nullptr;
   }
@@ -133,8 +127,7 @@ void Trx::insert_operation(Table *table, Operation::Type type, const RID &rid)
 
 void Trx::delete_operation(Table *table, const RID &rid)
 {
-
-  std::unordered_map<Table *, OperationSet>::iterator table_operations_iter = operations_.find(table);
+  auto table_operations_iter = operations_.find(table);
   if (table_operations_iter == operations_.end()) {
     return;
   }
@@ -237,7 +230,7 @@ RC Trx::rollback_delete(Table *table, Record &record)
   return RC::SUCCESS;
 }
 
-bool Trx::is_visible(Table *table, const Record *record)
+bool Trx::is_visible(Table *table, const Record *record) const
 {
   int32_t record_trx_id;
   bool record_deleted;

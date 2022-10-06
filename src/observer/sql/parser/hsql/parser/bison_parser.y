@@ -226,7 +226,7 @@
     %type <table_name>             table_name
     %type <sval>                   opt_index_name
     %type <sval>                   file_path prepare_target_query
-    %type <bval>                   opt_not_exists opt_exists opt_distinct opt_all
+    %type <bval>                   opt_not_exists opt_exists opt_distinct opt_all opt_unique
     %type <ival_pair>              opt_decimal_specification
     %type <ival>                   opt_time_precision
     %type <join_type>              opt_join_type
@@ -481,6 +481,11 @@ show_statement : SHOW TABLES { $$ = new ShowStatement(kShowTables); }
   $$ = new ShowStatement(kShowColumns);
   $$->schema = $2.schema;
   $$->name = $2.name;
+}
+| DESC table_name {
+  $$ = new ShowStatement(kShowColumns);
+  $$->schema = $2.schema;
+  $$->name = $2.name;
 };
 
 /******************************
@@ -520,12 +525,13 @@ create_statement : CREATE TABLE opt_not_exists table_name FROM IDENTIFIER FILE f
   $$->tableName = $4.name;
   $$->select = $6;
 }
-| CREATE INDEX opt_not_exists opt_index_name ON table_name '(' ident_commalist ')' {
+| CREATE opt_unique INDEX opt_not_exists opt_index_name ON table_name '(' ident_commalist ')' {
   $$ = new CreateStatement(kCreateIndex);
-  $$->indexName = $4;
-  $$->ifNotExists = $3;
-  $$->tableName = $6.name;
-  $$->indexColumns = $8;
+  $$->indexName = $5;
+  $$->ifNotExists = $4;
+  $$->isUnique = $2;
+  $$->tableName = $7.name;
+  $$->indexColumns = $9;
 }
 | CREATE VIEW opt_not_exists table_name opt_column_list AS select_statement {
   $$ = new CreateStatement(kCreateView);
@@ -537,6 +543,9 @@ create_statement : CREATE TABLE opt_not_exists table_name FROM IDENTIFIER FILE f
 };
 
 opt_not_exists : IF NOT EXISTS { $$ = true; }
+| /* empty */ { $$ = false; };
+
+opt_unique: UNIQUE { $$ = true; }
 | /* empty */ { $$ = false; };
 
 table_elem_commalist : table_elem {

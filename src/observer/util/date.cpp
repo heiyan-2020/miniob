@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <string>
+#include <regex>
 
 Date::Date(void *data)
 {
@@ -118,38 +119,21 @@ bool Date::validate_date(void *data)
 
 RC Date::parse_date(void *dst, const char *src)
 {
-  int first{-1};
-  for (size_t i = 0; i < strlen(src); ++i) {
-    if (*(src + i) == '-') {
-      first = i;
-      break;
-    }
-  }
-  if (first == -1) {
+  std::cmatch m;
+  std::regex reg(R"(^(\d+)-(\d+)-(\d+)$)");
+
+  auto ret = std::regex_match(src, m, reg);
+  if (!ret) {
     return RC::DATE;
   }
-
-  int second{-1};
-  for (size_t i = first + 1; i < strlen(src); ++i) {
-    if (*(src + i) == '-') {
-      second = i;
-      break;
-    }
+  if (m.size() != 4) {
+    return RC::INTERNAL;
   }
-  if (second == -1) {
-    return RC::DATE;
-  }
-
-  std::string s{src};
-  std::string year_str = s.substr(0, first);
-  std::string month_str = s.substr(first + 1, second - first - 1);
-  std::string day_str = s.substr(second + 1);
-  LOG_INFO("year: %s, month: %s, day: %s", year_str.c_str(), month_str.c_str(), day_str.c_str());
 
   int *trans = reinterpret_cast<int *>(dst);
-  trans[0] = std::stoi(year_str);
-  trans[1] = std::stoi(month_str);
-  trans[2] = std::stoi(day_str);
+  trans[0] = std::stoi(m.str(1));
+  trans[1] = std::stoi(m.str(2));
+  trans[2] = std::stoi(m.str(3));
 
   if (!Date::validate_date(dst)) {
     return RC::DATE;
@@ -158,7 +142,7 @@ RC Date::parse_date(void *dst, const char *src)
   return RC::SUCCESS;
 }
 
-std::string Date::to_string()
+std::string Date::to_string() const
 {
   std::string year_str = std::to_string(this->year);
   std::string month_str = std::to_string(this->month);

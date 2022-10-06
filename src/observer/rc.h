@@ -172,7 +172,7 @@ enum RC {
   /* beginning-of-error-codes */
   GENERIC_ERROR,    /* Generic error */
   INVALID_ARGUMENT, /* Invalid argument */
-  UNIMPLENMENT,     /* not implenment yet */
+  UNIMPLENMENT,     /* not implement yet */
   SQL_SYNTAX,       /* SQL Syntax error */
   BUFFERPOOL,       /* Buffer pool error*/
   RECORD,           /* Record error */

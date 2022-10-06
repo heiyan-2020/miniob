@@ -1565,7 +1565,7 @@ RC BplusTreeHandler::coalesce_or_redistribute(Frame *frame)
   rc = disk_buffer_pool_->get_this_page(neighbor_page_num, &neighbor_frame);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to fetch neighbor page. page id=%d, rc=%d:%s", neighbor_page_num, rc, strrc(rc));
-    // TODO do more thing to release resource
+    // TODO: do more thing to release resource
     disk_buffer_pool_->unpin_page(frame);
     disk_buffer_pool_->unpin_page(parent_frame);
     return rc;

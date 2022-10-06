@@ -30,7 +30,7 @@ int page_fix_size()
 
 int page_record_capacity(int page_size, int record_size)
 {
-  // (record_capacity * record_size) + record_capacity/8 + 1 <= (page_size - fix_size)
+  // (record_capacity * record_size) + record_capacity / 8 + 1 <= (page_size - fix_size)
   // ==> record_capacity = ((page_size - fix_size) - 1) / (record_size + 0.125)
   return (int)((page_size - page_fix_size() - 1) / (record_size + 0.125));
 }
@@ -45,11 +45,8 @@ int page_header_size(int record_capacity)
   const int bitmap_size = page_bitmap_size(record_capacity);
   return align8(page_fix_size() + bitmap_size);
 }
+
 ////////////////////////////////////////////////////////////////////////////////
-RecordPageIterator::RecordPageIterator()
-{}
-RecordPageIterator::~RecordPageIterator()
-{}
 
 void RecordPageIterator::init(RecordPageHandler &record_page_handler)
 {
@@ -59,7 +56,7 @@ void RecordPageIterator::init(RecordPageHandler &record_page_handler)
   next_slot_num_ = bitmap_.next_setted_bit(0);
 }
 
-bool RecordPageIterator::has_next()
+bool RecordPageIterator::has_next() const
 {
   return -1 != next_slot_num_;
 }
@@ -162,7 +159,6 @@ RC RecordPageHandler::insert_record(const char *data, RID *rid)
     rid->slot_num = index;
   }
 
-  // LOG_TRACE("Insert record. rid page_num=%d, slot num=%d", get_page_num(), index);
   return RC::SUCCESS;
 }
 
@@ -183,7 +179,6 @@ RC RecordPageHandler::update_record(const Record *rec)
     memcpy(record_data, rec->data(), page_header_->record_real_size);
     bitmap.set_bit(rec->rid().slot_num);
     frame_->mark_dirty();
-    // LOG_TRACE("Update record. file_id=%d, page num=%d,slot=%d", file_id_, rec->rid.page_num, rec->rid.slot_num);
     return RC::SUCCESS;
   }
 }
@@ -273,7 +268,6 @@ RC RecordFileHandler::init_free_pages()
 {
   // 遍历当前文件上所有页面，找到没有满的页面
   // 这个效率很低，会降低启动速度
-
   RC rc = RC::SUCCESS;
   BufferPoolIterator bp_iterator;
   bp_iterator.init(*disk_buffer_pool_);
@@ -299,7 +293,6 @@ RC RecordFileHandler::insert_record(const char *data, int record_size, RID *rid)
 {
   RC ret = RC::SUCCESS;
   // 找到没有填满的页面
-
   RecordPageHandler record_page_handler;
   bool page_found = false;
   PageNum current_page_num = 0;
@@ -374,7 +367,7 @@ RC RecordFileHandler::delete_record(const RID *rid)
 
 RC RecordFileHandler::get_record(const RID *rid, Record *rec)
 {
-  // lock?
+  // TODO: lock?
   RC ret = RC::SUCCESS;
   if (nullptr == rid || nullptr == rec) {
     LOG_ERROR("Invalid rid %p or rec %p, one of them is null. ", rid, rec);

@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_SESSION_SESSIONEVENT_H__
 #define __OBSERVER_SESSION_SESSIONEVENT_H__
 
-#include <string.h>
+#include <cstring>
 #include <string>
 
 #include "common/seda/stage_event.h"
@@ -25,19 +25,17 @@ class Session;
 
 class SessionEvent : public common::StageEvent {
 public:
-  SessionEvent(ConnectionContext *client);
-  virtual ~SessionEvent();
+  explicit SessionEvent(ConnectionContext *client);
+  ~SessionEvent() override = default;
 
   ConnectionContext *get_client() const;
   Session *session() const;
 
-  const char *get_response() const;
+  const std::string &get_response() const;
   void set_response(const char *response);
   void set_response(const char *response, int len);
   void set_response(std::string &&response);
-  int get_response_len() const;
   char *get_request_buf();
-  int get_request_buf_len();
 
 private:
   ConnectionContext *client_;

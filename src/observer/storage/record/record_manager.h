@@ -30,12 +30,12 @@ struct PageHeader {
 class RecordPageHandler;
 class RecordPageIterator {
 public:
-  RecordPageIterator();
-  ~RecordPageIterator();
+  RecordPageIterator() = default;
+  ~RecordPageIterator() = default;
 
   void init(RecordPageHandler &record_page_handler);
 
-  bool has_next();
+  bool has_next() const;
   RC next(Record &record);
 
   bool is_valid() const
@@ -62,7 +62,6 @@ public:
   RC insert_record(const char *data, RID *rid);
   RC update_record(const Record *rec);
   RC delete_record(const RID *rid);
-
   RC get_record(const RID *rid, Record *rec);
 
   PageNum get_page_num() const;

@@ -26,16 +26,16 @@ See the Mulan PSL v2 for more details. */
 #include "event/session_event.h"
 #include "session/session.h"
 #include "sql/stmt/stmt.h"
+#include "sql/command/command.h"
+#include "sql/command/create_command.h"
+#include "sql/command/show_command.h"
+#include "sql/command/drop_command.h"
 #include "Planner.h"
 
 using namespace common;
 
 //! Constructor
 ResolveStage::ResolveStage(const char *tag) : Stage(tag)
-{}
-
-//! Destructor
-ResolveStage::~ResolveStage()
 {}
 
 //! Parse properties, instantiate a stage object
@@ -90,16 +90,34 @@ void ResolveStage::handle_event(StageEvent *event)
     return;
   }
 
+  // stmt
   Query *query = sql_event->query();
   Stmt *stmt = nullptr;
   RC rc = Stmt::create_stmt(db, *query, stmt);
   if (rc != RC::SUCCESS && rc != RC::UNIMPLENMENT) {
     LOG_WARN("failed to create stmt. rc=%d:%s", rc, strrc(rc));
-    session_event->set_response("FAILURE\n");
+    session_event->set_response("FAILURE");
     return;
   }
-
   sql_event->set_stmt(stmt);
+
+  // command
+  {
+    const auto &result = sql_event->result();
+    auto stmt = result->getStatement(0);
+    switch (stmt->type()) {  // TODO(vgalaxy): only consider the first stmt
+      case hsql::kStmtCreate:
+        sql_event->set_command(std::make_unique<CreateCommand>(dynamic_cast<const hsql::CreateStatement *>(stmt)));
+        break;
+      case hsql::kStmtShow:
+        sql_event->set_command(std::make_unique<ShowCommand>(dynamic_cast<const hsql::ShowStatement *>(stmt)));
+        break;
+      case hsql::kStmtDrop:
+        sql_event->set_command(std::make_unique<DropCommand>(dynamic_cast<const hsql::DropStatement *>(stmt)));
+      default:
+        break;
+    }
+  }
 
   query_cache_stage_->handle_event(sql_event);
   LOG_TRACE("Exit");

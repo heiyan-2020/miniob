@@ -113,7 +113,6 @@ void Server::close_connection(ConnectionContext *client_context)
 void Server::recv(int fd, short ev, void *arg)
 {
   ConnectionContext *client = (ConnectionContext *)arg;
-  // Server::send(sev->getClient(), sev->getRequestBuf(), strlen(sev->getRequestBuf()));
 
   int data_len = 0;
   int read_len = 0;
@@ -122,7 +121,8 @@ void Server::recv(int fd, short ev, void *arg)
 
   TimerStat timer_stat(*read_socket_metric_);
   MUTEX_LOCK(&client->mutex);
-  // 持续接收消息，直到遇到'\0'。将'\0'遇到的后续数据直接丢弃没有处理，因为目前仅支持一收一发的模式
+  // 持续接收消息，直到遇到 '\0'
+  // 将 '\0' 遇到的后续数据直接丢弃没有处理
   while (true) {
     read_len = ::read(client->fd, client->buf + data_len, buf_size - data_len);
     if (read_len < 0) {
@@ -234,7 +234,7 @@ void Server::accept(int fd, short ev, void *arg)
   }
 
   if (!instance->server_param_.use_unix_socket) {
-    // unix socket不支持设置NODELAY
+    // unix socket 不支持设置 NODELAY
     int yes = 1;
     ret = setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
     if (ret < 0) {

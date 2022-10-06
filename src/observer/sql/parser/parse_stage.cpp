@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <cstring>
 #include <string>
+#include <regex>
 
 #include "parse_stage.h"
 
@@ -33,10 +34,6 @@ using namespace common;
 
 //! Constructor
 ParseStage::ParseStage(const char *tag) : Stage(tag)
-{}
-
-//! Destructor
-ParseStage::~ParseStage()
 {}
 
 //! Parse properties, instantiate a stage object
@@ -62,7 +59,6 @@ bool ParseStage::initialize()
 {
   LOG_TRACE("Enter");
   auto stgp = next_stage_list_.begin();
-  // optimize_stage_ = *(stgp++);
   resolve_stage_ = *(stgp++);
   LOG_TRACE("Exit");
   return true;
@@ -116,10 +112,21 @@ RC ParseStage::handle_request(StageEvent *event)
   hsql::SQLParserResult result;
   hsql::SQLParser::parse(sql, &result);
   if (result.isValid()) {
-    sql_event->set_result(std::move(result));
+    sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
   } else {
-    LOG_ERROR("Failed to parse query.");
-    return RC::INTERNAL;
+    // transform char -> char(4)
+    // TODO(vgalaxy): consider coexistence of char and char (xxx)
+    std::string sql_trans = std::regex_replace(sql, std::regex{"char"}, "char(4)");
+    // parse again
+    result.reset();
+    hsql::SQLParser::parse(sql_trans, &result);
+    if (result.isValid()) {
+      sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
+    } else {
+      sql_event->session_event()->set_response("Failed to parse sql");
+      result.reset();
+      return RC::INTERNAL;
+    }
   }
 
   // original parser
@@ -134,7 +141,7 @@ RC ParseStage::handle_request(StageEvent *event)
     sql_event->set_query(query_result);
   } else {
     // set error information to event
-    sql_event->session_event()->set_response("Failed to parse sql\n");
+    sql_event->session_event()->set_response("Failed to parse sql");
     query_destroy(query_result);
     return RC::INTERNAL;
   }

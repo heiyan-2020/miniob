@@ -70,6 +70,7 @@ struct CreateStatement : SQLStatement {
 
   CreateType type;
   bool ifNotExists;                                 // default: false
+  bool isUnique;                                    // default: false
   char* filePath;                                   // default: nullptr
   char* schema;                                     // default: nullptr
   char* tableName;                                  // default: nullptr

@@ -89,7 +89,7 @@ Server *init_server()
   long max_connection_num = MAX_CONNECTION_NUM_DEFAULT;
   int port = PORT_DEFAULT;
 
-  std::map<std::string, std::string>::iterator it = net_section.find(CLIENT_ADDRESS);
+  auto it = net_section.find(CLIENT_ADDRESS);
   if (it != net_section.end()) {
     std::string str = it->second;
     str_to_val(str, listen_addr);
@@ -117,29 +117,30 @@ Server *init_server()
   server_param.max_connection_num = max_connection_num;
   server_param.port = port;
 
-  if (process_param->get_unix_socket_path().size() > 0) {
+  if (!process_param->get_unix_socket_path().empty()) {
     server_param.use_unix_socket = true;
     server_param.unix_socket_path = process_param->get_unix_socket_path();
   }
 
-  Server *server = new Server(server_param);
+  auto *server = new Server(server_param);
   return server;
 }
 
 /**
- * 如果收到terminal信号的时候，正在处理某些事情，比如打日志，并且拿着日志的锁
- * 那么直接在signal_handler里面处理的话，可能会导致死锁
+ * 如果收到 terminal 信号的时候，正在处理某些事情，比如打日志，并且拿着日志的锁
+ * 那么直接在 signal_handler 里面处理的话，可能会导致死锁
  * 所以这里单独创建一个线程
  */
 void *quit_thread_func(void *_signum)
 {
-  intptr_t signum = (intptr_t)_signum;
+  auto signum = (intptr_t)_signum;
   LOG_INFO("Receive signal: %ld", signum);
   if (g_server) {
     g_server->shutdown();
   }
   return nullptr;
 }
+
 void quit_signal_handle(int signum)
 {
   pthread_t tid;
@@ -152,7 +153,7 @@ int main(int argc, char **argv)
 
   parse_parameter(argc, argv);
 
-  int rc = STATUS_SUCCESS;
+  int rc;
   rc = init(the_process_param());
   if (rc) {
     std::cerr << "Shutdown due to failed to init!" << std::endl;

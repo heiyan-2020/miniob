@@ -19,12 +19,12 @@ See the Mulan PSL v2 for more details. */
 
 class ResolveStage : public common::Stage {
 public:
-  ~ResolveStage();
+  ~ResolveStage() override = default;
   static Stage *make_stage(const std::string &tag);
 
 protected:
   // common function
-  ResolveStage(const char *tag);
+  explicit ResolveStage(const char *tag);
   bool set_properties();
 
   bool initialize();

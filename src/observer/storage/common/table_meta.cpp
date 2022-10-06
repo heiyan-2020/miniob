@@ -51,15 +51,14 @@ RC TableMeta::init_sys_fields()
   sys_fields_.push_back(field_meta);
   return rc;
 }
-RC TableMeta::init(const char *name, int field_num, const AttrInfo attributes[])
+
+RC TableMeta::init(const char *name, std::vector<AttrInfo> attr_infos)
 {
   if (common::is_blank(name)) {
-    LOG_ERROR("Name cannot be empty");
     return RC::INVALID_ARGUMENT;
   }
 
-  if (field_num <= 0 || nullptr == attributes) {
-    LOG_ERROR("Invalid argument. name=%s, field_num=%d, attributes=%p", name, field_num, attributes);
+  if (attr_infos.empty()) {
     return RC::INVALID_ARGUMENT;
   }
 
@@ -72,7 +71,7 @@ RC TableMeta::init(const char *name, int field_num, const AttrInfo attributes[])
     }
   }
 
-  fields_.resize(field_num + sys_fields_.size());
+  fields_.resize(attr_infos.size() + sys_fields_.size());
   for (size_t i = 0; i < sys_fields_.size(); i++) {
     fields_[i] = sys_fields_[i];
   }
@@ -80,8 +79,8 @@ RC TableMeta::init(const char *name, int field_num, const AttrInfo attributes[])
   // 当前实现下，所有类型都是 4 字节对齐的，所以不再考虑字节对齐问题
   int field_offset = sys_fields_.back().offset() + sys_fields_.back().len();
 
-  for (int i = 0; i < field_num; i++) {
-    const AttrInfo &attr_info = attributes[i];
+  for (int i = 0; i < attr_infos.size(); i++) {
+    const AttrInfo &attr_info = attr_infos[i];
     rc = fields_[i + sys_fields_.size()].init(attr_info.name, attr_info.type, field_offset, attr_info.length, true);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, attr_info.name);

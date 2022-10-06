@@ -16,8 +16,8 @@ See the Mulan PSL v2 for more details. */
 #define __COMMON_VERSION_H__
 namespace common {
 
-#ifndef MAIJOR_VER
-#define MAIJOR_VER 1
+#ifndef MAJOR_VER
+#define MAJOR_VER 1
 #endif
 
 #ifndef MINOR_VER
