@@ -40,9 +40,9 @@ struct SQLStatement {
   // Length of the string in the SQL query string
   size_t stringLength;
 
-  std::vector<Expr*>* hints;
+  std::vector<Expr *> *hints;
 
- private:
+private:
   StatementType type_;
 };
 

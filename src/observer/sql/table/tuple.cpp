@@ -1,7 +1,8 @@
 #include "tuple.h"
 #include <string>
 
-Tuple::Tuple(std::vector<Value> values, const Schema *schema) {
+Tuple::Tuple(std::vector<Value> values, const Schema *schema)
+{
   assert(values.size() == schema->get_column_count());
 
   // 1. Calculate the size of the tuple.
@@ -17,11 +18,12 @@ Tuple::Tuple(std::vector<Value> values, const Schema *schema) {
 
   for (uint32_t i = 0; i < column_count; i++) {
     const auto &col = schema->get_column(i);
-      values[i].SerializeTo(data_ + col.get_offset());
+    values[i].SerializeTo(data_ + col.get_offset());
   }
 }
 
-Value Tuple::GetValue(const Schema *schema, uint32_t column_idx) {
+Value Tuple::get_value(const Schema *schema, uint32_t column_idx)
+{
   assert(schema);
   assert(data_);
   const TypeId column_type = schema->get_column(column_idx).GetType();
@@ -29,7 +31,8 @@ Value Tuple::GetValue(const Schema *schema, uint32_t column_idx) {
   return Value::DeserializeFrom(data_ptr, column_type);
 }
 
-const char *Tuple::GetDataPtr(const Schema *schema, const uint32_t column_idx) const {
+const char *Tuple::get_data_ptr(const Schema *schema, const uint32_t column_idx) const
+{
   assert(schema);
   assert(data_);
   const auto &col = schema->get_column(column_idx);

@@ -12,7 +12,8 @@ using EnvRef = std::shared_ptr<Environment>;
 
 class Environment {
 public:
-  RC add_tuple(SchemaRef schema, TupleRef tuple) {
+  RC add_tuple(SchemaRef schema, TupleRef tuple)
+  {
     if (!schema || !tuple) {
       LOG_ERROR("Internal error: Adding empty schema or tuple into env.");
       return RC::INTERNAL;
@@ -22,12 +23,14 @@ public:
     current_tuples_.push_back(tuple);
   }
 
-  RC clear() {
+  RC clear()
+  {
     current_schemas_.clear();
     current_tuples_.clear();
   }
 
-  RC get_column_value(const char *table_name, const char *column_name, TupleCell &ret) {
+  RC get_column_value(const char *table_name, const char *column_name, TupleCell &ret)
+  {
     assert(column_name != nullptr);
     RC rc = RC::SUCCESS;
     for (int i = 0; i < current_tuples_.size(); i++) {
@@ -49,12 +52,11 @@ public:
     LOG_ERROR("May be in the parent env which hasn't implemented yet.");
     return RC::UNIMPLENMENT;
   }
+
 private:
   std::vector<SchemaRef> current_schemas_;
   std::vector<TupleRef> current_tuples_;
   std::vector<EnvRef> parent_envs_;
 };
-
-
 
 #endif  // MINIDB_ENVIRONMENT_H

@@ -1,6 +1,7 @@
 #include "schema.h"
 
-Schema::Schema(const std::vector<Column> &columns) {
+Schema::Schema(const std::vector<Column> &columns)
+{
   uint32_t curr_offset = 0;
   for (uint32_t index = 0; index < columns.size(); index++) {
     Column column = columns[index];

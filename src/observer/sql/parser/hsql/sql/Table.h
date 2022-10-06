@@ -15,16 +15,16 @@ struct TableRef;
 enum TableRefType { kTableName, kTableSelect, kTableJoin, kTableCrossProduct };
 
 struct TableName {
-  char* schema;
-  char* name;
+  char *schema;
+  char *name;
 };
 
 struct Alias {
-  Alias(char* name, std::vector<char*>* columns = nullptr);
+  Alias(char *name, std::vector<char *> *columns = nullptr);
   ~Alias();
 
-  char* name;
-  std::vector<char*>* columns;
+  char *name;
+  std::vector<char *> *columns;
 };
 
 // Holds reference to tables. Can be either table names or a select statement.
@@ -34,19 +34,19 @@ struct TableRef {
 
   TableRefType type;
 
-  char* schema;
-  char* name;
-  Alias* alias;
+  char *schema;
+  char *name;
+  Alias *alias;
 
-  SelectStatement* select;
-  std::vector<TableRef*>* list;
-  JoinDefinition* join;
+  SelectStatement *select;
+  std::vector<TableRef *> *list;
+  JoinDefinition *join;
 
   // Returns true if a schema is set.
   bool hasSchema() const;
 
   // Returns the alias, if it is set. Otherwise the name.
-  const char* getName() const;
+  const char *getName() const;
 };
 
 // Possible types of joins.
@@ -57,9 +57,9 @@ struct JoinDefinition {
   JoinDefinition();
   virtual ~JoinDefinition();
 
-  TableRef* left;
-  TableRef* right;
-  Expr* condition;
+  TableRef *left;
+  TableRef *right;
+  Expr *condition;
 
   JoinType type;
 };

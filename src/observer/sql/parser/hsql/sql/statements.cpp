@@ -4,21 +4,23 @@
 namespace hsql {
 
 // KeyConstraints
-TableConstraint::TableConstraint(ConstraintType type, std::vector<char*>* columnNames)
+TableConstraint::TableConstraint(ConstraintType type, std::vector<char *> *columnNames)
     : type(type), columnNames(columnNames){};
 
-TableConstraint::~TableConstraint() {
-  for (char* def : *columnNames) {
+TableConstraint::~TableConstraint()
+{
+  for (char *def : *columnNames) {
     free(def);
   }
   delete columnNames;
 }
 
 // ColumnDefinition
-ColumnDefinition::ColumnDefinition(char* name, ColumnType type, std::unordered_set<ConstraintType>* column_constraints)
+ColumnDefinition::ColumnDefinition(char *name, ColumnType type, std::unordered_set<ConstraintType> *column_constraints)
     : column_constraints(column_constraints), name(name), type(type), nullable(true){};
 
-ColumnDefinition::~ColumnDefinition() {
+ColumnDefinition::~ColumnDefinition()
+{
   free(name);
   delete column_constraints;
 }
@@ -26,14 +28,20 @@ ColumnDefinition::~ColumnDefinition() {
 ColumnType::ColumnType(DataType data_type, int64_t length, int64_t precision, int64_t scale)
     : data_type(data_type), length(length), precision(precision), scale(scale){};
 
-bool operator==(const ColumnType& lhs, const ColumnType& rhs) {
-  if (lhs.data_type != rhs.data_type) return false;
+bool operator==(const ColumnType &lhs, const ColumnType &rhs)
+{
+  if (lhs.data_type != rhs.data_type)
+    return false;
   return lhs.length == rhs.length && lhs.precision == rhs.precision && lhs.scale == rhs.scale;
 }
 
-bool operator!=(const ColumnType& lhs, const ColumnType& rhs) { return !(lhs == rhs); }
+bool operator!=(const ColumnType &lhs, const ColumnType &rhs)
+{
+  return !(lhs == rhs);
+}
 
-std::ostream& operator<<(std::ostream& stream, const ColumnType& column_type) {
+std::ostream &operator<<(std::ostream &stream, const ColumnType &column_type)
+{
   switch (column_type.data_type) {
     case DataType::UNKNOWN:
       stream << "UNKNOWN";
@@ -90,7 +98,8 @@ std::ostream& operator<<(std::ostream& stream, const ColumnType& column_type) {
 // DeleteStatement
 DeleteStatement::DeleteStatement() : SQLStatement(kStmtDelete), schema(nullptr), tableName(nullptr), expr(nullptr){};
 
-DeleteStatement::~DeleteStatement() {
+DeleteStatement::~DeleteStatement()
+{
   free(schema);
   free(tableName);
   delete expr;
@@ -98,9 +107,11 @@ DeleteStatement::~DeleteStatement() {
 
 // DropStatement
 DropStatement::DropStatement(DropType type)
-    : SQLStatement(kStmtDrop), type(type), schema(nullptr), name(nullptr), indexName(nullptr) {}
+    : SQLStatement(kStmtDrop), type(type), schema(nullptr), name(nullptr), indexName(nullptr)
+{}
 
-DropStatement::~DropStatement() {
+DropStatement::~DropStatement()
+{
   free(schema);
   free(name);
   free(indexName);
@@ -108,19 +119,25 @@ DropStatement::~DropStatement() {
 
 // AlterStatement and supportive classes
 
-AlterAction::AlterAction(ActionType type) : type(type) {}
+AlterAction::AlterAction(ActionType type) : type(type)
+{}
 
 AlterAction::~AlterAction() = default;
 
-DropColumnAction::DropColumnAction(char* column_name)
+DropColumnAction::DropColumnAction(char *column_name)
     : AlterAction(ActionType::DropColumn), columnName(column_name), ifExists(false){};
 
-DropColumnAction::~DropColumnAction() { free(columnName); }
+DropColumnAction::~DropColumnAction()
+{
+  free(columnName);
+}
 
-AlterStatement::AlterStatement(char* name, AlterAction* action)
-    : SQLStatement(kStmtAlter), schema(nullptr), ifTableExists(false), name(name), action(action) {}
+AlterStatement::AlterStatement(char *name, AlterAction *action)
+    : SQLStatement(kStmtAlter), schema(nullptr), ifTableExists(false), name(name), action(action)
+{}
 
-AlterStatement::~AlterStatement() {
+AlterStatement::~AlterStatement()
+{
   free(schema);
   free(name);
   delete action;
@@ -128,18 +145,22 @@ AlterStatement::~AlterStatement() {
 
 // TransactionStatement
 TransactionStatement::TransactionStatement(TransactionCommand command)
-    : SQLStatement(kStmtTransaction), command(command) {}
+    : SQLStatement(kStmtTransaction), command(command)
+{}
 
-TransactionStatement::~TransactionStatement() {}
+TransactionStatement::~TransactionStatement()
+{}
 
 // ExecuteStatement
-ExecuteStatement::ExecuteStatement() : SQLStatement(kStmtExecute), name(nullptr), parameters(nullptr) {}
+ExecuteStatement::ExecuteStatement() : SQLStatement(kStmtExecute), name(nullptr), parameters(nullptr)
+{}
 
-ExecuteStatement::~ExecuteStatement() {
+ExecuteStatement::~ExecuteStatement()
+{
   free(name);
 
   if (parameters != nullptr) {
-    for (Expr* param : *parameters) {
+    for (Expr *param : *parameters) {
       delete param;
     }
     delete parameters;
@@ -150,7 +171,8 @@ ExecuteStatement::~ExecuteStatement() {
 ExportStatement::ExportStatement(ImportType type)
     : SQLStatement(kStmtExport), type(type), filePath(nullptr), schema(nullptr), tableName(nullptr){};
 
-ExportStatement::~ExportStatement() {
+ExportStatement::~ExportStatement()
+{
   free(filePath);
   free(schema);
   free(tableName);
@@ -160,7 +182,8 @@ ExportStatement::~ExportStatement() {
 ImportStatement::ImportStatement(ImportType type)
     : SQLStatement(kStmtImport), type(type), filePath(nullptr), schema(nullptr), tableName(nullptr){};
 
-ImportStatement::~ImportStatement() {
+ImportStatement::~ImportStatement()
+{
   free(filePath);
   free(schema);
   free(tableName);
@@ -174,22 +197,24 @@ InsertStatement::InsertStatement(InsertType type)
       tableName(nullptr),
       columns(nullptr),
       values(nullptr),
-      select(nullptr) {}
+      select(nullptr)
+{}
 
-InsertStatement::~InsertStatement() {
+InsertStatement::~InsertStatement()
+{
   free(schema);
   free(tableName);
   delete select;
 
   if (columns != nullptr) {
-    for (char* column : *columns) {
+    for (char *column : *columns) {
       free(column);
     }
     delete columns;
   }
 
   if (values != nullptr) {
-    for (Expr* expr : *values) {
+    for (Expr *expr : *values) {
       delete expr;
     }
     delete values;
@@ -197,9 +222,11 @@ InsertStatement::~InsertStatement() {
 }
 
 // ShowStatament
-ShowStatement::ShowStatement(ShowType type) : SQLStatement(kStmtShow), type(type), schema(nullptr), name(nullptr) {}
+ShowStatement::ShowStatement(ShowType type) : SQLStatement(kStmtShow), type(type), schema(nullptr), name(nullptr)
+{}
 
-ShowStatement::~ShowStatement() {
+ShowStatement::~ShowStatement()
+{
   free(schema);
   free(name);
 }
@@ -207,33 +234,42 @@ ShowStatement::~ShowStatement() {
 // SelectStatement.h
 
 // OrderDescription
-OrderDescription::OrderDescription(OrderType type, Expr* expr) : type(type), expr(expr) {}
+OrderDescription::OrderDescription(OrderType type, Expr *expr) : type(type), expr(expr)
+{}
 
-OrderDescription::~OrderDescription() { delete expr; }
+OrderDescription::~OrderDescription()
+{
+  delete expr;
+}
 
 // LimitDescription
-LimitDescription::LimitDescription(Expr* limit, Expr* offset) : limit(limit), offset(offset) {}
+LimitDescription::LimitDescription(Expr *limit, Expr *offset) : limit(limit), offset(offset)
+{}
 
-LimitDescription::~LimitDescription() {
+LimitDescription::~LimitDescription()
+{
   delete limit;
   delete offset;
 }
 
 // GroypByDescription
-GroupByDescription::GroupByDescription() : columns(nullptr), having(nullptr) {}
+GroupByDescription::GroupByDescription() : columns(nullptr), having(nullptr)
+{}
 
-GroupByDescription::~GroupByDescription() {
+GroupByDescription::~GroupByDescription()
+{
   delete having;
 
   if (columns != nullptr) {
-    for (Expr* expr : *columns) {
+    for (Expr *expr : *columns) {
       delete expr;
     }
     delete columns;
   }
 }
 
-WithDescription::~WithDescription() {
+WithDescription::~WithDescription()
+{
   free(alias);
   delete select;
 }
@@ -252,7 +288,8 @@ SelectStatement::SelectStatement()
       limit(nullptr),
       lockings(nullptr){};
 
-SelectStatement::~SelectStatement() {
+SelectStatement::~SelectStatement()
+{
   delete fromTable;
   delete whereClause;
   delete groupBy;
@@ -260,38 +297,39 @@ SelectStatement::~SelectStatement() {
 
   // Delete each element in the select list.
   if (selectList != nullptr) {
-    for (Expr* expr : *selectList) {
+    for (Expr *expr : *selectList) {
       delete expr;
     }
     delete selectList;
   }
 
   if (order != nullptr) {
-    for (OrderDescription* desc : *order) {
+    for (OrderDescription *desc : *order) {
       delete desc;
     }
     delete order;
   }
 
   if (withDescriptions != nullptr) {
-    for (WithDescription* desc : *withDescriptions) {
+    for (WithDescription *desc : *withDescriptions) {
       delete desc;
     }
     delete withDescriptions;
   }
 
   if (setOperations != nullptr) {
-    for (SetOperation* setOperation : *setOperations) {
+    for (SetOperation *setOperation : *setOperations) {
       delete setOperation;
     }
     delete setOperations;
   }
 
   if (lockings != nullptr) {
-    for (LockingClause* lockingClause : *lockings) {
+    for (LockingClause *lockingClause : *lockings) {
       if (lockingClause->tables != nullptr) {
-        for (char* dtable : *lockingClause->tables) {
-          if (dtable != nullptr) free(dtable);
+        for (char *dtable : *lockingClause->tables) {
+          if (dtable != nullptr)
+            free(dtable);
         }
         delete lockingClause->tables;
       }
@@ -302,14 +340,16 @@ SelectStatement::~SelectStatement() {
 }
 
 // UpdateStatement
-UpdateStatement::UpdateStatement() : SQLStatement(kStmtUpdate), table(nullptr), updates(nullptr), where(nullptr) {}
+UpdateStatement::UpdateStatement() : SQLStatement(kStmtUpdate), table(nullptr), updates(nullptr), where(nullptr)
+{}
 
-UpdateStatement::~UpdateStatement() {
+UpdateStatement::~UpdateStatement()
+{
   delete table;
   delete where;
 
   if (updates != nullptr) {
-    for (UpdateClause* update : *updates) {
+    for (UpdateClause *update : *updates) {
       free(update->column);
       delete update->value;
       delete update;
@@ -319,12 +359,14 @@ UpdateStatement::~UpdateStatement() {
 }
 
 // Alias
-Alias::Alias(char* name, std::vector<char*>* columns) : name(name), columns(columns) {}
+Alias::Alias(char *name, std::vector<char *> *columns) : name(name), columns(columns)
+{}
 
-Alias::~Alias() {
+Alias::~Alias()
+{
   free(name);
   if (columns) {
-    for (char* column : *columns) {
+    for (char *column : *columns) {
       free(column);
     }
     delete columns;
@@ -333,9 +375,11 @@ Alias::~Alias() {
 
 // TableRef
 TableRef::TableRef(TableRefType type)
-    : type(type), schema(nullptr), name(nullptr), alias(nullptr), select(nullptr), list(nullptr), join(nullptr) {}
+    : type(type), schema(nullptr), name(nullptr), alias(nullptr), select(nullptr), list(nullptr), join(nullptr)
+{}
 
-TableRef::~TableRef() {
+TableRef::~TableRef()
+{
   free(schema);
   free(name);
 
@@ -344,16 +388,20 @@ TableRef::~TableRef() {
   delete alias;
 
   if (list != nullptr) {
-    for (TableRef* table : *list) {
+    for (TableRef *table : *list) {
       delete table;
     }
     delete list;
   }
 }
 
-bool TableRef::hasSchema() const { return schema != nullptr; }
+bool TableRef::hasSchema() const
+{
+  return schema != nullptr;
+}
 
-const char* TableRef::getName() const {
+const char *TableRef::getName() const
+{
   if (alias)
     return alias->name;
   else
@@ -361,22 +409,26 @@ const char* TableRef::getName() const {
 }
 
 // JoinDefinition
-JoinDefinition::JoinDefinition() : left(nullptr), right(nullptr), condition(nullptr), type(kJoinInner) {}
+JoinDefinition::JoinDefinition() : left(nullptr), right(nullptr), condition(nullptr), type(kJoinInner)
+{}
 
-JoinDefinition::~JoinDefinition() {
+JoinDefinition::~JoinDefinition()
+{
   delete left;
   delete right;
   delete condition;
 }
 
-SetOperation::SetOperation() : nestedSelectStatement(nullptr), resultOrder(nullptr), resultLimit(nullptr) {}
+SetOperation::SetOperation() : nestedSelectStatement(nullptr), resultOrder(nullptr), resultLimit(nullptr)
+{}
 
-SetOperation::~SetOperation() {
+SetOperation::~SetOperation()
+{
   delete nestedSelectStatement;
   delete resultLimit;
 
   if (resultOrder != nullptr) {
-    for (OrderDescription* desc : *resultOrder) {
+    for (OrderDescription *desc : *resultOrder) {
       delete desc;
     }
     delete resultOrder;

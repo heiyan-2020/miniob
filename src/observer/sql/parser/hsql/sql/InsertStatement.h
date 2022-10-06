@@ -14,11 +14,11 @@ struct InsertStatement : SQLStatement {
   ~InsertStatement() override;
 
   InsertType type;
-  char* schema;
-  char* tableName;
-  std::vector<char*>* columns;
-  std::vector<Expr*>* values;
-  SelectStatement* select;
+  char *schema;
+  char *tableName;
+  std::vector<char *> *columns;
+  std::vector<Expr *> *values;
+  SelectStatement *select;
 };
 
 }  // namespace hsql

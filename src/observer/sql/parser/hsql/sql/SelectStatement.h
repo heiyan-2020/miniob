@@ -15,20 +15,20 @@ enum RowLockWaitPolicy { NoWait, SkipLocked, None };
 
 // Description of the order by clause within a select statement.
 struct OrderDescription {
-  OrderDescription(OrderType type, Expr* expr);
+  OrderDescription(OrderType type, Expr *expr);
   virtual ~OrderDescription();
 
   OrderType type;
-  Expr* expr;
+  Expr *expr;
 };
 
 // Description of the limit clause within a select statement.
 struct LimitDescription {
-  LimitDescription(Expr* limit, Expr* offset);
+  LimitDescription(Expr *limit, Expr *offset);
   virtual ~LimitDescription();
 
-  Expr* limit;
-  Expr* offset;
+  Expr *limit;
+  Expr *offset;
 };
 
 // Description of the group-by clause within a select statement.
@@ -36,15 +36,15 @@ struct GroupByDescription {
   GroupByDescription();
   virtual ~GroupByDescription();
 
-  std::vector<Expr*>* columns;
-  Expr* having;
+  std::vector<Expr *> *columns;
+  Expr *having;
 };
 
 struct WithDescription {
   ~WithDescription();
 
-  char* alias;
-  SelectStatement* select;
+  char *alias;
+  SelectStatement *select;
 };
 
 struct SetOperation {
@@ -54,15 +54,15 @@ struct SetOperation {
   SetType setType;
   bool isAll;
 
-  SelectStatement* nestedSelectStatement;
-  std::vector<OrderDescription*>* resultOrder;
-  LimitDescription* resultLimit;
+  SelectStatement *nestedSelectStatement;
+  std::vector<OrderDescription *> *resultOrder;
+  LimitDescription *resultLimit;
 };
 
 struct LockingClause {
   RowLockMode rowLockMode;
   RowLockWaitPolicy rowLockWaitPolicy;
-  std::vector<char*>* tables;
+  std::vector<char *> *tables;
 };
 
 // Representation of a full SQL select statement.
@@ -70,11 +70,11 @@ struct SelectStatement : SQLStatement {
   SelectStatement();
   ~SelectStatement() override;
 
-  TableRef* fromTable;
+  TableRef *fromTable;
   bool selectDistinct;
-  std::vector<Expr*>* selectList;
-  Expr* whereClause;
-  GroupByDescription* groupBy;
+  std::vector<Expr *> *selectList;
+  Expr *whereClause;
+  GroupByDescription *groupBy;
 
   // Note that a SetOperation is always connected to a
   // different SelectStatement. This statement can itself
@@ -100,12 +100,12 @@ struct SelectStatement : SQLStatement {
   //   6. We evaluate the new nestedSelectStatement which is: `SELECT * FROM students_3`
   //   7. We apply a Union-Operation to connect the results of 4. and 6.
   //   8. Finally, we apply the resultOrder of the last SetOperation (ORDER BY grade ASC)
-  std::vector<SetOperation*>* setOperations;
+  std::vector<SetOperation *> *setOperations;
 
-  std::vector<OrderDescription*>* order;
-  std::vector<WithDescription*>* withDescriptions;
-  LimitDescription* limit;
-  std::vector<LockingClause*>* lockings;
+  std::vector<OrderDescription *> *order;
+  std::vector<WithDescription *> *withDescriptions;
+  LimitDescription *limit;
+  std::vector<LockingClause *> *lockings;
 };
 
 }  // namespace hsql

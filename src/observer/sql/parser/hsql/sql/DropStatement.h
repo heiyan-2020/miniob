@@ -16,9 +16,9 @@ struct DropStatement : SQLStatement {
 
   DropType type;
   bool ifExists;
-  char* schema;
-  char* name;
-  char* indexName;
+  char *schema;
+  char *name;
+  char *indexName;
 };
 
 }  // namespace hsql

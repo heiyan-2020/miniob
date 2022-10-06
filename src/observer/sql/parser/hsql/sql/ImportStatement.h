@@ -17,9 +17,9 @@ struct ImportStatement : SQLStatement {
   ~ImportStatement() override;
 
   ImportType type;
-  char* filePath;
-  char* schema;
-  char* tableName;
+  char *filePath;
+  char *schema;
+  char *tableName;
 };
 
 }  // namespace hsql

@@ -17,8 +17,8 @@ struct AlterAction {
 };
 
 struct DropColumnAction : AlterAction {
-  DropColumnAction(char* column_name);
-  char* columnName;
+  DropColumnAction(char *column_name);
+  char *columnName;
   bool ifExists;
 
   ~DropColumnAction() override;
@@ -27,13 +27,13 @@ struct DropColumnAction : AlterAction {
 // Represents SQL Alter Table statements.
 // Example "ALTER TABLE students DROP COLUMN name;"
 struct AlterStatement : SQLStatement {
-  AlterStatement(char* name, AlterAction* action);
+  AlterStatement(char *name, AlterAction *action);
   ~AlterStatement() override;
 
-  char* schema;
+  char *schema;
   bool ifTableExists;
-  char* name;
-  AlterAction* action;
+  char *name;
+  AlterAction *action;
 };
 }  // namespace hsql
 

@@ -11,10 +11,10 @@ struct PrepareStatement : SQLStatement {
   PrepareStatement();
   ~PrepareStatement() override;
 
-  char* name;
+  char *name;
 
   // The query that is supposed to be prepared.
-  char* query;
+  char *query;
 };
 
 }  // namespace hsql

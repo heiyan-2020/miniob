@@ -33,9 +33,9 @@ struct ColumnType {
   int64_t scale;      // Used for DECIMAL (6, 4)
 };
 
-bool operator==(const ColumnType& lhs, const ColumnType& rhs);
-bool operator!=(const ColumnType& lhs, const ColumnType& rhs);
-std::ostream& operator<<(std::ostream&, const ColumnType&);
+bool operator==(const ColumnType &lhs, const ColumnType &rhs);
+bool operator!=(const ColumnType &lhs, const ColumnType &rhs);
+std::ostream &operator<<(std::ostream &, const ColumnType &);
 
 }  // namespace hsql
 

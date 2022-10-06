@@ -11,8 +11,8 @@ struct ExecuteStatement : SQLStatement {
   ExecuteStatement();
   ~ExecuteStatement() override;
 
-  char* name;
-  std::vector<Expr*>* parameters;
+  char *name;
+  std::vector<Expr *> *parameters;
 };
 
 }  // namespace hsql

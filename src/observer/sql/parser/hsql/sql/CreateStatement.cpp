@@ -18,7 +18,8 @@ CreateStatement::CreateStatement(CreateType type)
       viewColumns(nullptr),
       select(nullptr){};
 
-CreateStatement::~CreateStatement() {
+CreateStatement::~CreateStatement()
+{
   free(filePath);
   free(schema);
   free(tableName);
@@ -26,42 +27,43 @@ CreateStatement::~CreateStatement() {
   delete select;
 
   if (columns != nullptr) {
-    for (ColumnDefinition* def : *columns) {
+    for (ColumnDefinition *def : *columns) {
       delete def;
     }
     delete columns;
   }
 
   if (tableConstraints != nullptr) {
-    for (TableConstraint* def : *tableConstraints) {
+    for (TableConstraint *def : *tableConstraints) {
       delete def;
     }
     delete tableConstraints;
   }
 
   if (indexColumns != nullptr) {
-    for (char* column : *indexColumns) {
+    for (char *column : *indexColumns) {
       free(column);
     }
     delete indexColumns;
   }
 
   if (viewColumns != nullptr) {
-    for (char* column : *viewColumns) {
+    for (char *column : *viewColumns) {
       free(column);
     }
     delete viewColumns;
   }
 }
 
-void CreateStatement::setColumnDefsAndConstraints(std::vector<TableElement*>* tableElements) {
-  columns = new std::vector<ColumnDefinition*>();
-  tableConstraints = new std::vector<TableConstraint*>();
+void CreateStatement::setColumnDefsAndConstraints(std::vector<TableElement *> *tableElements)
+{
+  columns = new std::vector<ColumnDefinition *>();
+  tableConstraints = new std::vector<TableConstraint *>();
 
   for (auto tableElem : *tableElements) {
-    if (auto* colDef = dynamic_cast<ColumnDefinition*>(tableElem)) {
+    if (auto *colDef = dynamic_cast<ColumnDefinition *>(tableElem)) {
       columns->emplace_back(colDef);
-    } else if (auto* tableConstraint = dynamic_cast<TableConstraint*>(tableElem)) {
+    } else if (auto *tableConstraint = dynamic_cast<TableConstraint *>(tableElem)) {
       tableConstraints->emplace_back(tableConstraint);
     }
   }

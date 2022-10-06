@@ -12,9 +12,9 @@ struct ExportStatement : SQLStatement {
 
   // ImportType is used for compatibility reasons
   ImportType type;
-  char* filePath;
-  char* schema;
-  char* tableName;
+  char *filePath;
+  char *schema;
+  char *tableName;
 };
 
 }  // namespace hsql
