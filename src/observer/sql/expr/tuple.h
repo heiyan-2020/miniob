@@ -230,3 +230,5 @@ private:
   std::vector<TupleCellSpec *> speces_;
   Tuple *tuple_ = nullptr;
 };
+
+using TupleRef = std::shared_ptr<Tuple>;

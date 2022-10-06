@@ -203,6 +203,7 @@ enum RC {
   NOTADB,           /* File opened that is not a database file */
   NOTICE = 100,     /* Notifications from log() */
   DATE,             /* Date format error */
+  WRONGTYPE,        /* wrong type error */
 
   /* buffer pool part */
   BUFFERPOOL_EXIST = (BUFFERPOOL | (RCBufferPool::BP_EXIST << 8)),

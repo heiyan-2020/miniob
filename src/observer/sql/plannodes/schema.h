@@ -19,17 +19,23 @@ public:
   Schema(RowTuple *table_tuple)
   {
     for (auto spec : table_tuple->speces_) {
-      cols_.push_back(Column(spec));
+      cols_.push_back(std::make_shared<Column>(spec));
+    }
+    for (int i = 0; i < table_tuple->speces_.size(); i++) {
+      cols_.push_back(std::make_shared<Column>(table_tuple->speces_[i]));
+      cols_[i]->set_index(i);
     }
   }
 
   void append(Schema s);
   int addColumn(Column column);
 
-  std::vector<Column> findColumns(const char *table_name, const char *column_name);
+  std::vector<ColumnRef> findColumns(const char *table_name, const char *column_name);
 
 private:
-  std::vector<Column> cols_;
+  std::vector<ColumnRef> cols_;
 };
+
+using SchemaRef = std::shared_ptr<Schema>;
 
 #endif  // MINIDB_SCHEMA_H

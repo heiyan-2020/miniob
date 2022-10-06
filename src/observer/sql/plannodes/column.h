@@ -32,6 +32,12 @@ public:
   {
     return col_idx_;
   }
+
+  void set_index(int index)
+  {
+    col_idx_ = index;
+  }
+
   TupleCellSpec *get_spec()
   {
     return spec_;
@@ -43,5 +49,7 @@ private:
   int col_idx_;
   TupleCellSpec *spec_;
 };
+
+using ColumnRef = std::shared_ptr<Column>;
 
 #endif  // MINIDB_COLUMN_H
