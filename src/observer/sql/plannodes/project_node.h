@@ -4,17 +4,18 @@
 
 #ifndef MINIDB_PROJECT_NODE_H
 #define MINIDB_PROJECT_NODE_H
-#include "PlanNode.h"
-
+#include "plan_node.h"
 
 class ProjectNode : public PlanNode {
 public:
-  ProjectNode(std::shared_ptr<PlanNode> leftChild, std::vector<hsql::Expr*> projectionSpecs): left_child_(leftChild), projection_spec_(projectionSpecs)
+  ProjectNode(std::shared_ptr<PlanNode> leftChild, std::vector<hsql::Expr *> projectionSpecs)
+      : left_child_(leftChild), projection_spec_(projectionSpecs)
   {}
-  ProjectNode(std::vector<hsql::Expr*> selValues);
+  ProjectNode(std::vector<hsql::Expr *> selValues);
   ProjectNode();
   virtual RC prepare() override;
-  virtual RC initialize() override {
+  virtual RC initialize() override
+  {
     return RC::UNIMPLENMENT;
   }
   virtual RC next() override;
@@ -23,7 +24,7 @@ public:
 
 private:
   std::shared_ptr<PlanNode> left_child_;
-  std::vector<hsql::Expr*> projection_spec_;
+  std::vector<hsql::Expr *> projection_spec_;
 
   void prepareSchema(Schema inputSchema);
   ProjectTuple project_tuple(RowTuple ori_tuple);

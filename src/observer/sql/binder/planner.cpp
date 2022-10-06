@@ -1,9 +1,10 @@
 //
 // Created by 37034 on 10/4/2022.
 //
-#include "Planner.h"
+#include "planner.h"
 
-RC Planner::handleFromClause(hsql::TableRef *table, std::shared_ptr<PlanNode> &plan) {
+RC Planner::handleFromClause(hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
+{
   if (table != nullptr) {
     switch (table->type) {
       case hsql::TableRefType::kTableName: {
@@ -21,7 +22,7 @@ RC Planner::handleFromClause(hsql::TableRef *table, std::shared_ptr<PlanNode> &p
         break;
       }
       case hsql::TableRefType::kTableSelect:
-        break ;
+        break;
       case hsql::TableRefType::kTableJoin:
       case hsql::TableRefType::kTableCrossProduct:
         break;
@@ -32,10 +33,11 @@ RC Planner::handleFromClause(hsql::TableRef *table, std::shared_ptr<PlanNode> &p
   return RC::SUCCESS;
 }
 
-RC Planner::handleWhereClause(hsql::SelectStatement *selStmt, std::shared_ptr<PlanNode> &plan) {
+RC Planner::handleWhereClause(hsql::SelectStatement *selStmt, std::shared_ptr<PlanNode> &plan)
+{
   hsql::Expr *predicate = selStmt->whereClause;
   RC rc = RC::SUCCESS;
-  //TODO(zyx): find aggregates in expr.
+  // TODO(zyx): find aggregates in expr.
 
   if (nullptr != predicate) {
     rc = addPredicateToPlan(plan, predicate);
@@ -48,17 +50,19 @@ RC Planner::handleWhereClause(hsql::SelectStatement *selStmt, std::shared_ptr<Pl
   return RC::SUCCESS;
 }
 
-RC Planner::handleSelectClause(hsql::SelectStatement *selStmt, std::shared_ptr<PlanNode> &plan) {
+RC Planner::handleSelectClause(hsql::SelectStatement *selStmt, std::shared_ptr<PlanNode> &plan)
+{
   if (!plan) {
     LOG_ERROR("Not supported select values yet.\n");
     return RC::UNIMPLENMENT;
-    //TODO(zyx): Support query without from tables.
+    // TODO(zyx): Support query without from tables.
   }
   plan = std::make_shared<ProjectNode>(plan, *selStmt->selectList);
   return RC::SUCCESS;
 }
 
-RC Planner::addPredicateToPlan(std::shared_ptr<PlanNode> &plan, hsql::Expr *predicate) {
+RC Planner::addPredicateToPlan(std::shared_ptr<PlanNode> &plan, hsql::Expr *predicate)
+{
   std::shared_ptr<TableScanNode> scan_node = std::dynamic_pointer_cast<TableScanNode>(plan);
   if (scan_node) {
     if (scan_node->getPredicate() != nullptr) {
@@ -69,10 +73,11 @@ RC Planner::addPredicateToPlan(std::shared_ptr<PlanNode> &plan, hsql::Expr *pred
     return RC::SUCCESS;
   }
   return RC::UNIMPLENMENT;
-  //TODO(zyx): Add filter node..
+  // TODO(zyx): Add filter node..
 }
 
-RC Planner::make_plan(hsql::SelectStatement *selStmt, std::shared_ptr<PlanNode> &plan) {
+RC Planner::make_plan(hsql::SelectStatement *selStmt, std::shared_ptr<PlanNode> &plan)
+{
   RC rc = RC::SUCCESS;
 
   rc = handleFromClause(selStmt->fromTable, plan);

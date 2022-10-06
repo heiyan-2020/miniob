@@ -14,12 +14,28 @@ class TupleCellSpec; /**
                       */
 class Column {
 public:
-  Column(TupleCellSpec *spec):spec_(spec) {}
-  const char *get_table_name() { return ((FieldExpr *) spec_->expression())->table_name(); }
-  const char *get_column_name() { return ((FieldExpr *) spec_->expression())->field_name(); }
-  void set_alias(const char *alias) { spec_->set_alias(alias); }
-  int get_index() { return col_idx_; }
-  TupleCellSpec *get_spec() { return spec_; }
+  Column(TupleCellSpec *spec) : spec_(spec)
+  {}
+  const char *get_table_name()
+  {
+    return ((FieldExpr *)spec_->expression())->table_name();
+  }
+  const char *get_column_name()
+  {
+    return ((FieldExpr *)spec_->expression())->field_name();
+  }
+  void set_alias(const char *alias)
+  {
+    spec_->set_alias(alias);
+  }
+  int get_index()
+  {
+    return col_idx_;
+  }
+  TupleCellSpec *get_spec()
+  {
+    return spec_;
+  }
 
 private:
   const char *table_name_;

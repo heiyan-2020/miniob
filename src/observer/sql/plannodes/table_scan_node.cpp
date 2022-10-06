@@ -4,7 +4,8 @@
 
 #include "table_scan_node.h"
 
-RC TableScanNode::prepare() {
+RC TableScanNode::prepare()
+{
   RC rc = table_->get_record_scanner(record_scanner_);
   if (rc == RC::SUCCESS) {
     current_.set_schema(table_, table_->table_meta().field_metas());
@@ -14,7 +15,8 @@ RC TableScanNode::prepare() {
   return rc;
 }
 
-RC TableScanNode::next() {
+RC TableScanNode::next()
+{
   if (!record_scanner_.has_next()) {
     return RC::RECORD_EOF;
   }

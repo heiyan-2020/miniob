@@ -2,14 +2,14 @@
 // Created by 37034 on 10/5/2022.
 //
 
-#include "Schema.h"
+#include "schema.h"
 
-//Schema::Schema(RowTuple table_tuple)
+// Schema::Schema(RowTuple table_tuple)
 //{
-//  for (auto spec : table_tuple.speces_) {
-//    cols_.push_back(Column(spec));
-//  }
-//}
+//   for (auto spec : table_tuple.speces_) {
+//     cols_.push_back(Column(spec));
+//   }
+// }
 
 std::vector<Column> Schema::findColumns(const char *table_name, const char *column_name)
 {

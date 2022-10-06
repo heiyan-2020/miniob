@@ -8,7 +8,7 @@ class Table;
 
 class DropCommand : public Command {
 public:
-  explicit DropCommand(const hsql::DropStatement* stmt);
+  explicit DropCommand(const hsql::DropStatement *stmt);
   ~DropCommand() override = default;
 
   RC execute(const SQLStageEvent *sql_event) override;
@@ -17,5 +17,5 @@ private:
   RC do_drop_table(const SQLStageEvent *sql_event);
 
 private:
-  const hsql::DropStatement* stmt_;
+  const hsql::DropStatement *stmt_;
 };

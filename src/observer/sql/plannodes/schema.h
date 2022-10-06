@@ -10,13 +10,14 @@
 #include "string.h"
 #include "sql/expr/tuple.h"
 
-
 class Schema {
 public:
-  Schema() {}
+  Schema()
+  {}
   Schema(std::vector<Column> cols);
   Schema(Schema lhs, Schema rhs);
-  Schema(RowTuple *table_tuple) {
+  Schema(RowTuple *table_tuple)
+  {
     for (auto spec : table_tuple->speces_) {
       cols_.push_back(Column(spec));
     }
@@ -27,11 +28,8 @@ public:
 
   std::vector<Column> findColumns(const char *table_name, const char *column_name);
 
-
 private:
   std::vector<Column> cols_;
-
 };
-
 
 #endif  // MINIDB_SCHEMA_H

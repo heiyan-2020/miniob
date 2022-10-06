@@ -24,13 +24,14 @@ RC ProjectNode::next()
   return RC::GENERIC_ERROR;
 }
 
-Tuple* ProjectNode::current_tuple()
+Tuple *ProjectNode::current_tuple()
 {
   current_.set_tuple(left_child_->current_tuple());
   return &current_;
 }
 
-ProjectTuple ProjectNode::project_tuple(RowTuple ori_tuple) {
+ProjectTuple ProjectNode::project_tuple(RowTuple ori_tuple)
+{
   ProjectTuple ret_tuple;
   std::vector<Column> tmp;
 
@@ -83,19 +84,19 @@ void ProjectNode::prepareSchema(Schema inputSchema)
         }
       }
     } else if (expr->type == hsql::kExprColumnRef) {
-        tmp = input_schema_.findColumns(expr->table, expr->getName());
-        assert(tmp.size() == 1);
-        if (expr->hasAlias()) {
-          tmp[0].set_alias(expr->alias);
-        }
-        fields.insert(fields.end(), tmp.begin(), tmp.end());
-        for (auto col : tmp) {
-          current_.add_cell_spec(col.get_spec());
-        }
+      tmp = input_schema_.findColumns(expr->table, expr->getName());
+      assert(tmp.size() == 1);
+      if (expr->hasAlias()) {
+        tmp[0].set_alias(expr->alias);
+      }
+      fields.insert(fields.end(), tmp.begin(), tmp.end());
+      for (auto col : tmp) {
+        current_.add_cell_spec(col.get_spec());
+      }
     } else {
       LOG_WARN("select value not supported.");
     }
   }
 
-  //TODO: set out_put schema.
+  // TODO: set out_put schema.
 }

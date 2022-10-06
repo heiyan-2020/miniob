@@ -8,7 +8,7 @@ class Table;
 
 class ShowCommand : public Command {
 public:
-  explicit ShowCommand(const hsql::ShowStatement* stmt);
+  explicit ShowCommand(const hsql::ShowStatement *stmt);
   ~ShowCommand() override = default;
 
   RC execute(const SQLStageEvent *sql_event) override;
@@ -18,5 +18,5 @@ private:
   RC do_desc_table(const SQLStageEvent *sql_event);
 
 private:
-  const hsql::ShowStatement* stmt_;
+  const hsql::ShowStatement *stmt_;
 };

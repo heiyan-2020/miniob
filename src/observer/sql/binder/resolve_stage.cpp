@@ -30,7 +30,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/command/create_command.h"
 #include "sql/command/show_command.h"
 #include "sql/command/drop_command.h"
-#include "Planner.h"
+#include "planner.h"
 
 using namespace common;
 
