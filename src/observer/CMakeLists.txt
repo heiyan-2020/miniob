@@ -17,7 +17,7 @@ MESSAGE("MAIN SRC: " ${MAIN_SRC})
 FOREACH (F ${ALL_SRC})
 
     IF (NOT ${F} STREQUAL ${MAIN_SRC})
-        SET(LIB_SRC ${LIB_SRC} ${F})
+        SET(LIB_SRC ${LIB_SRC} ${F} sql/plannodes/Schema.h sql/plannodes/PlanNode.h sql/expr/Environment.h sql/binder/Planner.h sql/binder/Planner.cpp sql/plannodes/table_scan_node.h sql/plannodes/table_scan_node.cpp sql/plannodes/project_node.h sql/plannodes/project_node.cpp sql/plannodes/Schema.cpp sql/plannodes/column.h)
     ENDIF ()
 
     MESSAGE("Use " ${F})

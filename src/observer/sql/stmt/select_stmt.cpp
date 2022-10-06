@@ -62,7 +62,6 @@ RC SelectStmt::create(Db *db, const Selects &select_sql, Stmt *&stmt)
       for (Table *table : tables) {
         wildcard_fields(table, query_fields);
       }
-
     } else if (!common::is_blank(relation_attr.relation_name)) {  // TODO
       const char *table_name = relation_attr.relation_name;
       const char *field_name = relation_attr.attribute_name;

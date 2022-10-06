@@ -70,8 +70,11 @@ public:
   virtual RC cell_spec_at(int index, const TupleCellSpec *&spec) const = 0;
 };
 
+class Schema;
+
 class RowTuple : public Tuple {
 public:
+  friend class Schema;
   RowTuple() = default;
   virtual ~RowTuple()
   {

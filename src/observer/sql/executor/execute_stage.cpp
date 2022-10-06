@@ -237,7 +237,7 @@ void print_tuple_header(std::ostream &os, const ProjectOperator &oper)
   }
 }
 
-void tuple_to_string(std::ostream &os, const Tuple &tuple)
+static void tuple_to_string(std::ostream &os, const Tuple &tuple)
 {
   TupleCell cell;
   RC rc = RC::SUCCESS;

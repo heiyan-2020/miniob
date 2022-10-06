@@ -26,6 +26,7 @@ See the Mulan PSL v2 for more details. */
 #include "event/session_event.h"
 #include "session/session.h"
 #include "sql/stmt/stmt.h"
+#include "Planner.h"
 
 using namespace common;
 
