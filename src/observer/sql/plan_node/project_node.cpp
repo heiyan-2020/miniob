@@ -2,6 +2,8 @@
 // Created by 37034 on 10/5/2022.
 //
 #include "project_node.h"
+
+#include <utility>
 #include "common/log/log.h"
 
 RC ProjectNode::prepare()
@@ -10,7 +12,7 @@ RC ProjectNode::prepare()
     left_child_->prepare();
     prepareSchema(left_child_->getSchema());
   } else {
-    LOG_WARN("Not implemented!\n");
+    LOG_WARN("Not implemented!");
   }
   return RC::SUCCESS;
 }
@@ -30,7 +32,7 @@ Tuple *ProjectNode::current_tuple()
   return &current_;
 }
 
-ProjectTuple ProjectNode::project_tuple(RowTuple ori_tuple)
+ProjectTuple ProjectNode::project_tuple(const RowTuple& ori_tuple)
 {
   ProjectTuple ret_tuple;
   std::vector<Column> tmp;
@@ -38,18 +40,18 @@ ProjectTuple ProjectNode::project_tuple(RowTuple ori_tuple)
   for (hsql::Expr *expr : projection_spec_) {
     if (expr->type == hsql::kExprStar) {
       if (expr->hasTable()) {
-        tmp = input_schema_.findColumns(expr->table, nullptr);
+        tmp = input_schema_.find_columns(expr->table, nullptr);
         for (auto col : tmp) {
           ret_tuple.add_cell_spec(col.get_spec());
         }
       } else {
-        tmp = input_schema_.findColumns(nullptr, nullptr);
+        tmp = input_schema_.find_columns(nullptr, nullptr);
         for (auto col : tmp) {
           ret_tuple.add_cell_spec(col.get_spec());
         }
       }
     } else if (expr->type == hsql::kExprColumnRef) {
-      tmp = input_schema_.findColumns(expr->table, expr->getName());
+      tmp = input_schema_.find_columns(expr->table, expr->getName());
       assert(tmp.size() == 1);
       for (auto col : tmp) {
         ret_tuple.add_cell_spec(col.get_spec());
@@ -62,29 +64,29 @@ ProjectTuple ProjectNode::project_tuple(RowTuple ori_tuple)
   return ret_tuple;
 }
 
-void ProjectNode::prepareSchema(Schema inputSchema)
+void ProjectNode::prepareSchema(Schema input_schema)
 {
-  input_schema_ = inputSchema;
+  input_schema_ = std::move(input_schema);
   std::vector<Column> fields;
   std::vector<Column> tmp;
 
   for (hsql::Expr *expr : projection_spec_) {
     if (expr->type == hsql::kExprStar) {
       if (expr->hasTable()) {
-        tmp = input_schema_.findColumns(expr->table, nullptr);
+        tmp = input_schema_.find_columns(expr->table, nullptr);
         fields.insert(fields.end(), tmp.begin(), tmp.end());
         for (auto col : tmp) {
           current_.add_cell_spec(col.get_spec());
         }
       } else {
-        tmp = input_schema_.findColumns(nullptr, nullptr);
+        tmp = input_schema_.find_columns(nullptr, nullptr);
         fields.insert(fields.end(), tmp.begin(), tmp.end());
         for (auto col : tmp) {
           current_.add_cell_spec(col.get_spec());
         }
       }
     } else if (expr->type == hsql::kExprColumnRef) {
-      tmp = input_schema_.findColumns(expr->table, expr->getName());
+      tmp = input_schema_.find_columns(expr->table, expr->getName());
       assert(tmp.size() == 1);
       if (expr->hasAlias()) {
         tmp[0].set_alias(expr->alias);

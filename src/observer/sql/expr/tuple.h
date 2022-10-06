@@ -28,7 +28,7 @@ class Table;
 class TupleCellSpec {
 public:
   TupleCellSpec() = default;
-  TupleCellSpec(Expression *expr) : expression_(expr)
+  explicit TupleCellSpec(Expression *expr) : expression_(expr)
   {}
 
   ~TupleCellSpec()
@@ -76,7 +76,7 @@ class RowTuple : public Tuple {
 public:
   friend class Schema;
   RowTuple() = default;
-  virtual ~RowTuple()
+  ~RowTuple() override
   {
     for (TupleCellSpec *spec : speces_) {
       delete spec;
@@ -111,7 +111,7 @@ public:
     }
 
     const TupleCellSpec *spec = speces_[index];
-    FieldExpr *field_expr = (FieldExpr *)spec->expression();
+    auto *field_expr = (FieldExpr *)spec->expression();
     const FieldMeta *field_meta = field_expr->field().meta();
     cell.set_type(field_meta->type());
     cell.set_data(this->record_->data() + field_meta->offset());
@@ -128,7 +128,7 @@ public:
 
     const char *field_name = field.field_name();
     for (size_t i = 0; i < speces_.size(); ++i) {
-      const FieldExpr *field_expr = (const FieldExpr *)speces_[i]->expression();
+      const auto *field_expr = (const FieldExpr *)speces_[i]->expression();
       const Field &field = field_expr->field();
       if (0 == strcmp(field_name, field.field_name())) {
         return cell_at(i, cell);
@@ -163,22 +163,10 @@ private:
   std::vector<TupleCellSpec *> speces_;
 };
 
-/*
-class CompositeTuple : public Tuple
-{
-public:
-  int cell_num() const override;
-  RC  cell_at(int index, TupleCell &cell) const = 0;
-private:
-  int cell_num_ = 0;
-  std::vector<Tuple *> tuples_;
-};
-*/
-
 class ProjectTuple : public Tuple {
 public:
   ProjectTuple() = default;
-  virtual ~ProjectTuple()
+  ~ProjectTuple() override
   {
     for (TupleCellSpec *spec : speces_) {
       delete spec;

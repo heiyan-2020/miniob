@@ -11,7 +11,7 @@
 //   }
 // }
 
-std::vector<Column> Schema::findColumns(const char *table_name, const char *column_name)
+std::vector<Column> Schema::find_columns(const char *table_name, const char *column_name)
 {
   std::vector<Column> found_columns;
 
@@ -29,14 +29,14 @@ std::vector<Column> Schema::findColumns(const char *table_name, const char *colu
     }
   } else {
     if (table_name == nullptr) {
-      // Column name with no table name:  col
+      // Column name with no table name: col
       for (Column col : cols_) {
         if (0 == strcmp(col.get_column_name(), column_name)) {
           found_columns.push_back(col);
         }
       }
     } else {
-      // Column name with table name:  t.col
+      // Column name with table name: t.col
       for (Column col : cols_) {
         if (0 == strcmp(col.get_column_name(), column_name) && 0 == strcmp(col.get_table_name(), table_name)) {
           found_columns.push_back(col);

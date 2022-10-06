@@ -14,7 +14,7 @@ class TupleCellSpec; /**
                       */
 class Column {
 public:
-  Column(TupleCellSpec *spec) : spec_(spec)
+  explicit Column(TupleCellSpec *spec) : spec_(spec)
   {}
   const char *get_table_name()
   {
@@ -28,7 +28,7 @@ public:
   {
     spec_->set_alias(alias);
   }
-  int get_index()
+  int get_index() const
   {
     return col_idx_;
   }
@@ -38,9 +38,9 @@ public:
   }
 
 private:
-  const char *table_name_;
-  const char *column_name_;
-  int col_idx_;
+  const char *table_name_{};
+  const char *column_name_{};
+  int col_idx_{};
   TupleCellSpec *spec_;
 };
 

@@ -30,6 +30,10 @@ See the Mulan PSL v2 for more details. */
 #include "sql/command/create_command.h"
 #include "sql/command/show_command.h"
 #include "sql/command/drop_command.h"
+#include "sql/command/select_command.h"
+#include "sql/command/insert_command.h"
+#include "sql/command/update_command.h"
+#include "sql/command/delete_command.h"
 #include "planner.h"
 
 using namespace common;
@@ -114,6 +118,19 @@ void ResolveStage::handle_event(StageEvent *event)
         break;
       case hsql::kStmtDrop:
         sql_event->set_command(std::make_unique<DropCommand>(dynamic_cast<const hsql::DropStatement *>(stmt)));
+        break;
+      case hsql::kStmtSelect:
+        sql_event->set_command(std::make_unique<SelectCommand>(dynamic_cast<const hsql::SelectStatement *>(stmt)));
+        break;
+      case hsql::kStmtInsert:
+        sql_event->set_command(std::make_unique<InsertCommand>(dynamic_cast<const hsql::InsertStatement *>(stmt)));
+        break;
+      case hsql::kStmtUpdate:
+        sql_event->set_command(std::make_unique<UpdateCommand>(dynamic_cast<const hsql::UpdateStatement *>(stmt)));
+        break;
+      case hsql::kStmtDelete:
+        sql_event->set_command(std::make_unique<DeleteCommand>(dynamic_cast<const hsql::DeleteStatement *>(stmt)));
+        break;
       default:
         break;
     }

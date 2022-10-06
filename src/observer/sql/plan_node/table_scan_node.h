@@ -11,25 +11,24 @@ class TableScanNode : public PlanNode {
 public:
   TableScanNode(Table *table, hsql::Expr *predicate) : table_(table), predicate_(predicate)
   {}
-  ~TableScanNode()
+  ~TableScanNode() override
   {
     record_scanner_.close_scan();
-    std::cerr << "close" << std::endl;
   }
-  virtual RC prepare() override;
-  virtual RC initialize() override
+  RC prepare() override;
+  RC initialize() override
   {
     return RC::UNIMPLENMENT;
   }
-  virtual RC next() override;
+  RC next() override;
 
-  virtual Tuple *current_tuple();
+  Tuple *current_tuple() override;
 
-  hsql::Expr *getPredicate()
+  hsql::Expr *get_predicate()
   {
     return predicate_;
   }
-  void setPredicate(hsql::Expr *expr)
+  void set_predicate(hsql::Expr *expr)
   {
     predicate_ = expr;
   }
