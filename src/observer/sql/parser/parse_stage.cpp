@@ -28,6 +28,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/parser/parse.h"
 
 #include "hsql/SQLParser.h"
+#include "sql/binder/Planner.h"
 
 using namespace common;
 

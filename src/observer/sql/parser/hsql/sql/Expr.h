@@ -95,8 +95,8 @@ struct Expr {
   ExprType type;
 
   // TODO: Replace expressions by list.
-  Expr* expr;
-  Expr* expr2;
+  Expr* expr; //left child
+  Expr* expr2; //right child
   std::vector<Expr*>* exprList;
   SelectStatement* select;
   char* name;

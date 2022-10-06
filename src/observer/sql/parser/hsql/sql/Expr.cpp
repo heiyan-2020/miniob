@@ -1,6 +1,7 @@
 #include "Expr.h"
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
 #include "SelectStatement.h"
 
 namespace hsql {
@@ -30,6 +31,7 @@ Expr::~Expr() {
   free(name);
   free(table);
   free(alias);
+  std::cerr << "destruct Expr\n";
 
   if (exprList != nullptr) {
     for (Expr* e : *exprList) {
