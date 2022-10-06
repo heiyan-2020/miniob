@@ -25,12 +25,12 @@ class SelectStmt;
 
 class ExecuteStage : public common::Stage {
 public:
-  ~ExecuteStage();
+  ~ExecuteStage() override = default;
   static Stage *make_stage(const std::string &tag);
 
 protected:
   // common function
-  ExecuteStage(const char *tag);
+  explicit ExecuteStage(const char *tag);
   bool set_properties() override;
 
   bool initialize() override;
@@ -39,12 +39,8 @@ protected:
   void callback_event(common::StageEvent *event, common::CallbackContext *context) override;
 
   void handle_request(common::StageEvent *event);
+
   RC do_help(SQLStageEvent *session_event);
-  RC do_create_table(SQLStageEvent *sql_event);
-  RC do_create_index(SQLStageEvent *sql_event);
-  RC do_show_tables(SQLStageEvent *sql_event);
-  RC do_desc_table(SQLStageEvent *sql_event);
-  RC do_drop_table(SQLStageEvent *sql_event);
   RC do_select(SQLStageEvent *sql_event);
   RC do_insert(SQLStageEvent *sql_event);
   RC do_delete(SQLStageEvent *sql_event);
@@ -53,7 +49,6 @@ protected:
 protected:
 private:
   Stage *default_storage_stage_ = nullptr;
-  Stage *mem_storage_stage_ = nullptr;
 };
 
 #endif  //__OBSERVER_SQL_EXECUTE_STAGE_H__

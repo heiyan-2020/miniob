@@ -35,10 +35,6 @@ using namespace common;
 ParseStage::ParseStage(const char *tag) : Stage(tag)
 {}
 
-//! Destructor
-ParseStage::~ParseStage()
-{}
-
 //! Parse properties, instantiate a stage object
 Stage *ParseStage::make_stage(const std::string &tag)
 {
@@ -62,7 +58,6 @@ bool ParseStage::initialize()
 {
   LOG_TRACE("Enter");
   auto stgp = next_stage_list_.begin();
-  // optimize_stage_ = *(stgp++);
   resolve_stage_ = *(stgp++);
   LOG_TRACE("Exit");
   return true;
@@ -116,7 +111,7 @@ RC ParseStage::handle_request(StageEvent *event)
   hsql::SQLParserResult result;
   hsql::SQLParser::parse(sql, &result);
   if (result.isValid()) {
-    sql_event->set_result(std::move(result));
+    sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
   } else {
     // transform char -> char(4)
     // TODO(vgalaxy): consider coexistence of char and char (xxx)
@@ -125,7 +120,7 @@ RC ParseStage::handle_request(StageEvent *event)
     result.reset();
     hsql::SQLParser::parse(sql_trans, &result);
     if (result.isValid()) {
-      sql_event->set_result(std::move(result));
+      sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
     } else {
       sql_event->session_event()->set_response("Failed to parse sql");
       result.reset();

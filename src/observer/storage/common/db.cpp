@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <utility>
 #include <vector>
 
 #include "common/log/log.h"
@@ -52,7 +53,7 @@ RC Db::init(const char *name, const char *dbpath)
   return open_all_tables();
 }
 
-RC Db::create_table(const char *table_name, int attribute_count, const AttrInfo *attributes)
+RC Db::create_table(const char *table_name, std::vector<AttrInfo> attr_infos)
 {
   RC rc = RC::SUCCESS;
   // check table_name
@@ -63,8 +64,8 @@ RC Db::create_table(const char *table_name, int attribute_count, const AttrInfo 
 
   // 文件路径可以移到 Table 模块
   std::string table_file_path = table_meta_file(path_.c_str(), table_name);
-  Table *table = new Table();
-  rc = table->create(table_file_path.c_str(), table_name, path_.c_str(), attribute_count, attributes);
+  auto *table = new Table();
+  rc = table->create(table_file_path.c_str(), table_name, path_.c_str(), std::move(attr_infos));
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to create table %s.", table_name);
     delete table;

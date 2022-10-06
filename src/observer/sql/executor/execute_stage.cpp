@@ -45,21 +45,14 @@ See the Mulan PSL v2 for more details. */
 
 using namespace common;
 
-// RC create_selection_executor(
-//    Trx *trx, const Selects &selects, const char *db, const char *table_name, SelectExeNode &select_node);
-
 //! Constructor
 ExecuteStage::ExecuteStage(const char *tag) : Stage(tag)
-{}
-
-//! Destructor
-ExecuteStage::~ExecuteStage()
 {}
 
 //! Parse properties, instantiate a stage object
 Stage *ExecuteStage::make_stage(const std::string &tag)
 {
-  ExecuteStage *stage = new (std::nothrow) ExecuteStage(tag.c_str());
+  auto *stage = new (std::nothrow) ExecuteStage(tag.c_str());
   if (stage == nullptr) {
     LOG_ERROR("new ExecuteStage failed");
     return nullptr;
@@ -71,14 +64,6 @@ Stage *ExecuteStage::make_stage(const std::string &tag)
 //! Set properties for this object set in stage specific properties
 bool ExecuteStage::set_properties()
 {
-  //  std::string stageNameStr(stageName);
-  //  std::map<std::string, std::string> section = theGlobalProperties()->get(
-  //    stageNameStr);
-  //
-  //  std::map<std::string, std::string>::iterator it;
-  //
-  //  std::string key;
-
   return true;
 }
 
@@ -87,11 +72,11 @@ bool ExecuteStage::initialize()
 {
   LOG_TRACE("Enter");
 
-  std::list<Stage *>::iterator stgp = next_stage_list_.begin();
+  auto stgp = next_stage_list_.begin();
   default_storage_stage_ = *(stgp++);
-  mem_storage_stage_ = *(stgp++);
 
   LOG_TRACE("Exit");
+
   return true;
 }
 
@@ -110,7 +95,6 @@ void ExecuteStage::handle_event(StageEvent *event)
   handle_request(event);
 
   LOG_TRACE("Exit");
-  return;
 }
 
 void ExecuteStage::callback_event(StageEvent *event, CallbackContext *context)
@@ -120,16 +104,17 @@ void ExecuteStage::callback_event(StageEvent *event, CallbackContext *context)
   // here finish read all data from disk or network, but do nothing here.
 
   LOG_TRACE("Exit");
-  return;
 }
 
 void ExecuteStage::handle_request(common::StageEvent *event)
 {
-  SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
+  auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   SessionEvent *session_event = sql_event->session_event();
   Stmt *stmt = sql_event->stmt();
   Session *session = session_event->session();
   Query *sql = sql_event->query();
+
+  sql_event->command()->execute(sql_event);
 
   if (stmt != nullptr) {
     switch (stmt->type()) {
@@ -154,21 +139,13 @@ void ExecuteStage::handle_request(common::StageEvent *event)
       case SCF_HELP: {
         do_help(sql_event);
       } break;
-      case SCF_CREATE_TABLE: {
-        do_create_table(sql_event);
-      } break;
-      case SCF_CREATE_INDEX: {
-        do_create_index(sql_event);
-      } break;
-      case SCF_SHOW_TABLES: {
-        do_show_tables(sql_event);
-      } break;
-      case SCF_DESC_TABLE: {
-        do_desc_table(sql_event);
-      } break;
-      case SCF_DROP_TABLE: {
-        do_drop_table(sql_event);
-      } break;
+
+      case SCF_CREATE_TABLE:
+      case SCF_CREATE_INDEX:
+      case SCF_SHOW_TABLES:
+      case SCF_DESC_TABLE:
+      case SCF_DROP_TABLE:
+        break;
 
       case SCF_SYNC: {
         RC rc = DefaultHandler::get_default().sync();
@@ -313,98 +290,8 @@ RC ExecuteStage::do_help(SQLStageEvent *sql_event)
                          "insert into `table` values(`value1`,`value2`);\n"
                          "update `table` set column=value [where `column`=`value`];\n"
                          "delete from `table` [where `column`=`value`];\n"
-                         "select [ * | `columns` ] from `table`;"; // remove '\n'
+                         "select [ * | `columns` ] from `table`;\n";
   session_event->set_response(response);
-  return RC::SUCCESS;
-}
-
-RC ExecuteStage::do_create_table(SQLStageEvent *sql_event)
-{
-  const CreateTable &create_table = sql_event->query()->sstr.create_table;
-  SessionEvent *session_event = sql_event->session_event();
-  Db *db = session_event->session()->get_current_db();
-  RC rc = db->create_table(create_table.relation_name, create_table.attribute_count, create_table.attributes);
-  if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
-  } else {
-    session_event->set_response("FAILURE");
-  }
-  return rc;
-}
-
-RC ExecuteStage::do_create_index(SQLStageEvent *sql_event)
-{
-  SessionEvent *session_event = sql_event->session_event();
-  Db *db = session_event->session()->get_current_db();
-  const CreateIndex &create_index = sql_event->query()->sstr.create_index;
-  Table *table = db->find_table(create_index.relation_name);
-  if (nullptr == table) {
-    session_event->set_response("FAILURE");
-    return RC::SCHEMA_TABLE_NOT_EXIST;
-  }
-
-  std::vector<std::string> attribute_names{};
-  for (size_t i = 0; i < create_index.attribute_count; ++i) {
-    attribute_names.emplace_back(create_index.attribute_name[i]);
-  }
-  if (attribute_names.size() > MAX_ATTR_NUM) {
-    return RC::GENERIC_ERROR;  // TODO: support up to 4 multi index
-  }
-
-  RC rc = table->create_index(nullptr, create_index.index_name, attribute_names, create_index.is_unique);
-  if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
-  } else {
-    session_event->set_response("FAILURE");
-  }
-  return rc;
-}
-
-RC ExecuteStage::do_show_tables(SQLStageEvent *sql_event)
-{
-  SessionEvent *session_event = sql_event->session_event();
-  Db *db = session_event->session()->get_current_db();
-  std::vector<std::string> all_tables;
-  db->all_tables(all_tables);
-  if (all_tables.empty()) {
-    session_event->set_response("No table");
-  } else {
-    std::stringstream ss;
-    for (const auto &table : all_tables) {
-      ss << table << std::endl;
-    }
-    session_event->set_response(ss.str());
-  }
-  return RC::SUCCESS;
-}
-
-RC ExecuteStage::do_desc_table(SQLStageEvent *sql_event)
-{
-  Query *query = sql_event->query();
-  Db *db = sql_event->session_event()->session()->get_current_db();
-  const char *table_name = query->sstr.desc_table.relation_name;
-  Table *table = db->find_table(table_name);
-  std::stringstream ss;
-  if (table != nullptr) {
-    table->table_meta().desc(ss);
-  } else {
-    ss << "No such table: " << table_name << std::endl;
-  }
-  sql_event->session_event()->set_response(ss.str());
-  return RC::SUCCESS;
-}
-
-RC ExecuteStage::do_drop_table(SQLStageEvent *sql_event)
-{
-  const DropTable &drop_table = sql_event->query()->sstr.drop_table;
-  SessionEvent *session_event = sql_event->session_event();
-  Db *db = session_event->session()->get_current_db();
-  RC rc = db->drop_table(drop_table.relation_name);
-  if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
-  } else {
-    session_event->set_response("FAILURE");
-  }
   return RC::SUCCESS;
 }
 

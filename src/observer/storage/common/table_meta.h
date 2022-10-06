@@ -32,7 +32,7 @@ public:
 
   void swap(TableMeta &other) noexcept;
 
-  RC init(const char *name, int field_num, const AttrInfo attributes[]);
+  RC init(const char *name, std::vector<AttrInfo> attr_infos);
 
   RC add_index(const IndexMeta &index);
 

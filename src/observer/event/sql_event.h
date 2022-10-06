@@ -18,15 +18,17 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 #include "common/seda/stage_event.h"
 #include "sql/parser/hsql/SQLParserResult.h"
+#include "sql/command/command.h"
 
 class SessionEvent;
 class Stmt;
+class Command;
 struct Query;
 
 class SQLStageEvent : public common::StageEvent {
 public:
   SQLStageEvent(SessionEvent *event, const std::string &sql);
-  virtual ~SQLStageEvent() noexcept;
+  ~SQLStageEvent() noexcept override;
 
   SessionEvent *session_event() const
   {
@@ -45,8 +47,13 @@ public:
   {
     return stmt_;
   }
-  const hsql::SQLParserResult& result() const {
+  const std::unique_ptr<hsql::SQLParserResult>& result() const
+  {
     return result_;
+  }
+  const std::unique_ptr<Command>& command() const
+  {
+    return command_;
   }
 
   void set_sql(const char *sql)
@@ -61,17 +68,22 @@ public:
   {
     stmt_ = stmt;
   }
-  void set_result(hsql::SQLParserResult result)
+  void set_result(std::unique_ptr<hsql::SQLParserResult> result)
   {
     result_ = std::move(result);
+  }
+  void set_command(std::unique_ptr<Command> command)
+  {
+    command_ = std::move(command);
   }
 
 private:
   SessionEvent *session_event_ = nullptr;
-  std::string sql_;
+  std::string sql_{};
   Query *query_ = nullptr;
   Stmt *stmt_ = nullptr;
-  hsql::SQLParserResult result_;
+  std::unique_ptr<hsql::SQLParserResult> result_{};
+  std::unique_ptr<Command> command_{};
 };
 
-#endif  //__SRC_OBSERVER_SQL_EVENT_SQLEVENT_H__
+#endif  //__OBSERVER_SQL_EVENT_SQLEVENT_H__

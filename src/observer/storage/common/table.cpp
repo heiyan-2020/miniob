@@ -50,18 +50,15 @@ Table::~Table()
   LOG_INFO("Table has been closed: %s", name());
 }
 
-RC Table::create(
-    const char *path, const char *name, const char *base_dir, int attribute_count, const AttrInfo attributes[])
+RC Table::create(const char *path, const char *name, const char *base_dir, std::vector<AttrInfo> attr_infos)
 {
-
   if (common::is_blank(name)) {
-    LOG_WARN("Name cannot be empty");
     return RC::INVALID_ARGUMENT;
   }
+
   LOG_INFO("Begin to create table %s:%s", base_dir, name);
 
-  if (attribute_count <= 0 || nullptr == attributes) {
-    LOG_WARN("Invalid arguments. table_name=%s, attribute_count=%d, attributes=%p", name, attribute_count, attributes);
+  if (attr_infos.empty()) {
     return RC::INVALID_ARGUMENT;
   }
 
@@ -82,7 +79,7 @@ RC Table::create(
   close(fd);
 
   // 创建文件
-  if ((rc = table_meta_.init(name, attribute_count, attributes)) != RC::SUCCESS) {
+  if ((rc = table_meta_.init(name, attr_infos)) != RC::SUCCESS) {
     LOG_ERROR("Failed to init table meta. name:%s, ret:%d", name, rc);
     return rc;  // delete table file
   }

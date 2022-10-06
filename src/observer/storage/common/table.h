@@ -31,29 +31,13 @@ public:
   Table() = default;
   ~Table();
 
-  /**
-   * 创建一个表
-   * @param path 元数据保存的文件 (完整路径)
-   * @param name 表名
-   * @param base_dir 表数据存放的路径
-   * @param attribute_count 字段个数
-   * @param attributes 字段
-   */
-  RC create(const char *path, const char *name, const char *base_dir, int attribute_count, const AttrInfo attributes[]);
-
-  /**
-   * 打开一个表
-   * @param meta_file 保存表元数据的文件完整路径
-   * @param base_dir 表所在的文件夹，表记录数据文件、索引数据文件存放位置
-   */
+  RC create(const char *path, const char *name, const char *base_dir, std::vector<AttrInfo> attr_infos);
   RC open(const char *meta_file, const char *base_dir);
-
   RC drop(const char *table_name);
 
   RC insert_record(Trx *trx, int value_num, const Value *values);
   RC update_record(Trx *trx, Record *old_record, Record *new_record);
   RC delete_record(Trx *trx, Record *record);
-
   RC scan_record(Trx *trx, int limit, void *context, void (*record_reader)(const char *, void *));
 
   RC create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique);

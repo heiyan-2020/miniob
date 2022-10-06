@@ -31,7 +31,7 @@ public:
 
   RC init(const char *name, const char *dbpath);
 
-  RC create_table(const char *table_name, int attribute_count, const AttrInfo *attributes);
+  RC create_table(const char *table_name, std::vector<AttrInfo> attr_infos);
 
   RC drop_table(const char *table_name);
 
