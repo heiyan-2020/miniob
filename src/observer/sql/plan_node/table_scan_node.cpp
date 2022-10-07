@@ -22,8 +22,8 @@ RC TableScanNode::next()
   return rc;
 }
 
-Tuple *TableScanNode::current_tuple()
+TupleRef TableScanNode::current_tuple()
 {
-  current_ = refactor::Tuple(&current_record_);
-  return &current_;
+  current_ = std::make_shared<Tuple>(&current_record_);
+  return current_;
 }

@@ -6,6 +6,9 @@
 #include "type/value.h"
 #include "storage/record/record.h"
 
+class Tuple;
+using TupleRef = std::shared_ptr<Tuple>;
+
 class Tuple {
 public:
   // Default constructor (to create a dummy tuple)
@@ -16,6 +19,11 @@ public:
 
   // constructor for table heap tuple
   explicit Tuple(Record *record);
+
+  ~Tuple() {
+    delete[] data_;
+    data_ = nullptr;
+  }
 
   Value get_value(const Schema *schema, size_t column_idx) const;
 

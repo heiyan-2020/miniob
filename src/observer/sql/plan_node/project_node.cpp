@@ -26,13 +26,13 @@ RC ProjectNode::next()
   return RC::GENERIC_ERROR;
 }
 
-Tuple *ProjectNode::current_tuple()
+TupleRef ProjectNode::current_tuple()
 {
-  current_.set_tuple(left_child_->current_tuple());
-  return &current_;
+  current_ = left_child_->current_tuple();
+  return project_tuple(current_);
 }
 
-ProjectTuple ProjectNode::project_tuple(const RowTuple &ori_tuple)
+TupleRef ProjectNode::project_tuple(TupleRef tuple)
 {
   ProjectTuple ret_tuple;
   std::vector<Column> tmp;
@@ -72,7 +72,7 @@ void ProjectNode::prepareSchema(SchemaRef input_schema)
   for (hsql::Expr *expr : projection_spec_) {
     if (expr->type == hsql::kExprStar) {
       if (expr->hasTable()) {
-        tmp = input_schema.find_columns(expr->table, nullptr);
+        tmp = input_schema->find_columns(expr->table, nullptr);
         fields.insert(fields.end(), tmp.begin(), tmp.end());
         for (auto col : tmp) {
           current_.add_cell_spec(col.get_spec());

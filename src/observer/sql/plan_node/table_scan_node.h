@@ -24,7 +24,7 @@ public:
   }
   RC next() override;
 
-  Tuple *current_tuple() override;
+  TupleRef current_tuple() override;
 
   hsql::Expr *get_predicate()
   {
@@ -38,7 +38,7 @@ public:
 private:
   Table *table_;
   hsql::Expr *predicate_;
-  Tuple current_;
+  TupleRef current_;
   RecordFileScanner record_scanner_;
   Record current_record_;
 };

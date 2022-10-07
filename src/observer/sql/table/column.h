@@ -9,6 +9,7 @@
 
 class ColumnName {
   friend class TableMeta;
+  friend class Schema;
 
 public:
   ColumnName() = default;
@@ -24,6 +25,7 @@ public:
     this->table_name_ = other.table_name_;
     this->column_name_ = other.column_name_;
   }
+
   bool operator==(const ColumnName &other) const
   {
     return table_name_ == other.table_name_ && column_name_ == other.column_name_;
@@ -52,6 +54,11 @@ public:
   TypeId get_type()
   {
     return column_type_;
+  }
+
+  ColumnName &get_name()
+  {
+    return name_;
   }
 
 private:

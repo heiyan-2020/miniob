@@ -25,15 +25,15 @@ public:
   }
   RC next() override;
 
-  Tuple *current_tuple() override;
+  TupleRef current_tuple() override;
 
 private:
   PlanNodeRef left_child_;
   std::vector<hsql::Expr *> projection_spec_;
 
   void prepareSchema(SchemaRef input_schema);
-  Tuple project_tuple(const Tuple &original_tuple);
-  Tuple current_;
+  TupleRef project_tuple(TupleRef original_tuple);
+  TupleRef current_;
 };
 
 #endif  // MINIDB_PROJECT_NODE_H

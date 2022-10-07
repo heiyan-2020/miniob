@@ -14,7 +14,7 @@ public:
   Schema() = default;
   explicit Schema(const std::vector<Column> &columns);
 
-  Schema(Table *table, const std::vector<FieldMeta> *table_schema);
+  Schema(const Table *table, const std::vector<FieldMeta> *table_schema);
 
   const std::vector<Column> &get_columns() const
   {
@@ -47,7 +47,12 @@ public:
     return length_;
   }
 
+  std::vector<Column> find_columns(std::string &table_name, std::string &column_name);
+
 private:
+  void set_columns(const std::vector<Column> columns);
+
+
   std::vector<Column> columns_{};
   size_t length_{};
 };
