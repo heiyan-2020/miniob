@@ -77,3 +77,9 @@ auto IntType::deserialize_from(const char *storage) const -> Value
   int32_t val = *reinterpret_cast<const int32_t *>(storage);
   return {INT, val};
 }
+
+auto IntType::to_string(const Value &val) const -> std::string
+{
+  // TODO(zyx): check null.
+  return std::to_string(val.value_.int_);
+}

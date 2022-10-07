@@ -77,3 +77,8 @@ auto FloatType::deserialize_from(const char *storage) const -> Value
   float val = *reinterpret_cast<const float *>(storage);
   return {FLOAT, val};
 }
+
+auto FloatType::to_string(const Value &val) const -> std::string
+{
+  return {};
+}

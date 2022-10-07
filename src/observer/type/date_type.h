@@ -30,4 +30,6 @@ public:
 
   auto serialize_to(const Value &val, char *storage) const -> void override;
   auto deserialize_from(const char *storage) const -> Value override;
+
+  auto to_string(const Value &val) const -> std::string override;
 };

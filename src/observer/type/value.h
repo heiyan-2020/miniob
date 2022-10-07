@@ -73,6 +73,8 @@ public:
   auto serialize_to(char *storage) const -> void;
   auto deserialize_from(const char *storage) -> Value;
 
+  inline auto to_string() const -> std::string { return Type::get_instance(type_id_)->to_string(*this); }
+
 protected:
   TypeId type_id_;
 

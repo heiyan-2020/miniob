@@ -76,3 +76,8 @@ auto DateType::deserialize_from(const char *storage) const -> Value
 {
   return {DATE, reinterpret_cast<const int32_t *>(storage)};
 }
+
+auto DateType::to_string(const Value &val) const -> std::string
+{
+  return {};
+}

@@ -3,6 +3,7 @@
 #include "command.h"
 #include "sql/parser/hsql/sql/SelectStatement.h"
 #include "sql/table/tuple.h"
+#include "sql/table/schema.h"
 
 class Session;
 class Table;

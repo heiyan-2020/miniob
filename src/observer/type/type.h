@@ -74,6 +74,8 @@ public:
   virtual auto serialize_to(const Value &val, char *storage) const -> void;
   virtual auto deserialize_from(const char *storage) const -> Value;
 
+  virtual auto to_string(const Value &val) const -> std::string;
+
 protected:
   TypeId type_id_;
   static Type *k_types[PLACEHOLDER];

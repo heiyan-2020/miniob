@@ -88,3 +88,8 @@ auto Type::deserialize_from(const char *storage) const -> Value
 {
   return Value{};
 }
+
+auto Type::to_string(const Value &val) const -> std::string
+{
+  return {};
+}
