@@ -3,27 +3,27 @@
 
 auto CharType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, strcmp(left.value_.char_, right.value_.char_) == 0};
+  return Value{BOOL, left.value_.char_ == right.value_.char_};
 }
 auto CharType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, strcmp(left.value_.char_, right.value_.char_) != 0};
+  return Value{BOOL, left.value_.char_ != right.value_.char_};
 }
 auto CharType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, strcmp(left.value_.char_, right.value_.char_) < 0};
+  return Value{BOOL, left.value_.char_ < right.value_.char_};
 }
 auto CharType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, strcmp(left.value_.char_, right.value_.char_) <= 0};
+  return Value{BOOL, left.value_.char_ <= right.value_.char_};
 }
 auto CharType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, strcmp(left.value_.char_, right.value_.char_) > 0};
+  return Value{BOOL, left.value_.char_ > right.value_.char_};
 }
 auto CharType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, strcmp(left.value_.char_, right.value_.char_) >= 0};
+  return Value{BOOL, left.value_.char_ >= right.value_.char_};
 }
 
 auto CharType::add(const Value &left, const Value &right) const -> Value
@@ -45,11 +45,11 @@ auto CharType::divide(const Value &left, const Value &right) const -> Value
 
 auto CharType::min(const Value &left, const Value &right) const -> Value
 {
-  return strcmp(left.value_.char_, right.value_.char_) <= 0 ? left : right;
+  return left.value_.char_ <= right.value_.char_ ? left : right;
 }
 auto CharType::max(const Value &left, const Value &right) const -> Value
 {
-  return strcmp(left.value_.char_, right.value_.char_) >= 0 ? left : right;
+  return left.value_.char_ >= right.value_.char_ ? left : right;
 }
 
 auto CharType::conjunction(const Value &left, const Value &right) const -> Value
@@ -67,9 +67,9 @@ auto CharType::negation(const Value &value) const -> Value
 
 auto CharType::serialize_to(const Value &val, char *storage) const -> void
 {
-  memcpy(storage, val.value_.char_, val.len_);
+  memcpy(storage, val.value_.char_.c_str(), val.len_);
 }
 auto CharType::deserialize_from(const char *storage) const -> Value
 {
-  return Value{CHAR, storage, strlen(storage)};
+  return {CHAR, storage, strlen(storage)};
 }

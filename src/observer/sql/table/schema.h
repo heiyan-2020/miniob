@@ -13,7 +13,7 @@ public:
     return columns_;
   }
 
-  const Column &get_column(int col_idx) const
+  Column get_column(int col_idx) const
   {
     return columns_[col_idx];
   }

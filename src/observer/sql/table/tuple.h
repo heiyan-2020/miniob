@@ -1,6 +1,8 @@
 #pragma once
+
 #include <cstdint>
 #include "schema.h"
+#include "type/type_id.h"
 #include "type/value.h"
 #include "storage/record/record.h"
 

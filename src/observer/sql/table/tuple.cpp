@@ -15,20 +15,19 @@ Tuple::Tuple(std::vector<Value> values, const Schema *schema)
 
   // 3. Serialize each attribute based on the input value.
   uint32_t column_count = schema->get_column_count();
-
   for (uint32_t i = 0; i < column_count; i++) {
     const auto &col = schema->get_column(i);
-    values[i].SerializeTo(data_ + col.get_offset());
+    values[i].serialize_to(data_ + col.get_offset());
   }
 }
 
-Value Tuple::get_value(const Schema *schema, uint32_t column_idx)
+Value Tuple::get_value(const Schema *schema, uint32_t column_idx) const
 {
   assert(schema);
   assert(data_);
-  const TypeId column_type = schema->get_column(column_idx).GetType();
-  const char *data_ptr = GetDataPtr(schema, column_idx);
-  return Value::DeserializeFrom(data_ptr, column_type);
+  const TypeId column_type = schema->get_column(column_idx).get_type();
+  const char *data_ptr = get_data_ptr(schema, column_idx);
+  return Value{column_type}.deserialize_from(data_ptr);
 }
 
 const char *Tuple::get_data_ptr(const Schema *schema, const uint32_t column_idx) const
@@ -36,5 +35,5 @@ const char *Tuple::get_data_ptr(const Schema *schema, const uint32_t column_idx)
   assert(schema);
   assert(data_);
   const auto &col = schema->get_column(column_idx);
-  return (data_ + col.GetOffset());
+  return (data_ + col.get_offset());
 }

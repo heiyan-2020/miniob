@@ -38,9 +38,7 @@ public:
   }
   Value(TypeId type, const char *c, size_t len = 4) : type_id_{type}, len_{len}
   {
-    // TODO(vgalaxy): free the space
-    value_.char_ = static_cast<char *>(calloc(len + 1, sizeof(char)));
-    memcpy(value_.char_, c, len);
+    value_.char_ = std::string{c};
   }
 
   auto compare_equals(const Value &o) const -> Value;
@@ -68,12 +66,13 @@ public:
 protected:
   TypeId type_id_;
 
-  union Val {
-    bool bool_;
-    int32_t int_;
-    float float_;
-    int32_t date_[3];
-    char *char_;
+  // TODO(vgalaxy): use union
+  struct Val {
+    bool bool_{};
+    int32_t int_{};
+    float float_{};
+    int32_t date_[3]{};
+    std::string char_{};
   } value_{};
 
   size_t len_{};

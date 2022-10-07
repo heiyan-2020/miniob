@@ -3,8 +3,7 @@
 Schema::Schema(const std::vector<Column> &columns)
 {
   uint32_t curr_offset = 0;
-  for (uint32_t index = 0; index < columns.size(); index++) {
-    Column column = columns[index];
+  for (auto column : columns) {
     // set column offset
     column.column_offset_ = curr_offset;
     curr_offset += column.fixed_length_;

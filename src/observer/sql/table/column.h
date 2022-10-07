@@ -4,6 +4,7 @@
 #include "schema.h"
 #include "type/type_id.h"
 #include "type/type.h"
+#include "tuple.h"
 
 class ColName {
 public:
