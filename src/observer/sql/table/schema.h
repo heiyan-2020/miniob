@@ -1,10 +1,14 @@
-#pragma once
+#ifndef MINIDB_SCHEMA_H
+#define MINIDB_SCHEMA_H
 
 #include <vector>
 
 #include "column.h"
 #include "common/log/log.h"
-#include "storage/common/table.h"
+//#include "storage/common/table.h"
+
+class Table;
+class FieldMeta;
 
 class Schema;
 using SchemaRef = std::shared_ptr<Schema>;
@@ -50,9 +54,12 @@ public:
   std::vector<Column> find_columns(std::string table_name, std::string column_name);
 
 private:
-  void set_columns(const std::vector<Column> columns);
-
+  void set_columns(const std::vector<Column> &columns);
 
   std::vector<Column> columns_{};
   size_t length_{};
 };
+
+using SchemaRef = std::shared_ptr<Schema>;
+
+#endif

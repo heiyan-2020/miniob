@@ -98,7 +98,6 @@ void ExecuteStage::callback_event(StageEvent *event, CallbackContext *context)
 void ExecuteStage::handle_request(common::StageEvent *event)
 {
   auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
-  SessionEvent *session_event = sql_event->session_event();
   sql_event->command()->execute(sql_event);
 
 //  switch (type) {

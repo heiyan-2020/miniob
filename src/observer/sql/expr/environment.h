@@ -5,7 +5,9 @@
 #ifndef MINIDB_ENVIRONMENT_H
 #define MINIDB_ENVIRONMENT_H
 
-#include "tuple_cell.h"
+
+#include "sql/table/schema.h"
+#include "sql/table/tuple.h"
 class Environment;
 using EnvRef = std::shared_ptr<Environment>;
 
@@ -26,6 +28,7 @@ public:
   {
     current_schemas_.clear();
     current_tuples_.clear();
+    return RC::SUCCESS;
   }
 
 //  RC get_column_value(const char *table_name, const char *column_name, TupleCell &ret)

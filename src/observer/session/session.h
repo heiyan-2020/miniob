@@ -31,7 +31,7 @@ public:
   Session(const Session &other);
   void operator=(Session &) = delete;
 
-  const char *get_current_db_name() const;
+  std::string get_current_db_name() const;
   Db *get_current_db() const;
 
   void set_current_db(const std::string &dbname);

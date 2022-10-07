@@ -17,7 +17,7 @@ Schema::Schema(const Table *table, const std::vector<FieldMeta> *table_schema)
   set_columns(columns);
 }
 
-void Schema::set_columns(const std::vector<Column> columns)
+void Schema::set_columns(const std::vector<Column> &columns)
 {
   size_t curr_offset = 0;
   for (auto column : columns) {
@@ -61,7 +61,7 @@ std::vector<Column> Schema::find_columns(std::string table_name, std::string col
     } else {
       // Column name with table name:  t.col
       for (Column col : columns_) {
-        if (col.get_name().column_name_ == column_name) && col.get_name().table_name_ == table_name) {
+        if (col.get_name().column_name_ == column_name && col.get_name().table_name_ == table_name) {
           found_columns.push_back(col);
         }
       }

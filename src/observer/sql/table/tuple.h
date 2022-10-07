@@ -1,14 +1,17 @@
-#pragma once
+#ifndef MINIDB_TUPLE_H
+#define MINIDB_TUPLE_H
 
 #include <cstdint>
 #include "type/type_id.h"
 #include "type/value.h"
 #include "storage/record/record.h"
-#include "schema.h"
+#include "sql/table/schema.h"
 
 class Tuple;
 using TupleRef = std::shared_ptr<Tuple>;
 
+
+class Schema;
 
 class Tuple {
 public:
@@ -34,3 +37,5 @@ private:
   size_t size_{};
   char *data_{nullptr};
 };
+
+#endif

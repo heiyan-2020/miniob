@@ -16,7 +16,6 @@ See the Mulan PSL v2 for more details. */
 #include "storage/default/disk_buffer_pool.h"
 #include "rc.h"
 #include "common/log/log.h"
-#include "sql/parser/parse_defs.h"
 #include "common/lang/lower_bound.h"
 
 #include <numeric>
@@ -751,7 +750,7 @@ RC BplusTreeHandler::sync()
   return disk_buffer_pool_->flush_all_pages();
 }
 
-RC BplusTreeHandler::create(const char *file_name, std::vector<AttrType> attr_types, std::vector<int> attr_lengths,
+RC BplusTreeHandler::create(const char *file_name, std::vector<TypeId> attr_types, std::vector<int> attr_lengths,
     int internal_max_size, int leaf_max_size)
 {
   assert(attr_types.size() == attr_lengths.size());
@@ -878,7 +877,7 @@ RC BplusTreeHandler::open(const char *file_name)
   // close old page_handle
   disk_buffer_pool->unpin_page(frame);
 
-  std::vector<AttrType> attr_types{};
+  std::vector<TypeId> attr_types{};
   std::vector<int> attr_lengths{};
   for (auto i = 0; i < file_header_.attr_num; ++i) {
     attr_types.push_back(file_header_.attr_type[i]);

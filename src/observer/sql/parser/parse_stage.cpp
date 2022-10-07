@@ -25,7 +25,6 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/timer_stage.h"
 #include "event/session_event.h"
 #include "event/sql_event.h"
-#include "sql/parser/parse.h"
 
 #include "hsql/SQLParser.h"
 #include "sql/binder/planner.h"

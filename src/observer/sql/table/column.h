@@ -1,11 +1,12 @@
-#pragma once
+#ifndef MINIDB_COLUMN_H
+#define MINIDB_COLUMN_H
 
 #include <string>
 #include <utility>
-#include "schema.h"
+#include <memory>
+
 #include "type/type_id.h"
 #include "type/type.h"
-#include "tuple.h"
 
 class Column;
 
@@ -74,3 +75,7 @@ private:
   size_t fixed_length_;
   size_t column_offset_{0};
 };
+
+using ColumnRef = std::shared_ptr<Column>;
+
+#endif
