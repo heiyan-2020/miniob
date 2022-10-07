@@ -1,4 +1,5 @@
 #include "int_type.h"
+#include "value.h"
 
 auto IntType::compare_equals(const Value &left, const Value &right) const -> Value
 {
@@ -65,4 +66,14 @@ auto IntType::disjunction(const Value &left, const Value &right) const -> Value
 auto IntType::negation(const Value &value) const -> Value
 {
   return Value{INT, -value.value_.int_};
+}
+
+auto IntType::serialize_to(const Value &val, char *storage) const -> void
+{
+  *reinterpret_cast<int32_t *>(storage) = val.value_.int_;
+}
+auto IntType::deserialize_from(const char *storage) const -> Value
+{
+  int32_t val = *reinterpret_cast<const int32_t *>(storage);
+  return {INT, val};
 }

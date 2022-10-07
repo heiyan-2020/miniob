@@ -1,6 +1,9 @@
 #pragma once
+
 #include <string>
 #include "schema.h"
+#include "type/type_id.h"
+#include "type/type.h"
 
 class ColName {
 public:
@@ -26,8 +29,8 @@ class Column {
   friend class Schema;
 
 public:
-  Column(ColName column_name, TypeId type)
-      : name_(std::move(column_name)), column_type_(type), fixed_length_(TypeSize(type))
+  Column(const ColName& column_name, TypeId type)
+      : name_(column_name), column_type_(type), fixed_length_(Type::get_type_size(type))
   {}
 
   int get_offset() const

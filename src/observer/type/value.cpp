@@ -64,3 +64,12 @@ auto Value::negation() const -> Value
 {
   return Type::get_instance(type_id_)->negation(*this);
 }
+
+auto Value::serialize_to(char *storage) const -> void
+{
+  Type::get_instance(type_id_)->serialize_to(*this, storage);
+}
+auto Value::deserialize_from(const char *storage) -> Value
+{
+  return Type::get_instance(type_id_)->deserialize_from(storage);
+}

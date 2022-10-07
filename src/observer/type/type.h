@@ -2,12 +2,6 @@
 
 #include "type_id.h"
 
-#include "char_type.h"
-#include "int_type.h"
-#include "float_type.h"
-#include "date_type.h"
-#include "bool_type.h"
-
 #include <cstddef>
 #include <string>
 
@@ -77,11 +71,10 @@ public:
   // including not and unary minus
   virtual auto negation(const Value &value) const -> Value;
 
+  virtual auto serialize_to(const Value &val, char *storage) const -> void;
+  virtual auto deserialize_from(const char *storage) const -> Value;
+
 protected:
   TypeId type_id_;
   static Type *k_types[PLACEHOLDER];
-};
-
-Type *Type::k_types[] = {
-    new Type{}, new CharType{}, new IntType{}, new FloatType{}, new DateType{}, new BoolType{},
 };

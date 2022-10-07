@@ -32,13 +32,15 @@ public:
   {
     value_.float_ = f;
   }
-  Value(TypeId type, int32_t d[3]) : type_id_{type}
+  Value(TypeId type, const int32_t d[3]) : type_id_{type}
   {
     memcpy(value_.date_, d, sizeof(int32_t[3]));
   }
-  Value(TypeId type, char *c, size_t len = 4) : type_id_{type}, len_{len}
+  Value(TypeId type, const char *c, size_t len = 4) : type_id_{type}, len_{len}
   {
-    value_.char_ = c;
+    // TODO(vgalaxy): free the space
+    value_.char_ = static_cast<char *>(calloc(len + 1, sizeof(char)));
+    memcpy(value_.char_, c, len);
   }
 
   auto compare_equals(const Value &o) const -> Value;
@@ -59,6 +61,9 @@ public:
   auto conjunction(const Value &o) const -> Value;
   auto disjunction(const Value &o) const -> Value;
   auto negation() const -> Value;
+
+  auto serialize_to(char *storage) const -> void;
+  auto deserialize_from(const char *storage) -> Value;
 
 protected:
   TypeId type_id_;

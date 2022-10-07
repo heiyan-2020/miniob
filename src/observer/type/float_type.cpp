@@ -1,4 +1,5 @@
 #include "float_type.h"
+#include "value.h"
 
 auto FloatType::compare_equals(const Value &left, const Value &right) const -> Value
 {
@@ -65,4 +66,14 @@ auto FloatType::disjunction(const Value &left, const Value &right) const -> Valu
 auto FloatType::negation(const Value &value) const -> Value
 {
   return Value{FLOAT, -value.value_.float_};
+}
+
+auto FloatType::serialize_to(const Value &val, char *storage) const -> void
+{
+  *reinterpret_cast<float *>(storage) = val.value_.float_;
+}
+auto FloatType::deserialize_from(const char *storage) const -> Value
+{
+  float val = *reinterpret_cast<const float *>(storage);
+  return {FLOAT, val};
 }

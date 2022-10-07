@@ -1,4 +1,5 @@
 #include "bool_type.h"
+#include "value.h"
 
 auto BoolType::compare_equals(const Value &left, const Value &right) const -> Value
 {
@@ -63,4 +64,13 @@ auto BoolType::disjunction(const Value &left, const Value &right) const -> Value
 auto BoolType::negation(const Value &value) const -> Value
 {
   return Value{BOOL, not value.value_.bool_};
+}
+
+auto BoolType::serialize_to(const Value &val, char *storage) const -> void
+{
+  Type::serialize_to(val, storage);
+}
+auto BoolType::deserialize_from(const char *storage) const -> Value
+{
+  return Type::deserialize_from(storage);
 }

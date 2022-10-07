@@ -1,4 +1,5 @@
 #include "char_type.h"
+#include "value.h"
 
 auto CharType::compare_equals(const Value &left, const Value &right) const -> Value
 {
@@ -62,4 +63,13 @@ auto CharType::disjunction(const Value &left, const Value &right) const -> Value
 auto CharType::negation(const Value &value) const -> Value
 {
   return Value{};
+}
+
+auto CharType::serialize_to(const Value &val, char *storage) const -> void
+{
+  memcpy(storage, val.value_.char_, val.len_);
+}
+auto CharType::deserialize_from(const char *storage) const -> Value
+{
+  return Value{CHAR, storage, strlen(storage)};
 }
