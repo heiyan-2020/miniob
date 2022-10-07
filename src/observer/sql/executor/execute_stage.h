@@ -16,7 +16,6 @@ See the Mulan PSL v2 for more details. */
 #define __OBSERVER_SQL_EXECUTE_STAGE_H__
 
 #include "common/seda/stage.h"
-#include "sql/parser/parse.h"
 #include "rc.h"
 
 class SQLStageEvent;

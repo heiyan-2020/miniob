@@ -22,44 +22,46 @@ RC CreateCommand::execute(const SQLStageEvent *sql_event)
 
 RC CreateCommand::do_create_table(const SQLStageEvent *sql_event)
 {
-  std::vector<AttrInfo> attr_infos{};
+  std::vector<Column> cols{};
   for (auto col : *this->stmt_->columns) {
-    AttrInfo attr_info{};
+    ColumnName column_name{};
+    TypeId type{};
+    size_t length{};
     const auto &col_type = col->type;
     switch (col_type.data_type) {
       case hsql::DataType::CHAR:
-        attr_info.type = CHARS;
-        attr_info.length = col_type.length;
-        attr_info.name = col->name;
+        type = TypeId::CHAR;
+        length = col_type.length;
+        column_name = ColumnName{col->name};
         break;
       case hsql::DataType::DATE:
-        attr_info.type = DATES;
-        attr_info.length = 12;
-        attr_info.name = col->name;
+        type = TypeId::DATE;
+        length = Type::get_type_size(type);
+        column_name = ColumnName{col->name};
         break;
       case hsql::DataType::FLOAT:
-        attr_info.type = FLOATS;
-        attr_info.length = 4;
-        attr_info.name = col->name;
+        type = TypeId::FLOAT;
+        length = Type::get_type_size(type);
+        column_name = ColumnName{col->name};
         break;
       case hsql::DataType::INT:
-        attr_info.type = INTS;
-        attr_info.length = 4;
-        attr_info.name = col->name;
+        type = TypeId::INT;
+        length = Type::get_type_size(type);
+        column_name = ColumnName{col->name};
         break;
       case hsql::DataType::TEXT:
-        attr_info.type = CHARS;
-        attr_info.length = 4096;
-        attr_info.name = col->name;
+        type = TypeId::CHAR;
+        length = 4096;
+        column_name = ColumnName{col->name};
         break;
       default:
         return RC::UNIMPLENMENT;
     }
-    attr_infos.emplace_back(attr_info);
+    cols.emplace_back(column_name, type, length);
   }
   SessionEvent *session_event = sql_event->session_event();
   Db *db = session_event->session()->get_current_db();
-  RC rc = db->create_table(this->stmt_->tableName, std::move(attr_infos));
+  RC rc = db->create_table(this->stmt_->tableName, Schema{cols});
   if (rc == RC::SUCCESS) {
     session_event->set_response("SUCCESS");
   } else {

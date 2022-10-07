@@ -30,21 +30,5 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
 
 void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple)
 {
-  TupleCell cell;
-  RC rc;
-  bool first_field = true;
-  for (int i = 0; i < tuple.cell_num(); i++) {
-    rc = tuple.cell_at(i, cell);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to fetch field of cell, index = %d, rc = %s", i, strrc(rc));
-      break;
-    }
 
-    if (!first_field) {
-      os << " | ";
-    } else {
-      first_field = false;
-    }
-    cell.to_string(os);
-  }
 }

@@ -25,23 +25,12 @@ See the Mulan PSL v2 for more details. */
 #include "session/session.h"
 #include "event/sql_event.h"
 #include "event/session_event.h"
-#include "sql/expr/tuple.h"
-#include "sql/operator/table_scan_operator.h"
-#include "sql/operator/delete_operator.h"
-#include "sql/operator/project_operator.h"
-#include "sql/stmt/stmt.h"
-#include "sql/stmt/select_stmt.h"
-#include "sql/stmt/update_stmt.h"
-#include "sql/stmt/delete_stmt.h"
-#include "sql/stmt/insert_stmt.h"
 #include "storage/common/table.h"
 #include "storage/common/field.h"
 #include "storage/index/index.h"
 #include "storage/default/default_handler.h"
 #include "storage/trx/trx.h"
-#include "sql/operator/update_operator.h"
 #include "storage/index/bplus_tree.h"
-#include "sql/operator/insert_operator.h"
 
 using namespace common;
 
@@ -110,69 +99,45 @@ void ExecuteStage::handle_request(common::StageEvent *event)
 {
   auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   SessionEvent *session_event = sql_event->session_event();
-  Stmt *stmt = sql_event->stmt();
-  Session *session = session_event->session();
-  Query *sql = sql_event->query();
-
   sql_event->command()->execute(sql_event);
 
-  if (stmt != nullptr) {
-    switch (stmt->type()) {
-      case StmtType::SELECT: {
-        do_select(sql_event);
-      } break;
-      case StmtType::INSERT: {
-        do_insert(sql_event);
-      } break;
-      case StmtType::UPDATE: {
-        do_update(sql_event);
-      } break;
-      case StmtType::DELETE: {
-        do_delete(sql_event);
-      } break;
-      default: {
-        LOG_WARN("should not happen. please implement");
-      } break;
-    }
-  } else {
-    switch (sql->flag) {
-      case SCF_HELP: {
-        do_help(sql_event);
-      } break;
-
-      case SCF_CREATE_TABLE:
-      case SCF_CREATE_INDEX:
-      case SCF_SHOW_TABLES:
-      case SCF_DESC_TABLE:
-      case SCF_DROP_TABLE:
-        break;
-
-      case SCF_SYNC: {
-        RC rc = DefaultHandler::get_default().sync();
-        session_event->set_response(strrc(rc));
-      } break;
-
-      case SCF_BEGIN: {
-        session_event->set_response("SUCCESS");
-      } break;
-      case SCF_COMMIT: {
-        Trx *trx = session->current_trx();
-        RC rc = trx->commit();
-        session->set_trx_multi_operation_mode(false);
-        session_event->set_response(strrc(rc));
-      } break;
-      case SCF_ROLLBACK: {
-        Trx *trx = session_event->get_client()->session->current_trx();
-        RC rc = trx->rollback();
-        session->set_trx_multi_operation_mode(false);
-        session_event->set_response(strrc(rc));
-      } break;
-
-      default: {
-        session_event->set_response("Unsupported");
-      }
-    }
-  }
+//  switch (type) {
+//    case SCF_HELP: {
+//      do_help(sql_event);
+//    } break;
+//
+//    case SCF_CREATE_TABLE:
+//    case SCF_CREATE_INDEX:
+//    case SCF_SHOW_TABLES:
+//    case SCF_DESC_TABLE:
+//    case SCF_DROP_TABLE:
+//      break;
+//
+//    case SCF_SYNC: {
+//      RC rc = DefaultHandler::get_default().sync();
+//      session_event->set_response(strrc(rc));
+//    } break;
+//
+//    case SCF_BEGIN: {
+//      session_event->set_response("SUCCESS");
+//    } break;
+//    case SCF_COMMIT: {
+//      Trx *trx = session->current_trx();
+//      RC rc = trx->commit();
+//      session->set_trx_multi_operation_mode(false);
+//      session_event->set_response(strrc(rc));
+//    } break;
+//    case SCF_ROLLBACK: {
+//      Trx *trx = session_event->get_client()->session->current_trx();
+//      RC rc = trx->rollback();
+//      session->set_trx_multi_operation_mode(false);
+//      session_event->set_response(strrc(rc));
+//    } break;
+//
+//    default: {
+//      session_event->set_response("Unsupported");
+//    }
+//  }
 }
 
 void end_trx_if_need(Session *session, Trx *trx, bool all_right)
@@ -186,181 +151,181 @@ void end_trx_if_need(Session *session, Trx *trx, bool all_right)
   }
 }
 
-void print_tuple_header(std::ostream &os, const ProjectOperator &oper)
-{
-  const int cell_num = oper.tuple_cell_num();
-  const TupleCellSpec *cell_spec = nullptr;
-  for (int i = 0; i < cell_num; i++) {
-    oper.tuple_cell_spec_at(i, cell_spec);
-    if (i != 0) {
-      os << " | ";
-    }
-
-    if (cell_spec->alias()) {
-      os << cell_spec->alias();
-    }
-  }
-
-  if (cell_num > 0) {
-    os << '\n';
-  }
-}
-
-static void tuple_to_string(std::ostream &os, const Tuple &tuple)
-{
-  TupleCell cell;
-  RC rc = RC::SUCCESS;
-  bool first_field = true;
-  for (int i = 0; i < tuple.cell_num(); i++) {
-    rc = tuple.cell_at(i, cell);
-    if (rc != RC::SUCCESS) {
-      LOG_WARN("failed to fetch field of cell. index=%d, rc=%s", i, strrc(rc));
-      break;
-    }
-
-    if (!first_field) {
-      os << " | ";
-    } else {
-      first_field = false;
-    }
-    cell.to_string(os);
-  }
-}
-
-RC ExecuteStage::do_select(SQLStageEvent *sql_event)
-{
-  auto *select_stmt = (SelectStmt *)(sql_event->stmt());
-  SessionEvent *session_event = sql_event->session_event();
-  RC rc = RC::SUCCESS;
-  if (select_stmt->tables().size() != 1) {
-    LOG_WARN("select more than 1 tables is not supported");
-    rc = RC::UNIMPLENMENT;
-    return rc;
-  }
-
-  Operator *scan_oper = new TableScanOperator(select_stmt->tables()[0]);
-  DEFER([&]() { delete scan_oper; });
-
-  ProjectOperator project_oper;
-  project_oper.add_child(scan_oper);
-  for (const Field &field : select_stmt->query_fields()) {
-    project_oper.add_projection(field.table(), field.meta());
-  }
-
-  rc = project_oper.open();
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to open operator");
-    return rc;
-  }
-
-  std::stringstream ss;
-  print_tuple_header(ss, project_oper);
-  while ((rc = project_oper.next()) == RC::SUCCESS) {
-    // get current record
-    // write to response
-    Tuple *tuple = project_oper.current_tuple();
-    if (nullptr == tuple) {
-      rc = RC::INTERNAL;
-      LOG_WARN("failed to get current record. rc=%s", strrc(rc));
-      break;
-    }
-
-    tuple_to_string(ss, *tuple);
-    ss << std::endl;
-  }
-
-  if (rc != RC::RECORD_EOF) {
-    LOG_WARN("something wrong while iterate operator. rc=%s", strrc(rc));
-    project_oper.close();
-  } else {
-    rc = project_oper.close();
-  }
-
-  session_event->set_response(ss.str());
-  return rc;
-}
-
-RC ExecuteStage::do_help(SQLStageEvent *sql_event)
-{
-  SessionEvent *session_event = sql_event->session_event();
-  const char *response = "show tables;\n"
-                         "desc `table name`;\n"
-                         "create table `table name` (`column name` `column type`, ...);\n"
-                         "create index `index name` on `table` (`column`);\n"
-                         "insert into `table` values(`value1`,`value2`);\n"
-                         "update `table` set column=value [where `column`=`value`];\n"
-                         "delete from `table` [where `column`=`value`];\n"
-                         "select [ * | `columns` ] from `table`;\n";
-  session_event->set_response(response);
-  return RC::SUCCESS;
-}
-
-RC ExecuteStage::do_insert(SQLStageEvent *sql_event)
-{
-  Stmt *stmt = sql_event->stmt();
-  SessionEvent *session_event = sql_event->session_event();
-
-  if (stmt == nullptr) {
-    LOG_WARN("cannot find statement");
-    return RC::GENERIC_ERROR;
-  }
-
-  auto *insert_stmt = (InsertStmt *)stmt;
-  InsertOperator insert_oper{insert_stmt};
-
-  RC rc = insert_oper.open();
-  if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE");
-  } else {
-    session_event->set_response("SUCCESS");
-  }
-  return rc;
-}
-
-RC ExecuteStage::do_delete(SQLStageEvent *sql_event)
-{
-  Stmt *stmt = sql_event->stmt();
-  SessionEvent *session_event = sql_event->session_event();
-
-  if (stmt == nullptr) {
-    LOG_WARN("cannot find statement");
-    return RC::GENERIC_ERROR;
-  }
-
-  auto *delete_stmt = (DeleteStmt *)stmt;
-  TableScanOperator scan_oper(delete_stmt->table());
-  DeleteOperator delete_oper(delete_stmt);
-  delete_oper.add_child(&scan_oper);
-
-  RC rc = delete_oper.open();
-  if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE");
-  } else {
-    session_event->set_response("SUCCESS");
-  }
-  return rc;
-}
-
-RC ExecuteStage::do_update(SQLStageEvent *sql_event)
-{
-  Stmt *stmt = sql_event->stmt();
-  SessionEvent *session_event = sql_event->session_event();
-
-  if (stmt == nullptr) {
-    LOG_WARN("cannot find statement");
-    return RC::GENERIC_ERROR;
-  }
-
-  auto *update_stmt = (UpdateStmt *)stmt;
-  TableScanOperator scan_oper(update_stmt->table());
-  UpdateOperator update_oper(update_stmt);
-  update_oper.add_child(&scan_oper);
-
-  RC rc = update_oper.open();
-  if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE");
-  } else {
-    session_event->set_response("SUCCESS");
-  }
-  return rc;
-}
+//void print_tuple_header(std::ostream &os, const ProjectOperator &oper)
+//{
+//  const int cell_num = oper.tuple_cell_num();
+//  const TupleCellSpec *cell_spec = nullptr;
+//  for (int i = 0; i < cell_num; i++) {
+//    oper.tuple_cell_spec_at(i, cell_spec);
+//    if (i != 0) {
+//      os << " | ";
+//    }
+//
+//    if (cell_spec->alias()) {
+//      os << cell_spec->alias();
+//    }
+//  }
+//
+//  if (cell_num > 0) {
+//    os << '\n';
+//  }
+//}
+//
+//static void tuple_to_string(std::ostream &os, const Tuple &tuple)
+//{
+//  TupleCell cell;
+//  RC rc = RC::SUCCESS;
+//  bool first_field = true;
+//  for (int i = 0; i < tuple.cell_num(); i++) {
+//    rc = tuple.cell_at(i, cell);
+//    if (rc != RC::SUCCESS) {
+//      LOG_WARN("failed to fetch field of cell. index=%d, rc=%s", i, strrc(rc));
+//      break;
+//    }
+//
+//    if (!first_field) {
+//      os << " | ";
+//    } else {
+//      first_field = false;
+//    }
+//    cell.to_string(os);
+//  }
+//}
+//
+//RC ExecuteStage::do_select(SQLStageEvent *sql_event)
+//{
+//  auto *select_stmt = (SelectStmt *)(sql_event->stmt());
+//  SessionEvent *session_event = sql_event->session_event();
+//  RC rc = RC::SUCCESS;
+//  if (select_stmt->tables().size() != 1) {
+//    LOG_WARN("select more than 1 tables is not supported");
+//    rc = RC::UNIMPLENMENT;
+//    return rc;
+//  }
+//
+//  Operator *scan_oper = new TableScanOperator(select_stmt->tables()[0]);
+//  DEFER([&]() { delete scan_oper; });
+//
+//  ProjectOperator project_oper;
+//  project_oper.add_child(scan_oper);
+//  for (const Field &field : select_stmt->query_fields()) {
+//    project_oper.add_projection(field.table(), field.meta());
+//  }
+//
+//  rc = project_oper.open();
+//  if (rc != RC::SUCCESS) {
+//    LOG_WARN("failed to open operator");
+//    return rc;
+//  }
+//
+//  std::stringstream ss;
+//  print_tuple_header(ss, project_oper);
+//  while ((rc = project_oper.next()) == RC::SUCCESS) {
+//    // get current record
+//    // write to response
+//    Tuple *tuple = project_oper.current_tuple();
+//    if (nullptr == tuple) {
+//      rc = RC::INTERNAL;
+//      LOG_WARN("failed to get current record. rc=%s", strrc(rc));
+//      break;
+//    }
+//
+//    tuple_to_string(ss, *tuple);
+//    ss << std::endl;
+//  }
+//
+//  if (rc != RC::RECORD_EOF) {
+//    LOG_WARN("something wrong while iterate operator. rc=%s", strrc(rc));
+//    project_oper.close();
+//  } else {
+//    rc = project_oper.close();
+//  }
+//
+//  session_event->set_response(ss.str());
+//  return rc;
+//}
+//
+//RC ExecuteStage::do_help(SQLStageEvent *sql_event)
+//{
+//  SessionEvent *session_event = sql_event->session_event();
+//  const char *response = "show tables;\n"
+//                         "desc `table name`;\n"
+//                         "create table `table name` (`column name` `column type`, ...);\n"
+//                         "create index `index name` on `table` (`column`);\n"
+//                         "insert into `table` values(`value1`,`value2`);\n"
+//                         "update `table` set column=value [where `column`=`value`];\n"
+//                         "delete from `table` [where `column`=`value`];\n"
+//                         "select [ * | `columns` ] from `table`;\n";
+//  session_event->set_response(response);
+//  return RC::SUCCESS;
+//}
+//
+//RC ExecuteStage::do_insert(SQLStageEvent *sql_event)
+//{
+//  Stmt *stmt = sql_event->stmt();
+//  SessionEvent *session_event = sql_event->session_event();
+//
+//  if (stmt == nullptr) {
+//    LOG_WARN("cannot find statement");
+//    return RC::GENERIC_ERROR;
+//  }
+//
+//  auto *insert_stmt = (InsertStmt *)stmt;
+//  InsertOperator insert_oper{insert_stmt};
+//
+//  RC rc = insert_oper.open();
+//  if (rc != RC::SUCCESS) {
+//    session_event->set_response("FAILURE");
+//  } else {
+//    session_event->set_response("SUCCESS");
+//  }
+//  return rc;
+//}
+//
+//RC ExecuteStage::do_delete(SQLStageEvent *sql_event)
+//{
+//  Stmt *stmt = sql_event->stmt();
+//  SessionEvent *session_event = sql_event->session_event();
+//
+//  if (stmt == nullptr) {
+//    LOG_WARN("cannot find statement");
+//    return RC::GENERIC_ERROR;
+//  }
+//
+//  auto *delete_stmt = (DeleteStmt *)stmt;
+//  TableScanOperator scan_oper(delete_stmt->table());
+//  DeleteOperator delete_oper(delete_stmt);
+//  delete_oper.add_child(&scan_oper);
+//
+//  RC rc = delete_oper.open();
+//  if (rc != RC::SUCCESS) {
+//    session_event->set_response("FAILURE");
+//  } else {
+//    session_event->set_response("SUCCESS");
+//  }
+//  return rc;
+//}
+//
+//RC ExecuteStage::do_update(SQLStageEvent *sql_event)
+//{
+//  Stmt *stmt = sql_event->stmt();
+//  SessionEvent *session_event = sql_event->session_event();
+//
+//  if (stmt == nullptr) {
+//    LOG_WARN("cannot find statement");
+//    return RC::GENERIC_ERROR;
+//  }
+//
+//  auto *update_stmt = (UpdateStmt *)stmt;
+//  TableScanOperator scan_oper(update_stmt->table());
+//  UpdateOperator update_oper(update_stmt);
+//  update_oper.add_child(&scan_oper);
+//
+//  RC rc = update_oper.open();
+//  if (rc != RC::SUCCESS) {
+//    session_event->set_response("FAILURE");
+//  } else {
+//    session_event->set_response("SUCCESS");
+//  }
+//  return rc;
+//}

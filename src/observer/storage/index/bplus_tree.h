@@ -23,7 +23,6 @@ See the Mulan PSL v2 for more details. */
 
 #include "storage/record/record_manager.h"
 #include "storage/default/disk_buffer_pool.h"
-#include "sql/parser/parse_defs.h"
 #include "util/comparator.h"
 #include "util/date.h"
 

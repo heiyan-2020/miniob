@@ -7,9 +7,7 @@
 RC TableScanNode::prepare()
 {
   RC rc = table_->get_record_scanner(record_scanner_);
-  if (rc == RC::SUCCESS) {
-
-  }
+  if (rc == RC::SUCCESS) {}
   output_schema_ = std::make_shared<Schema>(table_, table_->table_meta().field_metas());
   return rc;
 }
@@ -24,7 +22,7 @@ RC TableScanNode::next()
   return rc;
 }
 
-refactor::Tuple *TableScanNode::current_tuple()
+Tuple *TableScanNode::current_tuple()
 {
   current_ = refactor::Tuple(&current_record_);
   return &current_;

@@ -15,6 +15,7 @@ See the Mulan PSL v2 for more details. */
 #include <climits>
 #include <cstring>
 #include <algorithm>
+#include <utility>
 
 #include "common/defs.h"
 #include "storage/common/table.h"
@@ -29,6 +30,8 @@ See the Mulan PSL v2 for more details. */
 #include "storage/trx/trx.h"
 #include "util/date.h"
 #include "common/lang/defer.h"
+#include "sql/table/schema.h"
+#include "type/value.h"
 
 Table::~Table()
 {
@@ -47,20 +50,16 @@ Table::~Table()
   }
   indexes_.clear();
 
-  LOG_INFO("Table has been closed: %s", name());
+  LOG_INFO("Table has been closed: %s", name().c_str());
 }
 
-RC Table::create(const char *path, const char *name, const char *base_dir, std::vector<AttrInfo> attr_infos)
+RC Table::create(const char *path, const char *name, const char *base_dir, const Schema& schema)
 {
   if (common::is_blank(name)) {
     return RC::INVALID_ARGUMENT;
   }
 
-  LOG_INFO("Begin to create table %s:%s", base_dir, name);
-
-  if (attr_infos.empty()) {
-    return RC::INVALID_ARGUMENT;
-  }
+  LOG_INFO("Begin to create table: %s", name);
 
   RC rc = RC::SUCCESS;
 
@@ -79,15 +78,15 @@ RC Table::create(const char *path, const char *name, const char *base_dir, std::
   close(fd);
 
   // 创建文件
-  if ((rc = table_meta_.init(name, attr_infos)) != RC::SUCCESS) {
-    LOG_ERROR("Failed to init table meta. name:%s, ret:%d", name, rc);
+  if ((rc = table_meta_.init(name, schema)) != RC::SUCCESS) {
+    LOG_ERROR("Failed to init table meta");
     return rc;  // delete table file
   }
 
   std::fstream fs;
   fs.open(path, std::ios_base::out | std::ios_base::binary);
   if (!fs.is_open()) {
-    LOG_ERROR("Failed to open file for write. file name=%s, errmsg=%s", path, strerror(errno));
+    LOG_ERROR("Failed to open file for write, file name = %s, errmsg = %s", path, strerror(errno));
     return RC::IOERR;
   }
 
@@ -147,10 +146,10 @@ RC Table::open(const char *meta_file, const char *base_dir)
     std::vector<FieldMeta> field_metas{};
     const IndexMeta *index_meta = table_meta_.index(i);
     for (const auto &field_name : index_meta->fields()) {
-      const FieldMeta *field_meta = table_meta_.field(field_name.c_str());
+      const FieldMeta *field_meta = table_meta_.field(field_name);
       if (field_meta == nullptr) {
         LOG_ERROR("Found invalid index meta info which has a non-exists field. table=%s, index=%s, fields=%s",
-            name(),
+            name().c_str(),
             index_meta->name().c_str(),
             field_name.c_str());
         // skip cleanup
@@ -161,12 +160,12 @@ RC Table::open(const char *meta_file, const char *base_dir)
     }
 
     auto *index = new BplusTreeIndex();
-    std::string index_file = table_index_file(base_dir, name(), index_meta->name().c_str());
+    std::string index_file = table_index_file(base_dir, name().c_str(), index_meta->name().c_str());
     rc = index->open(index_file.c_str(), *index_meta, field_metas);
     if (rc != RC::SUCCESS) {
       delete index;
       LOG_ERROR("Failed to open index. table=%s, index=%s, file=%s, rc=%d:%s",
-          name(),
+          name().c_str(),
           index_meta->name().c_str(),
           index_file.c_str(),
           rc,
@@ -185,7 +184,7 @@ RC Table::commit_insert(Trx *trx, const RID &rid)
   Record record;
   RC rc = record_handler_->get_record(&rid, &record);
   if (rc != RC::SUCCESS) {
-    LOG_ERROR("Failed to get record %s: %s", this->name(), rid.to_string().c_str());
+    LOG_ERROR("Failed to get record %s: %s", this->name().c_str(), rid.to_string().c_str());
     return rc;
   }
 
@@ -198,7 +197,7 @@ RC Table::rollback_insert(Trx *trx, const RID &rid)
   Record record;
   RC rc = record_handler_->get_record(&rid, &record);
   if (rc != RC::SUCCESS) {
-    LOG_ERROR("Failed to get record %s: %s", this->name(), rid.to_string().c_str());
+    LOG_ERROR("Failed to get record %s: %s", this->name().c_str(), rid.to_string().c_str());
     return rc;
   }
 
@@ -226,7 +225,7 @@ RC Table::insert_record(Trx *trx, Record *record)
   }
   rc = record_handler_->insert_record(record->data(), table_meta_.record_size(), &record->rid());
   if (rc != RC::SUCCESS) {
-    LOG_ERROR("Insert record failed. table name=%s, rc=%d:%s", table_meta_.name(), rc, strrc(rc));
+    LOG_ERROR("Insert record failed. table name=%s, rc=%d:%s", table_meta_.name().c_str(), rc, strrc(rc));
     return rc;
   }
 
@@ -238,7 +237,7 @@ RC Table::insert_record(Trx *trx, Record *record)
       RC rc2 = record_handler_->delete_record(&record->rid());
       if (rc2 != RC::SUCCESS) {
         LOG_ERROR("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
-            name(),
+            name().c_str(),
             rc2,
             strrc(rc2));
       }
@@ -251,14 +250,14 @@ RC Table::insert_record(Trx *trx, Record *record)
     RC rc2 = delete_entry_of_indexes(record->data(), record->rid(), true);
     if (rc2 != RC::SUCCESS) {
       LOG_ERROR("Failed to rollback index data when insert index entries failed. table name=%s, rc=%d:%s",
-          name(),
+          name().c_str(),
           rc2,
           strrc(rc2));
     }
     rc2 = record_handler_->delete_record(&record->rid());
     if (rc2 != RC::SUCCESS) {
       LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
-          name(),
+          name().c_str(),
           rc2,
           strrc(rc2));
     }
@@ -266,16 +265,11 @@ RC Table::insert_record(Trx *trx, Record *record)
   }
   return rc;
 }
-RC Table::insert_record(Trx *trx, int value_num, const Value *values)
+RC Table::insert_record(Trx *trx, std::vector<Value> values)
 {
-  if (value_num <= 0 || nullptr == values) {
-    LOG_ERROR("Invalid argument. table name: %s, value num=%d, values=%p", name(), value_num, values);
-    return RC::INVALID_ARGUMENT;
-  }
-
   char *record_data;
   DEFER([&]() { delete[] record_data; });
-  RC rc = make_record(value_num, values, record_data);
+  RC rc = make_record(std::move(values), record_data);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to create a record. rc=%d:%s", rc, strrc(rc));
     return rc;
@@ -294,7 +288,7 @@ RC Table::insert_record(Trx *trx, int value_num, const Value *values)
   return rc;
 }
 
-const char *Table::name() const
+std::string Table::name() const
 {
   return table_meta_.name();
 }
@@ -304,46 +298,37 @@ const TableMeta &Table::table_meta() const
   return table_meta_;
 }
 
-RC Table::make_record(int value_num, const Value *values, char *&record_out)
+RC Table::make_record(std::vector<Value> values, char *&record_out)
 {
   int record_size = table_meta_.record_size();
   char *record = new char[record_size];
 
-  // 检查字段类型是否一致
-  if (value_num + table_meta_.sys_field_num() != table_meta_.field_num()) {
-    LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name());
+  // 检查字段个数是否一致
+  if (values.size() + table_meta_.sys_field_num() != table_meta_.field_num()) {
+    LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name().c_str());
     return RC::SCHEMA_FIELD_MISSING;
   }
 
+  // 检查字段类型是否一致
   const int normal_field_start_index = table_meta_.sys_field_num();
-  for (int i = 0; i < value_num; i++) {
+  for (auto i = 0; i < values.size(); i++) {
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     const Value &value = values[i];
-    if (field->type() != value.type) {
+    if (field->type() != value.get_type()) {
       LOG_ERROR("Invalid value type. table name =%s, fields name=%s, type=%d, but given=%d",
-          table_meta_.name(),
-          field->name(),
+          table_meta_.name().c_str(),
+          field->name().c_str(),
           field->type(),
-          value.type);
+          value.get_type());
       return RC::SCHEMA_FIELD_TYPE_MISMATCH;
     }
   }
 
   // 复制所有字段的值
-  for (int i = 0; i < value_num; i++) {
-    const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
-    const Value &value = values[i];
-    if (value.type == DATES && value.data == nullptr) {
-      return RC::DATE;
-    }
-    size_t copy_len = field->len();
-    if (field->type() == CHARS) {
-      const size_t data_len = strlen((const char *)value.data);
-      if (copy_len > data_len) {
-        copy_len = data_len + 1;
-      }
-    }
-    memcpy(record + field->offset(), value.data, copy_len);
+  size_t curr_offset{};
+  for (const auto& value : values) {
+    value.serialize_to(record + curr_offset);
+    curr_offset += value.get_len();
   }
 
   record_out = record;
@@ -352,7 +337,7 @@ RC Table::make_record(int value_num, const Value *values, char *&record_out)
 
 RC Table::init_record_handler(const char *base_dir)
 {
-  std::string data_file = table_data_file(base_dir, table_meta_.name());
+  std::string data_file = table_data_file(base_dir, table_meta_.name().c_str());
 
   RC rc = BufferPoolManager::instance().open_file(data_file.c_str(), data_buffer_pool_);
   if (rc != RC::SUCCESS) {
@@ -481,19 +466,19 @@ static RC insert_index_record_reader_adapter(Record *record, void *context)
 RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique)
 {
   if (common::is_blank(index_name)) {
-    LOG_INFO("Invalid input arguments, table name is %s, index_name is blank", name());
+    LOG_INFO("Invalid input arguments, table name is %s, index_name is blank", name().c_str());
     return RC::INVALID_ARGUMENT;
   }
 
   for (const auto &attribute_name : attribute_names) {
     if (common::is_blank(attribute_name.c_str())) {
-      LOG_INFO("Invalid input arguments, table name is %s, attribute_name is blank", name());
+      LOG_INFO("Invalid input arguments, table name is %s, attribute_name is blank", name().c_str());
       return RC::INVALID_ARGUMENT;
     }
   }
 
   if (table_meta_.index(index_name) != nullptr || table_meta_.find_index_by_fields(attribute_names)) {
-    LOG_INFO("Invalid input arguments, table name is %s, index exist or attributes exist on index", name());
+    LOG_INFO("Invalid input arguments, table name is %s, index exist or attributes exist on index", name().c_str());
     return RC::SCHEMA_INDEX_EXIST;
   }
 
@@ -501,7 +486,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   for (const auto &attribute_name : attribute_names) {
     const FieldMeta *field_meta = table_meta_.field(attribute_name.c_str());
     if (!field_meta) {
-      LOG_INFO("Invalid input arguments, there is no field of %s in table %s", attribute_name.c_str(), name());
+      LOG_INFO("Invalid input arguments, there is no field of %s in table %s", attribute_name.c_str(), name().c_str());
       return RC::SCHEMA_FIELD_MISSING;
     }
     field_metas.emplace_back(*field_meta);
@@ -510,13 +495,13 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   IndexMeta new_index_meta;
   RC rc = new_index_meta.init(index_name, attribute_names, is_unique);
   if (rc != RC::SUCCESS) {
-    LOG_INFO("Failed to init IndexMeta in table %s", name());
+    LOG_INFO("Failed to init IndexMeta in table %s", name().c_str());
     return rc;
   }
 
   // 创建索引相关数据
   auto *index = new BplusTreeIndex();
-  std::string index_file = table_index_file(base_dir_.c_str(), name(), index_name);
+  std::string index_file = table_index_file(base_dir_.c_str(), name().c_str(), index_name);
   rc = index->create(index_file.c_str(), new_index_meta, field_metas);
   if (rc != RC::SUCCESS) {
     delete index;
@@ -530,7 +515,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   if (rc != RC::SUCCESS) {
     // rollback
     delete index;
-    LOG_ERROR("Failed to insert index to all records. table=%s, rc=%d:%s", name(), rc, strrc(rc));
+    LOG_ERROR("Failed to insert index to all records. table=%s, rc=%d:%s", name().c_str(), rc, strrc(rc));
     return rc;
   }
   indexes_.push_back(index);
@@ -538,12 +523,12 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   TableMeta new_table_meta(table_meta_);
   rc = new_table_meta.add_index(new_index_meta);
   if (rc != RC::SUCCESS) {
-    LOG_ERROR("Failed to add index (%s) on table (%s). error=%d:%s", index_name, name(), rc, strrc(rc));
+    LOG_ERROR("Failed to add index (%s) on table (%s). error=%d:%s", index_name, name().c_str(), rc, strrc(rc));
     return rc;
   }
 
   // 创建元数据临时文件
-  std::string tmp_file = table_meta_file(base_dir_.c_str(), name()) + ".tmp";
+  std::string tmp_file = table_meta_file(base_dir_.c_str(), name().c_str()) + ".tmp";
   std::fstream fs;
   fs.open(tmp_file, std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
   if (!fs.is_open()) {
@@ -557,7 +542,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   fs.close();
 
   // 覆盖原始元数据文件
-  std::string meta_file = table_meta_file(base_dir_.c_str(), name());
+  std::string meta_file = table_meta_file(base_dir_.c_str(), name().c_str());
   int ret = rename(tmp_file.c_str(), meta_file.c_str());
   if (ret != 0) {
     LOG_ERROR("Failed to rename tmp meta file (%s) to normal meta file (%s) while creating index (%s) on table (%s). "
@@ -565,7 +550,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
         tmp_file.c_str(),
         meta_file.c_str(),
         index_name,
-        name(),
+        name().c_str(),
         errno,
         strerror(errno));
     return RC::IOERR;
@@ -573,7 +558,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
 
   table_meta_.swap(new_table_meta);
 
-  LOG_INFO("Successfully added a new index (%s) on the table (%s)", index_name, name());
+  LOG_INFO("Successfully added a new index (%s) on the table (%s)", index_name, name().c_str());
 
   return rc;
 }
@@ -729,7 +714,7 @@ RC Table::sync()
 {
   RC rc = data_buffer_pool_->flush_all_pages();
   if (rc != RC::SUCCESS) {
-    LOG_ERROR("Failed to flush table's data pages. table=%s, rc=%d:%s", name(), rc, strrc(rc));
+    LOG_ERROR("Failed to flush table's data pages. table=%s, rc=%d:%s", name().c_str(), rc, strrc(rc));
     return rc;
   }
 
@@ -737,14 +722,14 @@ RC Table::sync()
     rc = index->sync();
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Failed to flush index's pages. table=%s, index=%s, rc=%d:%s",
-          name(),
+          name().c_str(),
           index->index_meta().name().c_str(),
           rc,
           strrc(rc));
       return rc;
     }
   }
-  LOG_INFO("Sync table over. table=%s", name());
+  LOG_INFO("Sync table over. table=%s", name().c_str());
   return rc;
 }
 

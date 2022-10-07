@@ -16,6 +16,7 @@ See the Mulan PSL v2 for more details. */
 #define __OBSERVER_STORAGE_COMMON_TABLE_H__
 
 #include "storage/common/table_meta.h"
+#include "sql/table/schema.h"
 
 struct RID;
 class Record;
@@ -31,11 +32,11 @@ public:
   Table() = default;
   ~Table();
 
-  RC create(const char *path, const char *name, const char *base_dir, std::vector<AttrInfo> attr_infos);
+  RC create(const char *path, const char *name, const char *base_dir, const Schema& schema);
   RC open(const char *meta_file, const char *base_dir);
   RC drop(const char *table_name);
 
-  RC insert_record(Trx *trx, int value_num, const Value *values);
+  RC insert_record(Trx *trx, std::vector<Value> values);
   RC update_record(Trx *trx, Record *old_record, Record *new_record);
   RC delete_record(Trx *trx, Record *record);
   RC scan_record(Trx *trx, int limit, void *context, void (*record_reader)(const char *, void *));
@@ -50,10 +51,8 @@ public:
   }
 
 public:
-  const char *name() const;
-
+  std::string name() const;
   const TableMeta &table_meta() const;
-
   RC sync();
 
 public:
@@ -64,9 +63,7 @@ public:
 
 private:
   RC scan_record(Trx *trx, int limit, void *context, RC (*record_reader)(Record *, void *));
-
   RC insert_record(Trx *trx, Record *record);
-
   RC check_unique_constraint(const char *record_data);
 
 private:
@@ -75,7 +72,7 @@ private:
 
 private:
   RC init_record_handler(const char *base_dir);
-  RC make_record(int value_num, const Value *values, char *&record_out);
+  RC make_record(std::vector<Value> values, char *&record_out);
 
 public:
   Index *find_index(const std::string &index_name) const;

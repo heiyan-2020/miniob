@@ -94,46 +94,33 @@ void ResolveStage::handle_event(StageEvent *event)
     return;
   }
 
-  // stmt
-  Query *query = sql_event->query();
-  Stmt *stmt = nullptr;
-  RC rc = Stmt::create_stmt(db, *query, stmt);
-  if (rc != RC::SUCCESS && rc != RC::UNIMPLENMENT) {
-    LOG_WARN("failed to create stmt. rc=%d:%s", rc, strrc(rc));
-    session_event->set_response("FAILURE");
-    return;
-  }
-  sql_event->set_stmt(stmt);
-
   // command
-  {
-    const auto &result = sql_event->result();
-    auto stmt = result->getStatement(0);
-    switch (stmt->type()) {  // TODO(vgalaxy): only consider the first stmt
-      case hsql::kStmtCreate:
-        sql_event->set_command(std::make_unique<CreateCommand>(dynamic_cast<const hsql::CreateStatement *>(stmt)));
-        break;
-      case hsql::kStmtShow:
-        sql_event->set_command(std::make_unique<ShowCommand>(dynamic_cast<const hsql::ShowStatement *>(stmt)));
-        break;
-      case hsql::kStmtDrop:
-        sql_event->set_command(std::make_unique<DropCommand>(dynamic_cast<const hsql::DropStatement *>(stmt)));
-        break;
-      case hsql::kStmtSelect:
-        sql_event->set_command(std::make_unique<SelectCommand>(dynamic_cast<const hsql::SelectStatement *>(stmt)));
-        break;
-      case hsql::kStmtInsert:
-        sql_event->set_command(std::make_unique<InsertCommand>(dynamic_cast<const hsql::InsertStatement *>(stmt)));
-        break;
-      case hsql::kStmtUpdate:
-        sql_event->set_command(std::make_unique<UpdateCommand>(dynamic_cast<const hsql::UpdateStatement *>(stmt)));
-        break;
-      case hsql::kStmtDelete:
-        sql_event->set_command(std::make_unique<DeleteCommand>(dynamic_cast<const hsql::DeleteStatement *>(stmt)));
-        break;
-      default:
-        break;
-    }
+  const auto &result = sql_event->result();
+  auto stmt = result->getStatement(0);
+  switch (stmt->type()) {  // TODO(vgalaxy): only consider the first stmt
+    case hsql::kStmtCreate:
+      sql_event->set_command(std::make_unique<CreateCommand>(dynamic_cast<const hsql::CreateStatement *>(stmt)));
+      break;
+    case hsql::kStmtShow:
+      sql_event->set_command(std::make_unique<ShowCommand>(dynamic_cast<const hsql::ShowStatement *>(stmt)));
+      break;
+    case hsql::kStmtDrop:
+      sql_event->set_command(std::make_unique<DropCommand>(dynamic_cast<const hsql::DropStatement *>(stmt)));
+      break;
+    case hsql::kStmtSelect:
+      sql_event->set_command(std::make_unique<SelectCommand>(dynamic_cast<const hsql::SelectStatement *>(stmt)));
+      break;
+    case hsql::kStmtInsert:
+      sql_event->set_command(std::make_unique<InsertCommand>(dynamic_cast<const hsql::InsertStatement *>(stmt)));
+      break;
+    case hsql::kStmtUpdate:
+      sql_event->set_command(std::make_unique<UpdateCommand>(dynamic_cast<const hsql::UpdateStatement *>(stmt)));
+      break;
+    case hsql::kStmtDelete:
+      sql_event->set_command(std::make_unique<DeleteCommand>(dynamic_cast<const hsql::DeleteStatement *>(stmt)));
+      break;
+    default:
+      break;
   }
 
   query_cache_stage_->handle_event(sql_event);

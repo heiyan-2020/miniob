@@ -6,6 +6,8 @@
 #define MINIDB_PLANNODE_H
 
 #include <memory>
+
+#include "sql/table/schema.h"
 #include "../expr/environment.h"
 #include "sql/parser/hsql/sql/Expr.h"
 #include "common/log/log.h"
@@ -27,7 +29,7 @@ public:
   virtual RC prepare() = 0;
   virtual RC initialize() = 0;
   virtual RC next() = 0;
-  virtual refactor::Tuple *current_tuple() = 0;
+  virtual Tuple *current_tuple() = 0;
 
   SchemaRef getSchema()
   {

@@ -36,29 +36,27 @@ See the Mulan PSL v2 for more details. */
 
 using namespace common;
 
-#ifdef USE_READLINE
 char *my_readline(const char *prompt)
 {
   return readline(prompt);
 }
-#else   // USE_READLINE
-char *my_readline(const char *prompt)
-{
-  char *buffer = (char *)malloc(MAX_MEM_BUFFER_SIZE);
-  if (nullptr == buffer) {
-    fprintf(stderr, "failed to alloc line buffer");
-    return nullptr;
-  }
-  fprintf(stdout, prompt);
-  char *s = fgets(buffer, MAX_MEM_BUFFER_SIZE, stdin);
-  if (nullptr == s) {
-    fprintf(stderr, "failed to read message from console");
-    free(buffer);
-    return nullptr;
-  }
-  return buffer;
-}
-#endif  // USE_READLINE
+
+//char *my_readline(const char *prompt)
+//{
+//  char *buffer = (char *)malloc(MAX_MEM_BUFFER_SIZE);
+//  if (nullptr == buffer) {
+//    fprintf(stderr, "failed to alloc line buffer");
+//    return nullptr;
+//  }
+//  fprintf(stdout, prompt);
+//  char *s = fgets(buffer, MAX_MEM_BUFFER_SIZE, stdin);
+//  if (nullptr == s) {
+//    fprintf(stderr, "failed to read message from console");
+//    free(buffer);
+//    return nullptr;
+//  }
+//  return buffer;
+//}
 
 /* this function config a exit-cmd list, strncasecmp func truncate the command from terminal according to the number,
    'strncasecmp("exit", cmd, 4)' means that obclient read command string from terminal, truncate it to 4 chars from

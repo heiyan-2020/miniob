@@ -53,7 +53,7 @@ RC Db::init(const char *name, const char *dbpath)
   return open_all_tables();
 }
 
-RC Db::create_table(const char *table_name, std::vector<AttrInfo> attr_infos)
+RC Db::create_table(const char *table_name, Schema schema)
 {
   RC rc = RC::SUCCESS;
   // check table_name
@@ -65,7 +65,7 @@ RC Db::create_table(const char *table_name, std::vector<AttrInfo> attr_infos)
   // 文件路径可以移到 Table 模块
   std::string table_file_path = table_meta_file(path_.c_str(), table_name);
   auto *table = new Table();
-  rc = table->create(table_file_path.c_str(), table_name, path_.c_str(), std::move(attr_infos));
+  rc = table->create(table_file_path.c_str(), table_name, path_.c_str(), std::move(schema));
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to create table %s.", table_name);
     delete table;
@@ -108,22 +108,22 @@ RC Db::open_all_tables()
     if (opened_tables_.count(table->name()) != 0) {
       delete table;
       LOG_ERROR("Duplicate table with difference file name. table=%s, the other filename=%s",
-          table->name(),
+          table->name().c_str(),
           filename.c_str());
       return RC::GENERIC_ERROR;
     }
 
     opened_tables_[table->name()] = table;
-    LOG_INFO("Open table: %s, file: %s", table->name(), filename.c_str());
+    LOG_INFO("Open table: %s, file: %s", table->name().c_str(), filename.c_str());
   }
 
   LOG_INFO("All table have been opened. num=%d", opened_tables_.size());
   return rc;
 }
 
-const char *Db::name() const
+std::string Db::name() const
 {
-  return name_.c_str();
+  return name_;
 }
 
 void Db::all_tables(std::vector<std::string> &table_names) const
@@ -140,10 +140,10 @@ RC Db::sync()
     Table *table = table_pair.second;
     rc = table->sync();
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to flush table. table=%s.%s, rc=%d:%s", name_.c_str(), table->name(), rc, strrc(rc));
+      LOG_ERROR("Failed to flush table. table=%s.%s, rc=%d:%s", name_.c_str(), table->name().c_str(), rc, strrc(rc));
       return rc;
     }
-    LOG_INFO("Successfully sync table db:%s, table:%s.", name_.c_str(), table->name());
+    LOG_INFO("Successfully sync table db:%s, table:%s.", name_.c_str(), table->name().c_str());
   }
   LOG_INFO("Successfully sync db. db=%s", name_.c_str());
   return rc;

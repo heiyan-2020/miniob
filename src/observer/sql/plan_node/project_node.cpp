@@ -32,7 +32,7 @@ Tuple *ProjectNode::current_tuple()
   return &current_;
 }
 
-ProjectTuple ProjectNode::project_tuple(const RowTuple& ori_tuple)
+ProjectTuple ProjectNode::project_tuple(const RowTuple &ori_tuple)
 {
   ProjectTuple ret_tuple;
   std::vector<Column> tmp;

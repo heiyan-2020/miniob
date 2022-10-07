@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "json/json.h"
 #include "common/log/log.h"
 #include "storage/trx/trx.h"
+#include "sql/table/schema.h"
 
 static const Json::StaticString FIELD_TABLE_NAME("table_name");
 static const Json::StaticString FIELD_FIELDS("fields");
@@ -52,17 +53,13 @@ RC TableMeta::init_sys_fields()
   return rc;
 }
 
-RC TableMeta::init(const char *name, std::vector<AttrInfo> attr_infos)
+RC TableMeta::init(const char *name, const Schema& schema)
 {
   if (common::is_blank(name)) {
     return RC::INVALID_ARGUMENT;
   }
 
-  if (attr_infos.empty()) {
-    return RC::INVALID_ARGUMENT;
-  }
-
-  RC rc = RC::SUCCESS;
+  RC rc;
   if (sys_fields_.empty()) {
     rc = init_sys_fields();
     if (rc != RC::SUCCESS) {
@@ -71,7 +68,9 @@ RC TableMeta::init(const char *name, std::vector<AttrInfo> attr_infos)
     }
   }
 
-  fields_.resize(attr_infos.size() + sys_fields_.size());
+  const std::vector<Column> &cols = schema.get_columns();
+
+  fields_.resize(cols.size() + sys_fields_.size());
   for (size_t i = 0; i < sys_fields_.size(); i++) {
     fields_[i] = sys_fields_[i];
   }
@@ -79,15 +78,20 @@ RC TableMeta::init(const char *name, std::vector<AttrInfo> attr_infos)
   // 当前实现下，所有类型都是 4 字节对齐的，所以不再考虑字节对齐问题
   int field_offset = sys_fields_.back().offset() + sys_fields_.back().len();
 
-  for (int i = 0; i < attr_infos.size(); i++) {
-    const AttrInfo &attr_info = attr_infos[i];
-    rc = fields_[i + sys_fields_.size()].init(attr_info.name, attr_info.type, field_offset, attr_info.length, true);
+  for (int i = 0; i < cols.size(); i++) {
+    const Column &col = cols[i];
+    rc = fields_[i + sys_fields_.size()].init(
+        col.name_.column_name_.c_str(),
+        col.column_type_,
+        field_offset,
+        col.fixed_length_,
+        true);
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, attr_info.name);
+      LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, col.name_.column_name_.c_str());
       return rc;
     }
 
-    field_offset += attr_info.length;
+    field_offset += col.fixed_length_;
   }
 
   record_size_ = field_offset;
@@ -103,9 +107,9 @@ RC TableMeta::add_index(const IndexMeta &index)
   return RC::SUCCESS;
 }
 
-const char *TableMeta::name() const
+std::string TableMeta::name() const
 {
-  return name_.c_str();
+  return name_;
 }
 
 const FieldMeta *TableMeta::trx_field() const
@@ -117,13 +121,10 @@ const FieldMeta *TableMeta::field(int index) const
 {
   return &fields_[index];
 }
-const FieldMeta *TableMeta::field(const char *name) const
+const FieldMeta *TableMeta::field(const std::string &field_name) const
 {
-  if (nullptr == name) {
-    return nullptr;
-  }
   for (const FieldMeta &field : fields_) {
-    if (0 == strcmp(field.name(), name)) {
+    if (field.name() == name_) {
       return &field;
     }
   }

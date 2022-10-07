@@ -129,22 +129,5 @@ RC ParseStage::handle_request(StageEvent *event)
     }
   }
 
-  // original parser
-  Query *query_result = query_create();
-  if (nullptr == query_result) {
-    LOG_ERROR("Failed to create query.");
-    return RC::INTERNAL;
-  }
-
-  RC ret = parse(sql.c_str(), query_result);
-  if (ret == RC::SUCCESS) {
-    sql_event->set_query(query_result);
-  } else {
-    // set error information to event
-    sql_event->session_event()->set_response("Failed to parse sql");
-    query_destroy(query_result);
-    return RC::INTERNAL;
-  }
-
   return RC::SUCCESS;
 }

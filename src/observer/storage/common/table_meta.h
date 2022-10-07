@@ -22,6 +22,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/field_meta.h"
 #include "storage/common/index_meta.h"
 #include "common/lang/serializable.h"
+#include "sql/table/schema.h"
 
 class TableMeta : public common::Serializable {
 public:
@@ -32,15 +33,15 @@ public:
 
   void swap(TableMeta &other) noexcept;
 
-  RC init(const char *name, std::vector<AttrInfo> attr_infos);
+  RC init(const char *name, const Schema& schema);
 
   RC add_index(const IndexMeta &index);
 
 public:
-  const char *name() const;
+  std::string name() const;
   const FieldMeta *trx_field() const;
   const FieldMeta *field(int index) const;
-  const FieldMeta *field(const char *name) const;
+  const FieldMeta *field(const std::string &field_name) const;
   const FieldMeta *find_field_by_offset(int offset) const;
   const std::vector<FieldMeta> *field_metas() const
   {

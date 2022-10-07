@@ -1,6 +1,7 @@
 #pragma once
 
 #include "type_id.h"
+#include "type.h"
 
 #include <cstddef>
 #include <string>
@@ -17,28 +18,37 @@ class Value {
 public:
   Value() : Value{TypeId::UNDEFINED}
   {}
-  explicit Value(const TypeId type) : type_id_{type}
+  explicit Value(const TypeId type) : type_id_{type}, len_{Type::get_type_size(type)}
   {}
 
-  Value(TypeId type, bool b) : type_id_{type}
+  Value(TypeId type, bool b) : type_id_{type}, len_{Type::get_type_size(type)}
   {
     value_.bool_ = b;
   }
-  Value(TypeId type, int32_t i) : type_id_{type}
+  Value(TypeId type, int32_t i) : type_id_{type}, len_{Type::get_type_size(type)}
   {
     value_.int_ = i;
   }
-  Value(TypeId type, float f) : type_id_{type}
+  Value(TypeId type, float f) : type_id_{type}, len_{Type::get_type_size(type)}
   {
     value_.float_ = f;
   }
-  Value(TypeId type, const int32_t d[3]) : type_id_{type}
+  Value(TypeId type, const int32_t d[3]) : type_id_{type}, len_{Type::get_type_size(type)}
   {
     memcpy(value_.date_, d, sizeof(int32_t[3]));
   }
   Value(TypeId type, const char *c, size_t len = 4) : type_id_{type}, len_{len}
   {
     value_.char_ = std::string{c};
+  }
+
+  auto get_type() const -> TypeId
+  {
+    return type_id_;
+  }
+  auto get_len() const -> size_t
+  {
+    return len_;
   }
 
   auto compare_equals(const Value &o) const -> Value;

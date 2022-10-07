@@ -27,7 +27,7 @@ struct Query;
 
 class SQLStageEvent : public common::StageEvent {
 public:
-  SQLStageEvent(SessionEvent *event, const std::string &sql);
+  SQLStageEvent(SessionEvent *event, std::string sql);
   ~SQLStageEvent() noexcept override;
 
   SessionEvent *session_event() const
@@ -38,14 +38,6 @@ public:
   const std::string &sql() const
   {
     return sql_;
-  }
-  Query *query() const
-  {
-    return query_;
-  }
-  Stmt *stmt() const
-  {
-    return stmt_;
   }
   const std::unique_ptr<hsql::SQLParserResult>& result() const
   {
@@ -60,14 +52,6 @@ public:
   {
     sql_ = sql;
   }
-  void set_query(Query *query)
-  {
-    query_ = query;
-  }
-  void set_stmt(Stmt *stmt)
-  {
-    stmt_ = stmt;
-  }
   void set_result(std::unique_ptr<hsql::SQLParserResult> result)
   {
     result_ = std::move(result);
@@ -80,8 +64,6 @@ public:
 private:
   SessionEvent *session_event_ = nullptr;
   std::string sql_{};
-  Query *query_ = nullptr;
-  Stmt *stmt_ = nullptr;
   std::unique_ptr<hsql::SQLParserResult> result_{};
   std::unique_ptr<Command> command_{};
 };
