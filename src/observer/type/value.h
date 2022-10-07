@@ -58,6 +58,8 @@ public:
   auto compare_greater_than(const Value &o) const -> Value;
   auto compare_greater_than_equals(const Value &o) const -> Value;
 
+  auto compare(const Value &o) const -> int;
+
   auto add(const Value &o) const -> Value;
   auto subtract(const Value &o) const -> Value;
   auto multiply(const Value &o) const -> Value;

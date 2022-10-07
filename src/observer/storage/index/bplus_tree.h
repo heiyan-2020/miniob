@@ -25,6 +25,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/default/disk_buffer_pool.h"
 #include "util/comparator.h"
 #include "util/date.h"
+#include "type/value.h"
 
 class AttrComparator {
 public:
@@ -43,19 +44,25 @@ public:
   {
     switch (attr_type_) {
       case INT: {
-        return compare_int((void *)v1, (void *)v2);
+        Value lhs{INT, *(int32_t *)v1};
+        Value rhs{INT, *(int32_t *)v2};
+        return lhs.compare(rhs);
       } break;
       case FLOAT: {
-        return compare_float((void *)v1, (void *)v2);
+        Value lhs{FLOAT, *(float *)v1};
+        Value rhs{FLOAT, *(float *)v2};
+        return lhs.compare(rhs);
       }
       case CHAR: {
-        return compare_string((void *)v1, attr_length_, (void *)v2, attr_length_);
+        Value lhs{CHAR, v1, static_cast<size_t>(attr_length_)};
+        Value rhs{CHAR, v2, static_cast<size_t>(attr_length_)};
+        return lhs.compare(rhs);
       }
       case DATE: {
         return compare_date((void *)v1, (void *)v2);
       }
       default: {
-        LOG_ERROR("unknown attr type. %d", attr_type_);
+        LOG_ERROR("unknown attr type %d", attr_type_);
       }
     }
   }

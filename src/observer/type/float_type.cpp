@@ -1,29 +1,43 @@
 #include "float_type.h"
 #include "value.h"
 
+const double epsilon = 1E-6;
+
 auto FloatType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.float_ == right.value_.float_};
+  return Value{BOOL, compare(left, right) == 0};
 }
 auto FloatType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.float_ != right.value_.float_};
+  return Value{BOOL, compare(left, right) != 0};
 }
 auto FloatType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.float_ < right.value_.float_};
+  return Value{BOOL, compare(left, right) < 0};
 }
 auto FloatType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.float_ <= right.value_.float_};
+  return Value{BOOL, compare(left, right) <= 0};
 }
 auto FloatType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.float_ > right.value_.float_};
+  return Value{BOOL, compare(left, right) > 0};
 }
 auto FloatType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.float_ >= right.value_.float_};
+  return Value{BOOL, compare(left, right) >= 0};
+}
+
+auto FloatType::compare(const Value &left, const Value &right) const -> int
+{
+  float cmp = left.value_.float_ - right.value_.float_;
+  if (cmp > epsilon) {
+    return 1;
+  }
+  if (cmp < -epsilon) {
+    return -1;
+  }
+  return 0;
 }
 
 auto FloatType::add(const Value &left, const Value &right) const -> Value
