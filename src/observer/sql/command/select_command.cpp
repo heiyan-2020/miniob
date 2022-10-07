@@ -20,14 +20,39 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   std::stringstream ss;
   while (RC::SUCCESS == sp->next()) {
     TupleRef tuple = sp->current_tuple();
-    tuple_to_string(ss, *tuple);
+    tuple_to_string(ss, *tuple, sp->get_schema());
     ss << std::endl;
   }
   session_event->set_response(ss.str());
   return RC::SUCCESS;
 }
 
-void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple)
+void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema)
 {
-
+  RC rc = RC::SUCCESS;
+  bool first_field = true;
+  for (int i = 0; i < schema->get_column_count(); i++) {
+    
+  }
 }
+
+//static void tuple_to_string(std::ostream &os, const Tuple &tuple)
+//{
+//  TupleCell cell;
+//  RC rc = RC::SUCCESS;
+//  bool first_field = true;
+//  for (int i = 0; i < tuple.cell_num(); i++) {
+//    rc = tuple.cell_at(i, cell);
+//    if (rc != RC::SUCCESS) {
+//      LOG_WARN("failed to fetch field of cell. index=%d, rc=%s", i, strrc(rc));
+//      break;
+//    }
+//
+//    if (!first_field) {
+//      os << " | ";
+//    } else {
+//      first_field = false;
+//    }
+//    cell.to_string(os);
+//  }
+//}

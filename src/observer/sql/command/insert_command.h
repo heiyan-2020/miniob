@@ -14,5 +14,8 @@ public:
   RC execute(const SQLStageEvent *sql_event) override;
 
 private:
+  RC do_insert_values(const SQLStageEvent *sql_event);
+
+private:
   const hsql::InsertStatement *stmt_;
 };
