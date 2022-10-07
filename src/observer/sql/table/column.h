@@ -35,6 +35,11 @@ public:
     return table_name_ == other.table_name_ && column_name_ == other.column_name_;
   }
 
+  std::string to_string() const
+  {
+    return table_name_ + "." + column_name_;
+  }
+
 private:
   std::string table_name_;
   std::string column_name_;
@@ -55,12 +60,12 @@ public:
     return column_offset_;
   }
 
-  TypeId get_type()
+  TypeId get_type() const
   {
     return column_type_;
   }
 
-  ColumnName &get_name()
+  ColumnName get_name() const
   {
     return name_;
   }

@@ -86,3 +86,8 @@ auto CharType::deserialize_from(const char *storage) const -> Value
 {
   return {CHAR, storage, strlen(storage)};
 }
+
+auto CharType::to_string(const Value &val) const -> std::string
+{
+  return {};
+}

@@ -78,3 +78,8 @@ auto Value::deserialize_from(const char *storage) -> Value
 {
   return Type::get_instance(type_id_)->deserialize_from(storage);
 }
+
+auto Value::to_string() const -> std::string
+{
+  return Type::get_instance(type_id_)->to_string(*this);
+}
