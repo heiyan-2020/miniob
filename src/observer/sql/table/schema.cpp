@@ -32,6 +32,42 @@ void Schema::set_columns(const std::vector<Column> columns)
   length_ = curr_offset;
 }
 
-//std::vector<Column> Schema::find_columns(std::string &table_name, std::string &column_name)
-//{
-//}
+
+
+std::vector<Column> Schema::find_columns(std::string table_name, std::string column_name)
+{
+  std::vector<Column> found_columns;
+  
+  if (column_name.empty()) {
+    if (table_name.empty()) {
+      // Wildcard with no table name: *
+      found_columns.insert(found_columns.end(), columns_.begin(), columns_.end());
+    } else {
+      // Wildcard with a table name: t.*
+      for (Column col : columns_) {
+        if (col.get_name().table_name_ == table_name) {
+          found_columns.push_back(col);
+        }
+      }
+    }
+  } else {
+    if (table_name.empty()) {
+      // Column name with no table name:  col
+      for (Column col : columns_) {
+        if (col.get_name().column_name_ == column_name) {
+          found_columns.push_back(col);
+        }
+      }
+    } else {
+      // Column name with table name:  t.col
+      for (Column col : columns_) {
+        if (col.get_name().column_name_ == column_name) && col.get_name().table_name_ == table_name) {
+          found_columns.push_back(col);
+        }
+      }
+    }
+  }
+
+  return found_columns;
+}
+

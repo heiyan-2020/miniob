@@ -28,12 +28,12 @@ public:
   TupleRef current_tuple() override;
 
 private:
+  void prepareSchema(SchemaRef input_schema);
+
   PlanNodeRef left_child_;
   std::vector<hsql::Expr *> projection_spec_;
-
-  void prepareSchema(SchemaRef input_schema);
-  TupleRef project_tuple(TupleRef original_tuple);
   TupleRef current_;
+
 };
 
 #endif  // MINIDB_PROJECT_NODE_H

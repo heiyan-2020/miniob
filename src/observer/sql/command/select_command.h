@@ -2,7 +2,6 @@
 
 #include "command.h"
 #include "sql/parser/hsql/sql/SelectStatement.h"
-#include "sql/operator/project_operator.h"
 #include "sql/table/tuple.h"
 
 class Session;

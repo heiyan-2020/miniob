@@ -7,9 +7,12 @@
 #include "type/type.h"
 #include "tuple.h"
 
+class Column;
+
 class ColumnName {
   friend class TableMeta;
   friend class Schema;
+  friend class Column;
 
 public:
   ColumnName() = default;
@@ -59,6 +62,10 @@ public:
   ColumnName &get_name()
   {
     return name_;
+  }
+
+  void set_alias(std::string alias) {
+    name_.column_name_ = std::move(alias);
   }
 
 private:

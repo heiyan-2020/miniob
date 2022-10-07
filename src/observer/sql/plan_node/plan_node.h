@@ -31,7 +31,7 @@ public:
   virtual RC next() = 0;
   virtual TupleRef current_tuple() = 0;
 
-  SchemaRef getSchema()
+  SchemaRef get_schema()
   {
     return output_schema_;
   }

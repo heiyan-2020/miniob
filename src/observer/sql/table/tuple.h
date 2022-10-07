@@ -1,13 +1,14 @@
 #pragma once
 
 #include <cstdint>
-#include "schema.h"
 #include "type/type_id.h"
 #include "type/value.h"
 #include "storage/record/record.h"
+#include "schema.h"
 
 class Tuple;
 using TupleRef = std::shared_ptr<Tuple>;
+
 
 class Tuple {
 public:
@@ -15,7 +16,7 @@ public:
   Tuple() = default;
 
   // constructor for creating a new tuple based on input value
-  Tuple(std::vector<Value> values, const Schema *schema);
+  Tuple(std::vector<Value> values, SchemaRef schema);
 
   // constructor for table heap tuple
   explicit Tuple(Record *record);
@@ -25,10 +26,10 @@ public:
     data_ = nullptr;
   }
 
-  Value get_value(const Schema *schema, size_t column_idx) const;
+  Value get_value(SchemaRef schema, size_t column_idx) const;
 
 private:
-  const char *get_data_ptr(const Schema *schema, size_t column_idx) const;
+  const char *get_data_ptr(SchemaRef schema, size_t column_idx) const;
   RID rid_{};  // if pointing to the table heap, the rid is valid
   size_t size_{};
   char *data_{nullptr};

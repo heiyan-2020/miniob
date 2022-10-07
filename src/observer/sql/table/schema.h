@@ -1,10 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #include "column.h"
 #include "common/log/log.h"
 #include "storage/common/table.h"
-#include <vector>
-#include <optional>
 
 class Schema;
 using SchemaRef = std::shared_ptr<Schema>;
@@ -47,7 +47,7 @@ public:
     return length_;
   }
 
-  std::vector<Column> find_columns(std::string &table_name, std::string &column_name);
+  std::vector<Column> find_columns(std::string table_name, std::string column_name);
 
 private:
   void set_columns(const std::vector<Column> columns);

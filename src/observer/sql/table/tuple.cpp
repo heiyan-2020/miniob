@@ -1,7 +1,7 @@
 #include "tuple.h"
 #include <string>
 
-Tuple::Tuple(std::vector<Value> values, const Schema *schema)
+Tuple::Tuple(std::vector<Value> values, SchemaRef schema)
 {
   assert(values.size() == schema->get_column_count());
 
@@ -27,7 +27,7 @@ Tuple::Tuple(Record *record)
   rid_ = record->rid();
 }
 
-Value Tuple::get_value(const Schema *schema, size_t column_idx) const
+Value Tuple::get_value(SchemaRef schema, size_t column_idx) const
 {
   assert(schema);
   assert(data_);
@@ -36,7 +36,7 @@ Value Tuple::get_value(const Schema *schema, size_t column_idx) const
   return Value{column_type}.deserialize_from(data_ptr);
 }
 
-const char *Tuple::get_data_ptr(const Schema *schema, const size_t column_idx) const
+const char *Tuple::get_data_ptr(SchemaRef schema, const size_t column_idx) const
 {
   assert(schema);
   assert(data_);
