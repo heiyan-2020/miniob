@@ -15,7 +15,7 @@ public:
   RC execute(const SQLStageEvent *sql_event) override;
 
 private:
-  static void tuple_to_string(std::ostream &os, const Tuple &tuple);
+  void tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema);
 
 private:
   const hsql::SelectStatement *stmt_;
