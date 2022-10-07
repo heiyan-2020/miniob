@@ -1,6 +1,9 @@
 #pragma once
 #include <stdint.h>
 #include "schema.h"
+#include "type/type_id.h"
+#include "type/value.h"
+#include "storage/record/record.h"
 
 class Tuple {
 public:
@@ -9,12 +12,6 @@ public:
 
   // constructor for creating a new tuple based on input value
   Tuple(std::vector<Value> values, const Schema *schema);
-
-  // serialize tuple data
-  void serialize_to(char *storage) const;
-
-  // deserialize tuple data(deep copy)
-  void deserialize_from(const char *storage);
 
   Value get_value(const Schema *schema, uint32_t column_idx) const;
 

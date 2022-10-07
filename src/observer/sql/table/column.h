@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "schema.h"
+#include "tuple.h"
 
 class ColName {
 public:
