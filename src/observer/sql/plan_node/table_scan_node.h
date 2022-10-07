@@ -4,8 +4,10 @@
 
 #ifndef MINIDB_TABLE_SCAN_NODE_H
 #define MINIDB_TABLE_SCAN_NODE_H
+
 #include "plan_node.h"
 #include "storage/record/record_manager.h"
+#include "storage/common/table.h"
 
 class TableScanNode : public PlanNode {
 public:

@@ -15,13 +15,13 @@ public:
   Tuple(std::vector<Value> values, const Schema *schema);
 
   // constructor for table heap tuple
-  Tuple(Record *record);
+  explicit Tuple(Record *record);
 
-  Value get_value(const Schema *schema, uint32_t column_idx) const;
+  Value get_value(const Schema *schema, size_t column_idx) const;
 
 private:
-  const char *get_data_ptr(const Schema *schema, uint32_t column_idx) const;
+  const char *get_data_ptr(const Schema *schema, size_t column_idx) const;
   RID rid_{};  // if pointing to the table heap, the rid is valid
-  int size_{0};
+  size_t size_{};
   char *data_{nullptr};
 };

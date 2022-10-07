@@ -32,16 +32,16 @@ public:
     return field_;
   }
 
-  AttrType attr_type() const
+  TypeId attr_type() const
   {
     return field_->type();
   }
 
-  const char *table_name() const
+  std::string table_name() const
   {
     return table_->name();
   }
-  const char *field_name() const
+  std::string field_name() const
   {
     return field_->name();
   }

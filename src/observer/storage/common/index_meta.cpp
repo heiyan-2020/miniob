@@ -43,7 +43,7 @@ void IndexMeta::to_json(Json::Value &json_value) const
 {
   json_value[FIELD_INDEX_NAME] = name_;
   Json::Value fields_value;
-  for (auto field : fields_name_) {
+  for (const auto& field : fields_name_) {
     fields_value.append(field);
   }
   json_value[FIELD_FIELDS_NAME] = fields_value;

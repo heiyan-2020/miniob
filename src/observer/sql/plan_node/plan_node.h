@@ -6,11 +6,11 @@
 #define MINIDB_PLANNODE_H
 
 #include <memory>
-#include "schema.h"
+#include "sql/table/schema.h"
 #include "../expr/environment.h"
 #include "sql/parser/hsql/sql/Expr.h"
 #include "common/log/log.h"
-#include "sql/expr/tuple.h"
+#include "sql/table/tuple.h"
 
 class PlanNode {
 public:

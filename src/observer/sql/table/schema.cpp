@@ -2,7 +2,7 @@
 
 Schema::Schema(const std::vector<Column> &columns)
 {
-  uint32_t curr_offset = 0;
+  size_t curr_offset = 0;
   for (auto column : columns) {
     // set column offset
     column.column_offset_ = curr_offset;

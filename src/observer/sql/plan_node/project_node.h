@@ -4,6 +4,7 @@
 
 #ifndef MINIDB_PROJECT_NODE_H
 #define MINIDB_PROJECT_NODE_H
+
 #include <utility>
 
 #include "plan_node.h"

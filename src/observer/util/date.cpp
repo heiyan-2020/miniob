@@ -124,7 +124,7 @@ RC Date::parse_date(void *dst, const char *src)
 
   auto ret = std::regex_match(src, m, reg);
   if (!ret) {
-    return RC::DATE;
+    return RC::DATEFORMAT;
   }
   if (m.size() != 4) {
     return RC::INTERNAL;
@@ -136,7 +136,7 @@ RC Date::parse_date(void *dst, const char *src)
   trans[2] = std::stoi(m.str(3));
 
   if (!Date::validate_date(dst)) {
-    return RC::DATE;
+    return RC::DATEFORMAT;
   }
 
   return RC::SUCCESS;
