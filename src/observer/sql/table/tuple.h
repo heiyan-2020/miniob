@@ -6,6 +6,8 @@
 #include "type/value.h"
 #include "storage/record/record.h"
 
+class Schema;
+
 class Tuple {
 public:
   // Default constructor (to create a dummy tuple)

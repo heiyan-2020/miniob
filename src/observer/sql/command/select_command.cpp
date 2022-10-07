@@ -3,7 +3,6 @@
 #include "storage/common/db.h"
 #include "session/session.h"
 #include "storage/common/table.h"
-#include "sql/operator/project_operator.h"
 
 SelectCommand::SelectCommand(const hsql::SelectStatement *stmt) : Command{hsql::kStmtSelect}, stmt_{stmt}
 {}

@@ -5,7 +5,8 @@
 #ifndef MINIDB_ENVIRONMENT_H
 #define MINIDB_ENVIRONMENT_H
 
-#include "ret_type.h"
+#include "sql/table/schema.h"
+#include "sql/table/tuple.h"
 
 class Environment;
 using EnvRef = std::shared_ptr<Environment>;

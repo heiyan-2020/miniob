@@ -60,3 +60,5 @@ private:
   size_t fixed_length_;
   size_t column_offset_{0};
 };
+
+using ColumnRef = std::shared_ptr<Column>;

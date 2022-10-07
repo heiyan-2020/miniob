@@ -25,7 +25,6 @@ See the Mulan PSL v2 for more details. */
 #include "event/sql_event.h"
 #include "event/session_event.h"
 #include "session/session.h"
-#include "sql/stmt/stmt.h"
 #include "sql/command/command.h"
 #include "sql/command/create_command.h"
 #include "sql/command/show_command.h"

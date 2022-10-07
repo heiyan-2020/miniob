@@ -28,7 +28,7 @@ See the Mulan PSL v2 for more details. */
 
 class AttrComparator {
 public:
-  void init(AttrType type, int length)
+  void init(TypeId type, int length)
   {
     attr_type_ = type;
     attr_length_ = length;
@@ -42,37 +42,36 @@ public:
   int operator()(const char *v1, const char *v2) const
   {
     switch (attr_type_) {
-      case INTS: {
+      case INT: {
         return compare_int((void *)v1, (void *)v2);
       } break;
-      case FLOATS: {
+      case FLOAT: {
         return compare_float((void *)v1, (void *)v2);
       }
-      case CHARS: {
+      case CHAR: {
         return compare_string((void *)v1, attr_length_, (void *)v2, attr_length_);
       }
-      case DATES: {
+      case DATE: {
         return compare_date((void *)v1, (void *)v2);
       }
       default: {
         LOG_ERROR("unknown attr type. %d", attr_type_);
-        abort();
       }
     }
   }
 
 private:
-  AttrType attr_type_;
+  TypeId attr_type_;
   int attr_length_;
 };
 
 class KeyComparator {
 public:
-  void init(std::vector<AttrType> attr_types, std::vector<int> attr_lengths)
+  void init(std::vector<TypeId> attr_types, std::vector<int> attr_lengths)
   {
     assert(attr_types.size() == attr_lengths.size());
     AttrComparator comparator{};
-    for (std::vector<AttrType>::size_type i = 0; i < attr_types.size(); ++i) {
+    for (std::vector<TypeId>::size_type i = 0; i < attr_types.size(); ++i) {
       comparator.init(attr_types[i], attr_lengths[i]);
       attr_comparators_.push_back(comparator);
     }
@@ -100,7 +99,7 @@ private:
 
 class AttrPrinter {
 public:
-  void init(AttrType type, int length)
+  void init(TypeId type, int length)
   {
     attr_type_ = type;
     attr_length_ = length;
@@ -114,13 +113,13 @@ public:
   std::string operator()(const char *v) const
   {
     switch (attr_type_) {
-      case INTS: {
+      case INT: {
         return std::to_string(*(int *)v);
       }
-      case FLOATS: {
+      case FLOAT: {
         return std::to_string(*(float *)v);
       }
-      case CHARS: {
+      case CHAR: {
         std::string str;
         for (int i = 0; i < attr_length_; i++) {
           if (v[i] == 0) {
@@ -130,29 +129,28 @@ public:
         }
         return str;
       }
-      case DATES: {
+      case DATE: {
         Date date{(void *)v};
         return date.to_string();
       }
       default: {
         LOG_ERROR("unknown attr type. %d", attr_type_);
-        abort();
       }
     }
   }
 
 private:
-  AttrType attr_type_;
+  TypeId attr_type_;
   int attr_length_;
 };
 
 class KeyPrinter {
 public:
-  void init(std::vector<AttrType> attr_types, std::vector<int> attr_lengths)
+  void init(std::vector<TypeId> attr_types, std::vector<int> attr_lengths)
   {
     assert(attr_types.size() == attr_lengths.size());
     AttrPrinter printer{};
-    for (std::vector<AttrType>::size_type i = 0; i < attr_types.size(); ++i) {
+    for (std::vector<TypeId>::size_type i = 0; i < attr_types.size(); ++i) {
       printer.init(attr_types[i], attr_lengths[i]);
       attr_printers_.push_back(printer);
     }
@@ -196,7 +194,7 @@ struct IndexFileHeader {
   int32_t attr_total_length;
   int32_t key_length;  // attr total length + sizeof(RID)
   int32_t attr_num;
-  AttrType attr_type[MAX_ATTR_NUM];  // TODO: support up to 4 multi index
+  TypeId attr_type[MAX_ATTR_NUM];  // TODO: support up to 4 multi index
   int32_t attr_length[MAX_ATTR_NUM];
 
   std::string to_string() const
@@ -411,7 +409,7 @@ private:
 
 class BplusTreeHandler {
 public:
-  RC create(const char *file_name, std::vector<AttrType> attr_types, std::vector<int> attr_lengths,
+  RC create(const char *file_name, std::vector<TypeId> attr_types, std::vector<int> attr_lengths,
       int internal_max_size = -1, int leaf_max_size = -1);
 
   RC open(const char *file_name);

@@ -21,7 +21,7 @@ See the Mulan PSL v2 for more details. */
 class BplusTreeIndex : public Index {
 public:
   BplusTreeIndex() = default;
-  virtual ~BplusTreeIndex() noexcept;
+  ~BplusTreeIndex() noexcept override;
 
   RC create(const char *file_name, IndexMeta index_meta, std::vector<FieldMeta> field_metas);
   RC open(const char *file_name, IndexMeta index_meta, std::vector<FieldMeta> field_metas);

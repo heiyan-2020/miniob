@@ -45,3 +45,5 @@ private:
   std::vector<Column> columns_{};
   size_t length_{};
 };
+
+using SchemaRef = std::shared_ptr<Schema>;
