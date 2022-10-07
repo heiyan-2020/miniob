@@ -7,7 +7,7 @@
 
 Date::Date(void *data)
 {
-  int *trans = reinterpret_cast<int *>(data);
+  auto *trans = reinterpret_cast<int32_t *>(data);
   this->year = trans[0];
   this->month = trans[1];
   this->day = trans[2];
@@ -130,7 +130,7 @@ RC Date::parse_date(void *dst, const char *src)
     return RC::INTERNAL;
   }
 
-  int *trans = reinterpret_cast<int *>(dst);
+  auto *trans = reinterpret_cast<int32_t *>(dst);
   trans[0] = std::stoi(m.str(1));
   trans[1] = std::stoi(m.str(2));
   trans[2] = std::stoi(m.str(3));

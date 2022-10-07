@@ -14,12 +14,13 @@
 
 class PlanNode {
 public:
-  PlanNode()
-  {}
-  PlanNode(std::shared_ptr<PlanNode> left_child)
+  PlanNode() = default;
+  explicit PlanNode(std::shared_ptr<PlanNode> left_child)
   {}
   PlanNode(std::shared_ptr<PlanNode> left_child, std::shared_ptr<PlanNode> right_child)
   {}
+
+  virtual ~PlanNode() = default;
 
   virtual RC prepare() = 0;
   virtual RC initialize() = 0;

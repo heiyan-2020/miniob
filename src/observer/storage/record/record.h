@@ -117,7 +117,7 @@ public:
   };
 
 private:
-  RID rid_;
+  RID rid_{};
 
   // the data buffer
   // record will not release the memory

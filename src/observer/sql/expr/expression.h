@@ -41,7 +41,7 @@ public:
   FieldExpr(const Table *table, const FieldMeta *field) : field_(table, field)
   {}
 
-  virtual ~FieldExpr() = default;
+  ~FieldExpr() override = default;
 
   ExprType type() const override
   {
@@ -84,7 +84,7 @@ public:
     }
   }
 
-  virtual ~ValueExpr() = default;
+  ~ValueExpr() override = default;
 
   RC get_value(const Tuple &tuple, TupleCell &cell) const override;
   ExprType type() const override

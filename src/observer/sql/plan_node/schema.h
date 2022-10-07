@@ -7,16 +7,15 @@
 
 #include "storage/common/field.h"
 #include "column.h"
-#include "string.h"
+#include <cstring>
 #include "sql/expr/tuple.h"
 
 class Schema {
 public:
-  Schema()
-  {}
+  Schema() = default;
   Schema(std::vector<Column> cols);
   Schema(Schema lhs, Schema rhs);
-  Schema(RowTuple *table_tuple)
+  explicit Schema(RowTuple *table_tuple)
   {
     for (auto spec : table_tuple->speces_) {
       cols_.push_back(std::make_shared<Column>(spec));
@@ -28,7 +27,7 @@ public:
   }
 
   void append(Schema s);
-  int addColumn(Column column);
+  int add_column(Column column);
 
   std::vector<ColumnRef> findColumns(const char *table_name, const char *column_name);
 

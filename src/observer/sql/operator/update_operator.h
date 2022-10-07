@@ -6,10 +6,10 @@ class UpdateStmt;
 
 class UpdateOperator : public Operator {
 public:
-  UpdateOperator(UpdateStmt *update_stmt) : update_stmt_(update_stmt)
+  explicit UpdateOperator(UpdateStmt *update_stmt) : update_stmt_(update_stmt)
   {}
 
-  virtual ~UpdateOperator() = default;
+  ~UpdateOperator() override = default;
 
   RC open() override;
   RC next() override;
