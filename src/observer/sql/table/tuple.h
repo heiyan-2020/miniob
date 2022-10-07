@@ -6,6 +6,8 @@
 #include "type/value.h"
 #include "storage/record/record.h"
 
+namespace refactor {
+
 class Tuple {
 public:
   // Default constructor (to create a dummy tuple)
@@ -25,3 +27,5 @@ private:
   int size_{0};
   char *data_{nullptr};
 };
+
+} //namespace refactor

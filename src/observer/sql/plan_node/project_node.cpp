@@ -40,18 +40,18 @@ ProjectTuple ProjectNode::project_tuple(const RowTuple& ori_tuple)
   for (hsql::Expr *expr : projection_spec_) {
     if (expr->type == hsql::kExprStar) {
       if (expr->hasTable()) {
-        tmp = input_schema_.find_columns(expr->table, nullptr);
+        tmp = input_schema.find_columns(expr->table, nullptr);
         for (auto col : tmp) {
           ret_tuple.add_cell_spec(col.get_spec());
         }
       } else {
-        tmp = input_schema_.find_columns(nullptr, nullptr);
+        tmp = input_schema.find_columns(nullptr, nullptr);
         for (auto col : tmp) {
           ret_tuple.add_cell_spec(col.get_spec());
         }
       }
     } else if (expr->type == hsql::kExprColumnRef) {
-      tmp = input_schema_.find_columns(expr->table, expr->getName());
+      tmp = input_schema.find_columns(expr->table, expr->getName());
       assert(tmp.size() == 1);
       for (auto col : tmp) {
         ret_tuple.add_cell_spec(col.get_spec());
@@ -64,29 +64,28 @@ ProjectTuple ProjectNode::project_tuple(const RowTuple& ori_tuple)
   return ret_tuple;
 }
 
-void ProjectNode::prepareSchema(Schema input_schema)
+void ProjectNode::prepareSchema(SchemaRef input_schema)
 {
-  input_schema_ = std::move(input_schema);
   std::vector<Column> fields;
   std::vector<Column> tmp;
 
   for (hsql::Expr *expr : projection_spec_) {
     if (expr->type == hsql::kExprStar) {
       if (expr->hasTable()) {
-        tmp = input_schema_.find_columns(expr->table, nullptr);
+        tmp = input_schema.find_columns(expr->table, nullptr);
         fields.insert(fields.end(), tmp.begin(), tmp.end());
         for (auto col : tmp) {
           current_.add_cell_spec(col.get_spec());
         }
       } else {
-        tmp = input_schema_.find_columns(nullptr, nullptr);
+        tmp = input_schema.find_columns(nullptr, nullptr);
         fields.insert(fields.end(), tmp.begin(), tmp.end());
         for (auto col : tmp) {
           current_.add_cell_spec(col.get_spec());
         }
       }
     } else if (expr->type == hsql::kExprColumnRef) {
-      tmp = input_schema_.find_columns(expr->table, expr->getName());
+      tmp = input_schema.find_columns(expr->table, expr->getName());
       assert(tmp.size() == 1);
       if (expr->hasAlias()) {
         tmp[0].set_alias(expr->alias);

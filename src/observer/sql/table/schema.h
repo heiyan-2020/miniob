@@ -1,12 +1,18 @@
 #pragma once
 #include "column.h"
 #include "common/log/log.h"
+#include "storage/common/table.h"
 #include <vector>
 #include <optional>
+
+class Schema;
+using SchemaRef = std::shared_ptr<Schema>;
 
 class Schema {
 public:
   explicit Schema(const std::vector<Column> &columns);
+
+  Schema(Table *table, const std::vector<FieldMeta> *table_schema);
 
   const std::vector<Column> &get_columns() const
   {

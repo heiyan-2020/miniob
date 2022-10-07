@@ -1,4 +1,5 @@
 #include "schema.h"
+#include "storage/common/table.h"
 
 Schema::Schema(const std::vector<Column> &columns)
 {
@@ -13,4 +14,14 @@ Schema::Schema(const std::vector<Column> &columns)
   }
 
   length_ = curr_offset;
+}
+
+Schema::Schema(const Table *table, const std::vector<FieldMeta> *table_schema)
+{
+  std::vector<Column> columns;
+  for (const auto &field : *table_schema) {
+    ColName col_name(table->name(), field.name());
+    // TODO(zyx): Initialize column type.
+//    columns.emplace_back(col_name, , field.len());
+  }
 }

@@ -6,11 +6,13 @@
 #define MINIDB_PLANNODE_H
 
 #include <memory>
-#include "schema.h"
 #include "../expr/environment.h"
 #include "sql/parser/hsql/sql/Expr.h"
 #include "common/log/log.h"
-#include "sql/expr/tuple.h"
+#include "sql/table/tuple.h"
+
+class PlanNode;
+using PlanNodeRef = std::shared_ptr<PlanNode>;
 
 class PlanNode {
 public:
@@ -25,19 +27,18 @@ public:
   virtual RC prepare() = 0;
   virtual RC initialize() = 0;
   virtual RC next() = 0;
-  virtual Tuple *current_tuple() = 0;
+  virtual refactor::Tuple *current_tuple() = 0;
 
-  Schema getSchema()
+  SchemaRef getSchema()
   {
     return output_schema_;
   }
 
 protected:
-  std::shared_ptr<PlanNode> left_child_;
-  std::shared_ptr<PlanNode> right_child_;
-  Schema output_schema_;
-  Schema input_schema_;
-  std::shared_ptr<Environment> env_;
+  PlanNodeRef left_child_;
+  PlanNodeRef right_child_;
+  SchemaRef output_schema_;
+  EnvRef env_;
 };
 
 #endif  // MINIDB_PLANNODE_H

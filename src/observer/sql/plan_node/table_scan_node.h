@@ -36,7 +36,7 @@ public:
 private:
   Table *table_;
   hsql::Expr *predicate_;
-  RowTuple current_;
+  refactor::Tuple current_;
   RecordFileScanner record_scanner_;
   Record current_record_;
 };
