@@ -21,6 +21,12 @@ Tuple::Tuple(std::vector<Value> values, const Schema *schema)
   }
 }
 
+Tuple::Tuple(Record *record)
+{
+  data_ = record->data();
+  rid_ = record->rid();
+}
+
 Value Tuple::get_value(const Schema *schema, uint32_t column_idx) const
 {
   assert(schema);

@@ -14,6 +14,9 @@ public:
   // constructor for creating a new tuple based on input value
   Tuple(std::vector<Value> values, const Schema *schema);
 
+  // constructor for table heap tuple
+  Tuple(Record *record);
+
   Value get_value(const Schema *schema, uint32_t column_idx) const;
 
 private:
