@@ -53,7 +53,7 @@ Table::~Table()
   LOG_INFO("Table has been closed: %s", name().c_str());
 }
 
-RC Table::create(const char *path, const char *name, const char *base_dir, const Schema& schema)
+RC Table::create(const char *path, const char *name, const char *base_dir, const Schema &schema)
 {
   if (common::is_blank(name)) {
     return RC::INVALID_ARGUMENT;
@@ -265,18 +265,23 @@ RC Table::insert_record(Trx *trx, Record *record)
   }
   return rc;
 }
-RC Table::insert_record(Trx *trx, std::vector<Value> values)
+
+RC Table::insert_record(Trx *trx, const std::vector<Value> &values)
 {
-  char *record_data;
-  DEFER([&]() { delete[] record_data; });
-  RC rc = make_record(std::move(values), record_data);
-  if (rc != RC::SUCCESS) {
-    LOG_ERROR("Failed to create a record, rc = %s", strrc(rc));
-    return rc;
+  char *record_data = (char *)calloc(table_meta_.record_size(), sizeof(char));
+  DEFER([&]() { free(record_data); });
+
+  // TODO(vgalaxy): assume only one trx field
+  size_t curr_offset{static_cast<size_t>(table_meta_.trx_field()->len())};
+  size_t curr_index{1};
+  for (const auto &value : values) {
+    value.serialize_to(record_data + curr_offset);
+    curr_offset += table_meta_.field(curr_index)->len();
+    curr_index += 1;
   }
 
   // TODO(vgalaxy): listener
-  rc = check_unique_constraint(record_data);
+  RC rc = check_unique_constraint(record_data);
   if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to insert a record due to violate unique constraint");
     return rc;
@@ -296,43 +301,6 @@ std::string Table::name() const
 const TableMeta &Table::table_meta() const
 {
   return table_meta_;
-}
-
-RC Table::make_record(std::vector<Value> values, char *&record_out)
-{
-  int record_size = table_meta_.record_size();
-  char *record = new char[record_size];
-
-  // 检查字段个数是否一致
-  if (values.size() + table_meta_.sys_field_num() != table_meta_.field_num()) {
-    LOG_WARN("Input values don't match the table's schema, table name %s", table_meta_.name().c_str());
-    return RC::SCHEMA_FIELD_MISSING;
-  }
-
-  // 检查字段类型是否一致
-  const int normal_field_start_index = table_meta_.sys_field_num();
-  for (auto i = 0; i < values.size(); i++) {
-    const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
-    const Value &value = values[i];
-    if (field->type() != value.get_type()) {
-      LOG_ERROR("Invalid value type, table name = %s, fields name = %s, type = %d, but given = %d",
-          table_meta_.name().c_str(),
-          field->name().c_str(),
-          field->type(),
-          value.get_type());
-      return RC::SCHEMA_FIELD_TYPE_MISMATCH;
-    }
-  }
-
-  // 复制所有字段的值
-  size_t curr_offset{static_cast<size_t>(table_meta_.trx_field()->offset() + table_meta_.trx_field()->len())};
-  for (const auto& value : values) {
-    value.serialize_to(record + curr_offset);
-    curr_offset += value.get_len();
-  }
-
-  record_out = record;
-  return RC::SUCCESS;
 }
 
 RC Table::init_record_handler(const char *base_dir)

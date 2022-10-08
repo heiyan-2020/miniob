@@ -28,15 +28,7 @@ auto CharType::compare_greater_than_equals(const Value &left, const Value &right
 
 auto CharType::compare(const Value &left, const Value &right) const -> int
 {
-  std::string lhs = left.value_.char_.substr(0, left.get_len());
-  std::string rhs = right.value_.char_.substr(0, right.get_len());
-  if (lhs < rhs) {
-    return -1;
-  } else if (lhs > rhs) {
-    return 1;
-  } else {
-    return 0;
-  }
+  return strcmp(left.value_.char_, right.value_.char_);
 }
 
 auto CharType::add(const Value &left, const Value &right) const -> Value
@@ -80,7 +72,7 @@ auto CharType::negation(const Value &value) const -> Value
 
 auto CharType::serialize_to(const Value &val, char *storage) const -> void
 {
-  memcpy(storage, val.value_.char_.c_str(), val.len_);
+  memcpy(storage, val.value_.char_, val.len_);  // without '\0'
 }
 auto CharType::deserialize_from(const char *storage) const -> Value
 {

@@ -135,7 +135,7 @@ public:
         return Value{DATE, (const int32_t *)v}.to_string();
       }
       default: {
-        LOG_ERROR("unknown attr type. %d", attr_type_);
+        LOG_ERROR("unknown attr type %d", attr_type_);
         return {};
       }
     }
