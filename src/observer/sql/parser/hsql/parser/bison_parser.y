@@ -173,7 +173,7 @@
         }
       }
       delete ($$);
-    } <str_vec> <table_vec> <table_element_vec> <update_vec> <expr_vec> <order_vec> <stmt_vec>
+    } <str_vec> <table_vec> <table_element_vec> <update_vec> <expr_vec> <order_vec> <stmt_vec> <list_vec>
     %destructor { delete ($$); } <*>
 
 
@@ -263,7 +263,8 @@
     %type <import_type_t>          opt_file_type file_type
 
     %type <str_vec>                ident_commalist opt_column_list
-    %type <expr_vec>               expr_list select_list opt_literal_list literal_list hint_list opt_hints
+    %type <expr_vec>               expr_list select_list opt_literal_list list_item literal_list hint_list opt_hints
+    %type <list_vec>		   list_of_list
     %type <table_vec>              table_ref_commalist
     %type <order_vec>              opt_order order_list
     %type <with_description_vec>   opt_with_clause with_clause with_description_list
@@ -690,12 +691,12 @@ truncate_statement : TRUNCATE table_name {
  * INSERT INTO students VALUES ('Max', 1112233, 'Musterhausen', 2.3)
  * INSERT INTO employees SELECT * FROM stundents
  ******************************/
-insert_statement : INSERT INTO table_name opt_column_list VALUES '(' literal_list ')' {
+insert_statement : INSERT INTO table_name opt_column_list VALUES list_of_list {
   $$ = new InsertStatement(kInsertValues);
   $$->schema = $3.schema;
   $$->tableName = $3.name;
   $$->columns = $4;
-  $$->values = $7;
+  $$->values = $6;
 }
 | INSERT INTO table_name opt_column_list select_no_paren {
   $$ = new InsertStatement(kInsertSelect);
@@ -898,6 +899,19 @@ expr_list : expr_alias {
 
 opt_literal_list : literal_list { $$ = $1; }
 | /* empty */ { $$ = nullptr; };
+
+list_of_list : list_item {
+  $$ = new std::vector<ValueList*>();
+  $$->push_back($1);
+}
+| list_of_list ',' list_item {
+  $1->push_back($3);
+  $$ = $1;
+};
+
+list_item : '(' literal_list ')' {
+  $$ = $2;
+};
 
 literal_list : literal {
   $$ = new std::vector<Expr*>();

@@ -6,6 +6,7 @@
 
 namespace hsql {
 enum InsertType { kInsertValues, kInsertSelect };
+using ValueList = std::vector<Expr *>;
 
 // Represents SQL Insert statements.
 // Example: "INSERT INTO students VALUES ('Max', 1112233, 'Musterhausen', 2.3)"
@@ -17,7 +18,7 @@ struct InsertStatement : SQLStatement {
   char *schema;
   char *tableName;
   std::vector<char *> *columns;
-  std::vector<Expr *> *values;
+  std::vector<ValueList*> *values;
   SelectStatement *select;
 };
 

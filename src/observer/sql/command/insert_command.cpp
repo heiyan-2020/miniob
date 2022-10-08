@@ -30,24 +30,27 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
   }
   std::vector<Value> insert_values;
   // TODO(zyx): support insert multiple values.
-  for (auto expr : *stmt_->values) {
-    switch (expr->type) {
-      case hsql::ExprType::kExprLiteralInt: {
-        insert_values.push_back(Value(TypeId::INT, (int32_t) expr->ival));
-        break ;
-      }
-        //TODO(zyx): support more data types.
-      default: {
-        LOG_ERROR("Unsupported data type: %d\n", expr->type);
-        return RC::UNIMPLENMENT;
+  for (auto val_list :*stmt_->values) {
+    insert_values.clear();
+    for (auto expr : *val_list) {
+      switch (expr->type) {
+        case hsql::ExprType::kExprLiteralInt: {
+          insert_values.push_back(Value(TypeId::INT, (int32_t) expr->ival));
+          break ;
+        }
+          //TODO(zyx): support more data types.
+        default: {
+          LOG_ERROR("Unsupported data type: %d\n", expr->type);
+          return RC::UNIMPLENMENT;
+        }
       }
     }
+    rc = table->insert_record(nullptr, insert_values);
+    if (rc != RC::SUCCESS) {
+      session_event->set_response("FAILURE");
+      return rc;
+    }
   }
-  rc = table->insert_record(nullptr, insert_values);
-  if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
-  } else {
-    session_event->set_response("FAILURE");
-  }
+  session_event->set_response("SUCCESS");
   return rc;
 }
