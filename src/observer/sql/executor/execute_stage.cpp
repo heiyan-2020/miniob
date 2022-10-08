@@ -99,55 +99,6 @@ void ExecuteStage::handle_request(common::StageEvent *event)
 {
   auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   sql_event->command()->execute(sql_event);
-
-//  switch (type) {
-//    case SCF_HELP: {
-//      do_help(sql_event);
-//    } break;
-//
-//    case SCF_CREATE_TABLE:
-//    case SCF_CREATE_INDEX:
-//    case SCF_SHOW_TABLES:
-//    case SCF_DESC_TABLE:
-//    case SCF_DROP_TABLE:
-//      break;
-//
-//    case SCF_SYNC: {
-//      RC rc = DefaultHandler::get_default().sync();
-//      session_event->set_response(strrc(rc));
-//    } break;
-//
-//    case SCF_BEGIN: {
-//      session_event->set_response("SUCCESS");
-//    } break;
-//    case SCF_COMMIT: {
-//      Trx *trx = session->current_trx();
-//      RC rc = trx->commit();
-//      session->set_trx_multi_operation_mode(false);
-//      session_event->set_response(strrc(rc));
-//    } break;
-//    case SCF_ROLLBACK: {
-//      Trx *trx = session_event->get_client()->session->current_trx();
-//      RC rc = trx->rollback();
-//      session->set_trx_multi_operation_mode(false);
-//      session_event->set_response(strrc(rc));
-//    } break;
-//
-//    default: {
-//      session_event->set_response("Unsupported");
-//    }
-//  }
-}
-
-void end_trx_if_need(Session *session, Trx *trx, bool all_right)
-{
-  if (!session->is_trx_multi_operation_mode()) {
-    if (all_right) {
-      trx->commit();
-    } else {
-      trx->rollback();
-    }
-  }
 }
 
 //RC ExecuteStage::do_delete(SQLStageEvent *sql_event)
