@@ -4,6 +4,7 @@
 #include "type/value.h"
 #include "storage/common/table.h"
 #include "util/date.h"
+#include "common/lang/defer.h"
 
 #define CHECK_FIELD_TYPE(TYPE)                                                      \
  do {                                                                               \
@@ -77,6 +78,7 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
             rc = Date::parse_date(dst, expr->name);
             if (rc != RC::SUCCESS) {
               session_event->set_response("FAILURE");
+              free(dst);
               return rc;
             } else {
               insert_values.emplace_back(DATE, static_cast<const int32_t *>(dst));
