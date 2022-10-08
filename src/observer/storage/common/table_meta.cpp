@@ -63,7 +63,7 @@ RC TableMeta::init(const char *name, const Schema& schema)
   if (sys_fields_.empty()) {
     rc = init_sys_fields();
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to init_sys_fields, name:%s ", name);
+      LOG_ERROR("Failed to init_sys_fields, name %s", name);
       return rc;
     }
   }

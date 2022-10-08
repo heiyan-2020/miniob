@@ -37,7 +37,7 @@ public:
   {
     memcpy(value_.date_, d, sizeof(int32_t[3]));
   }
-  Value(TypeId type, const char *c, size_t len = 4) : type_id_{type}, len_{len}
+  Value(TypeId type, const char *c, size_t len) : type_id_{type}, len_{len}
   {
     value_.char_ = std::string{c};
   }

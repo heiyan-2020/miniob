@@ -271,11 +271,11 @@ RC Table::insert_record(Trx *trx, std::vector<Value> values)
   DEFER([&]() { delete[] record_data; });
   RC rc = make_record(std::move(values), record_data);
   if (rc != RC::SUCCESS) {
-    LOG_ERROR("Failed to create a record. rc=%d:%s", rc, strrc(rc));
+    LOG_ERROR("Failed to create a record, rc = %s", strrc(rc));
     return rc;
   }
 
-  // TODO: listener
+  // TODO(vgalaxy): listener
   rc = check_unique_constraint(record_data);
   if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to insert a record due to violate unique constraint");
@@ -305,7 +305,7 @@ RC Table::make_record(std::vector<Value> values, char *&record_out)
 
   // 检查字段个数是否一致
   if (values.size() + table_meta_.sys_field_num() != table_meta_.field_num()) {
-    LOG_WARN("Input values don't match the table's schema, table name:%s", table_meta_.name().c_str());
+    LOG_WARN("Input values don't match the table's schema, table name %s", table_meta_.name().c_str());
     return RC::SCHEMA_FIELD_MISSING;
   }
 
@@ -315,7 +315,7 @@ RC Table::make_record(std::vector<Value> values, char *&record_out)
     const FieldMeta *field = table_meta_.field(i + normal_field_start_index);
     const Value &value = values[i];
     if (field->type() != value.get_type()) {
-      LOG_ERROR("Invalid value type. table name =%s, fields name=%s, type=%d, but given=%d",
+      LOG_ERROR("Invalid value type, table name = %s, fields name = %s, type = %d, but given = %d",
           table_meta_.name().c_str(),
           field->name().c_str(),
           field->type(),
@@ -325,7 +325,7 @@ RC Table::make_record(std::vector<Value> values, char *&record_out)
   }
 
   // 复制所有字段的值
-  size_t curr_offset{};
+  size_t curr_offset{static_cast<size_t>(table_meta_.trx_field()->offset() + table_meta_.trx_field()->len())};
   for (const auto& value : values) {
     value.serialize_to(record + curr_offset);
     curr_offset += value.get_len();
