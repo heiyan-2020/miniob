@@ -52,6 +52,17 @@ public:
     return length_;
   }
 
+  bool table_name_visible() const
+  {
+    std::string table_name = columns_[0].get_name().table_name_;
+    for (const auto &column : columns_) {
+      if (column.get_name().table_name_ != table_name) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   std::vector<Column> find_columns(std::string table_name, std::string column_name);
 
 private:

@@ -11,7 +11,7 @@ Schema::Schema(const Table *table, const std::vector<FieldMeta> *table_schema)
   std::vector<Column> columns;
   for (const auto &field : *table_schema) {
     ColumnName col_name(table->name(), field.name());
-    columns.emplace_back(col_name, field.type(), field.len());
+    columns.emplace_back(col_name, field.type(), field.len(), field.visible());
   }
 
   set_columns(columns);

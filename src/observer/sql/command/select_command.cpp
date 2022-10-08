@@ -20,12 +20,7 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
 
   std::stringstream ss;
 
-  std::string header;
-  for (const auto &column : sp->get_schema()->get_columns()) {
-    header += column.get_name().to_string();
-    header += "\t";
-  }
-  ss << header << std::endl;
+  print_header(ss, sp->get_schema());
 
   while (RC::SUCCESS == sp->next()) {
     TupleRef tuple = sp->current_tuple();
@@ -36,13 +31,39 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   return RC::SUCCESS;
 }
 
+void SelectCommand::print_header(std::ostream &os, SchemaRef schema)
+{
+  std::string header;
+  bool first = true;
+  bool table_name_visible = schema->table_name_visible();
+  for (const auto &column : schema->get_columns()) {
+    if (column.is_visible()) {
+      if (!first) {
+        header += " | ";
+      }
+      header += column.get_name().to_string(table_name_visible);
+      first = false;
+    }
+  }
+  if (schema->get_column_count() > 0)
+    header += "\n";
+  os << header;
+}
+
 void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema)
 {
   // Transforming result set into strings.
     std::string row;
+    bool first = true;
     for (auto i = 0; i < schema->get_column_count(); i++) {
-      row += tuple.get_value(schema, i).to_string();
-      row += "\t";
+      const auto &column = schema->get_column(i);
+      if (column.is_visible()) {
+        if (!first) {
+          row += " | ";
+        }
+        row += tuple.get_value(schema, i).to_string();
+        first = false;
+      }
     }
     os << row;
 }

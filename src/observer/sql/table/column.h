@@ -53,6 +53,13 @@ public:
     return table_name_ + "." + column_name_;
   }
 
+  std::string to_string(bool table_name_visible) const
+  {
+    if (table_name_visible)
+      return to_string();
+    return column_name_;
+  }
+
 private:
   std::string table_name_;
   std::string column_name_;
@@ -64,8 +71,8 @@ class Column {
   friend class TableMeta;
 
 public:
-  Column(const ColumnName &column_name, TypeId type, size_t length)
-      : name_(column_name), column_type_(type), fixed_length_(length)
+  Column(const ColumnName &column_name, TypeId type, size_t length, bool visible=true)
+      : name_(column_name), column_type_(type), fixed_length_(length), visible_(visible)
   {}
 
   size_t get_offset() const
@@ -83,11 +90,18 @@ public:
     return name_;
   }
 
-  void set_alias(std::string alias) {
+  void set_alias(std::string alias)
+  {
     name_.column_name_ = std::move(alias);
   }
 
+  bool is_visible() const
+  {
+    return visible_;
+  }
+
 private:
+  bool visible_;
   ColumnName name_;
   TypeId column_type_;
   size_t fixed_length_;
