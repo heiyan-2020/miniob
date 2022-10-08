@@ -94,5 +94,5 @@ auto FloatType::deserialize_from(const char *storage) const -> Value
 
 auto FloatType::to_string(const Value &val) const -> std::string
 {
-  return {};
+  return std::to_string(val.value_.float_);
 }

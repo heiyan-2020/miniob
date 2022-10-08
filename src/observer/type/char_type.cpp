@@ -89,5 +89,5 @@ auto CharType::deserialize_from(const char *storage) const -> Value
 
 auto CharType::to_string(const Value &val) const -> std::string
 {
-  return {};
+  return val.value_.char_;
 }

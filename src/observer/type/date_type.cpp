@@ -93,5 +93,5 @@ auto DateType::deserialize_from(const char *storage) const -> Value
 
 auto DateType::to_string(const Value &val) const -> std::string
 {
-  return {};
+  return Date{(void *)val.value_.date_}.to_string();
 }
