@@ -370,17 +370,17 @@ void printInsertStatementInfo(const InsertStatement *stmt, uintmax_t numIndent)
       inprint(col_name, numIndent + 2);
     }
   }
-  switch (stmt->type) {
-    case kInsertValues:
-      inprint("Values", numIndent + 1);
-      for (Expr *expr : *stmt->values) {
-        printExpression(expr, numIndent + 2);
-      }
-      break;
-    case kInsertSelect:
-      printSelectStatementInfo(stmt->select, numIndent + 1);
-      break;
-  }
+//  switch (stmt->type) {
+//    case kInsertValues:
+//      inprint("Values", numIndent + 1);
+//      for (Expr *expr : *stmt->values) {
+//        printExpression(expr, numIndent + 2);
+//      }
+//      break;
+//    case kInsertSelect:
+//      printSelectStatementInfo(stmt->select, numIndent + 1);
+//      break;
+//  }
 }
 
 void printTransactionStatementInfo(const TransactionStatement *stmt, uintmax_t numIndent)

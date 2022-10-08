@@ -324,13 +324,14 @@ union HSQL_STYPE
   std::vector<hsql::UpdateClause*>* update_vec;
   std::vector<hsql::WithDescription*>* with_description_vec;
   std::vector<hsql::LockingClause*>* locking_clause_vec;
+  std::vector<std::vector<hsql::Expr*>*>* list_vec;
 
   std::pair<int64_t, int64_t>* ival_pair;
 
   hsql::RowLockMode lock_mode_t;
   hsql::RowLockWaitPolicy lock_wait_policy_t;
 
-#line 334 "bison_parser.h"
+#line 335 "bison_parser.h"
 
 };
 typedef union HSQL_STYPE HSQL_STYPE;

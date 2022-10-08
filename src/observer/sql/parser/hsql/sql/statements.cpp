@@ -221,12 +221,12 @@ InsertStatement::~InsertStatement()
     delete columns;
   }
 
-  if (values != nullptr) {
-    for (Expr *expr : *values) {
-      delete expr;
-    }
-    delete values;
-  }
+//  if (values != nullptr) {
+//    for (Expr *expr : *values) {
+//      delete expr;
+//    }
+//    delete values;
+//  }
 }
 
 // ShowStatament
