@@ -48,14 +48,14 @@ private:
         {hsql::OperatorType::kOpLess, ComparisonType::LessThan},
         {hsql::OperatorType::kOpLessEq, ComparisonType::LessThanOrEqual},
     };
-    for (size_t idx = 0; idx < sizeof infos / sizeof infos[0]; idx++) {
-      if (infos[idx].opt == opt) {
-        return infos[idx].ct;
+    for (auto info : infos) {
+      if (info.opt == opt) {
+        return info.ct;
       }
     }
     LOG_ERROR("Bind operator type failed");
     assert(false);
-    return ComparisonType::LessThanOrEqual; // dummy return value, because program will halt before.
+    return {}; // dummy return value, because program will halt before.
   }
 };
 

@@ -25,6 +25,7 @@ public:
 
     current_schemas_.push_back(schema);
     current_tuples_.push_back(tuple);
+    return RC::SUCCESS;
   }
 
   RC clear()

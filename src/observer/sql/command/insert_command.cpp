@@ -4,7 +4,6 @@
 #include "type/value.h"
 #include "storage/common/table.h"
 #include "util/date.h"
-#include "common/lang/defer.h"
 
 #define CHECK_FIELD_TYPE(TYPE)                                                      \
  do {                                                                               \
@@ -13,7 +12,6 @@
         table_meta.name().c_str(),                                                  \
         field_meta.name().c_str(),                                                  \
         field_meta.type());                                                         \
-      session_event->set_response("FAILURE");                                       \
       return RC::SCHEMA_FIELD_MISSING;                                              \
     }                                                                               \
   } while (0)                                                                       \
@@ -23,9 +21,17 @@ InsertCommand::InsertCommand(const hsql::InsertStatement *stmt) : Command{hsql::
 
 RC InsertCommand::execute(const SQLStageEvent *sql_event)
 {
+  SessionEvent *session_event = sql_event->session_event();
   switch (stmt_->type) {
-    case hsql::kInsertValues:
-      return do_insert_values(sql_event);
+    case hsql::kInsertValues: {
+      RC rc = do_insert_values(sql_event);
+      if (rc == RC::SUCCESS) {
+        session_event->set_response("SUCCESS");
+      } else {
+        session_event->set_response("FAILURE");
+      }
+      return rc;
+    }
     default:
       return RC::UNIMPLENMENT;
   }
@@ -52,7 +58,6 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
 
     if (val_list->size() + table_meta.sys_field_num() != table_meta.field_num()) {
       LOG_WARN("Input values don't match the table's schema, table name %s", table_meta.name().c_str());
-      session_event->set_response("FAILURE");
       return RC::SCHEMA_FIELD_MISSING;
     }
 
@@ -77,7 +82,6 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
             void *dst = calloc(1, sizeof(int32_t[3]));
             rc = Date::parse_date(dst, expr->name);
             if (rc != RC::SUCCESS) {
-              session_event->set_response("FAILURE");
               free(dst);
               return rc;
             } else {
@@ -92,7 +96,6 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
         }
         default: {
           LOG_ERROR("Unsupported data type: %d", expr->type);
-          session_event->set_response("FAILURE");
           return RC::UNIMPLENMENT;
         }
       }
@@ -101,11 +104,9 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
 
     rc = table->insert_record(nullptr, insert_values);
     if (rc != RC::SUCCESS) {
-      session_event->set_response("FAILURE");
       return rc;
     }
   }
 
-  session_event->set_response("SUCCESS");
-  return rc;  // TODO(vgalaxy): necessity
+  return rc;
 }

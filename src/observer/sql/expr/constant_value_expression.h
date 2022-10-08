@@ -3,7 +3,8 @@
 
 class ConstantValueExpression : public AbstractExpression {
 public:
-  explicit ConstantValueExpression(const Value &val) : AbstractExpression({}, val.get_type()), val_(val) {}
+  explicit ConstantValueExpression(Value &&val) :
+        AbstractExpression({}, val.get_type()), val_(val) {}
 
   RC evaluate(EnvRef env, Value &out_value) const
   {

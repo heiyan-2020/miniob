@@ -72,7 +72,7 @@ class Column {
 
 public:
   Column(const ColumnName &column_name, TypeId type, size_t length, bool visible=true)
-      : name_(column_name), column_type_(type), fixed_length_(length), visible_(visible)
+      : visible_(visible), name_(column_name), column_type_(type), fixed_length_(length)
   {}
 
   size_t get_offset() const

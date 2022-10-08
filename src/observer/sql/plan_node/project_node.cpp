@@ -51,6 +51,7 @@ void ProjectNode::prepareSchema(SchemaRef input_schema)
       if (expr->table != nullptr)
         table_name = expr->table;
       tmp = input_schema->find_columns(table_name, expr->getName());
+      // TODO(vgalaxy): column not exist
       assert(tmp.size() == 1);
       if (expr->hasAlias()) {
         tmp[0].set_alias(expr->alias);
