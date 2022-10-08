@@ -26,7 +26,7 @@ public:
   TupleRef current_tuple() override;
 
 private:
-  void prepareSchema(SchemaRef input_schema);
+  RC prepareSchema(SchemaRef input_schema);
 
   PlanNodeRef left_child_;
   std::vector<hsql::Expr *> projection_spec_;
