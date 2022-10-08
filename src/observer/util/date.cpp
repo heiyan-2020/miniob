@@ -1,7 +1,6 @@
 #include "date.h"
 #include "common/log/log.h"
 
-#include <cstring>
 #include <string>
 #include <regex>
 

@@ -58,6 +58,8 @@ public:
   virtual auto compare_greater_than(const Value &left, const Value &right) const -> Value;
   virtual auto compare_greater_than_equals(const Value &left, const Value &right) const -> Value;
 
+  virtual auto compare(const Value &left, const Value &right) const -> int;
+
   virtual auto add(const Value &left, const Value &right) const -> Value;
   virtual auto subtract(const Value &left, const Value &right) const -> Value;
   virtual auto multiply(const Value &left, const Value &right) const -> Value;

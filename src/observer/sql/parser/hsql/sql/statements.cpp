@@ -151,6 +151,14 @@ TransactionStatement::TransactionStatement(TransactionCommand command)
 TransactionStatement::~TransactionStatement()
 {}
 
+// OtherStatement
+OtherStatement::OtherStatement(OtherCommand command)
+    : SQLStatement(kStmtOther), command(command)
+{}
+
+OtherStatement::~OtherStatement()
+{}
+
 // ExecuteStatement
 ExecuteStatement::ExecuteStatement() : SQLStatement(kStmtExecute), name(nullptr), parameters(nullptr)
 {}

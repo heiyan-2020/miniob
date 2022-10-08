@@ -23,7 +23,6 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   std::string header;
   for (const auto &column : sp->get_schema()->get_columns()) {
     header += column.get_name().to_string();
-    ;
     header += "\t";
   }
   ss << header << std::endl;
@@ -41,7 +40,7 @@ void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple, Schema
 {
   // Transforming result set into strings.
     std::string row;
-    for (uint32_t i = 0; i < schema->get_column_count(); i++) {
+    for (auto i = 0; i < schema->get_column_count(); i++) {
       row += tuple.get_value(schema, i).to_string();
       row += "\t";
     }

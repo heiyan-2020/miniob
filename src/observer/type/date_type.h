@@ -16,6 +16,8 @@ public:
   auto compare_greater_than(const Value &left, const Value &right) const -> Value override;
   auto compare_greater_than_equals(const Value &left, const Value &right) const -> Value override;
 
+  auto compare(const Value &left, const Value &right) const -> int override;
+
   auto add(const Value &left, const Value &right) const -> Value override;
   auto subtract(const Value &left, const Value &right) const -> Value override;
   auto multiply(const Value &left, const Value &right) const -> Value override;

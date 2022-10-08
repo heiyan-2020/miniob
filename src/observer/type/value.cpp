@@ -26,6 +26,11 @@ auto Value::compare_greater_than_equals(const Value &o) const -> Value
   return Type::get_instance(type_id_)->compare_greater_than_equals(*this, o);
 }
 
+auto Value::compare(const Value &o) const -> int
+{
+  return Type::get_instance(type_id_)->compare(*this, o);
+}
+
 auto Value::add(const Value &o) const -> Value
 {
   return Type::get_instance(type_id_)->add(*this, o);
@@ -72,4 +77,9 @@ auto Value::serialize_to(char *storage) const -> void
 auto Value::deserialize_from(const char *storage) -> Value
 {
   return Type::get_instance(type_id_)->deserialize_from(storage);
+}
+
+auto Value::to_string() const -> std::string
+{
+  return Type::get_instance(type_id_)->to_string(*this);
 }

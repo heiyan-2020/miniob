@@ -6,9 +6,9 @@
 #include <cstddef>
 #include <string>
 #include <cstring>
+#include <cstdlib>
 
 class TableScanNode;
-enum class CmpBool { CmpFalse = 0, CmpTrue = 1, CmpNull = 2 };
 
 class Value {
   friend class Type;
@@ -24,6 +24,12 @@ public:
   {}
   explicit Value(const TypeId type) : type_id_{type}, len_{Type::get_type_size(type)}
   {}
+  ~Value()
+  {
+    if (type_id_ == CHAR) {
+      free(value_.char_);
+    }
+  }
 
   Value(TypeId type, bool b) : type_id_{type}, len_{Type::get_type_size(type)}
   {
@@ -37,13 +43,14 @@ public:
   {
     value_.float_ = f;
   }
-  Value(TypeId type, const int32_t d[3]) : type_id_{type}, len_{Type::get_type_size(type)}
+  Value(TypeId type, const int32_t *d) : type_id_{type}, len_{Type::get_type_size(type)}
   {
     memcpy(value_.date_, d, sizeof(int32_t[3]));
   }
-  Value(TypeId type, const char *c, size_t len = 4) : type_id_{type}, len_{len}
+  Value(TypeId type, const char *c, size_t len) : type_id_{type}, len_{len}
   {
-    value_.char_ = std::string{c};
+    value_.char_ = (char *)calloc(len + 1, sizeof(char));
+    memcpy(value_.char_, c, std::min(len, strlen(c)));
   }
 
   auto get_type() const -> TypeId
@@ -62,6 +69,8 @@ public:
   auto compare_greater_than(const Value &o) const -> Value;
   auto compare_greater_than_equals(const Value &o) const -> Value;
 
+  auto compare(const Value &o) const -> int;
+
   auto add(const Value &o) const -> Value;
   auto subtract(const Value &o) const -> Value;
   auto multiply(const Value &o) const -> Value;
@@ -77,18 +86,17 @@ public:
   auto serialize_to(char *storage) const -> void;
   auto deserialize_from(const char *storage) -> Value;
 
-  inline auto to_string() const -> std::string { return Type::get_instance(type_id_)->to_string(*this); }
+  auto to_string() const -> std::string;
 
 protected:
   TypeId type_id_;
 
-  // TODO(vgalaxy): use union
-  struct Val {
-    bool bool_{};
-    int32_t int_{};
-    float float_{};
-    int32_t date_[3]{};
-    std::string char_{};
+  union Val {
+    bool bool_;
+    int32_t int_;
+    float float_;
+    int32_t date_[3];
+    char *char_;
   } value_{};
 
   size_t len_{};

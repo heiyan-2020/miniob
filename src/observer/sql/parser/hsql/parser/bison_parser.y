@@ -117,6 +117,7 @@
   hsql::ShowStatement* show_stmt;
   hsql::SQLStatement* statement;
   hsql::TransactionStatement* transaction_stmt;
+  hsql::OtherStatement* other_stmt;
   hsql::UpdateStatement* update_stmt;
 
   hsql::Alias* alias_t;
@@ -153,6 +154,7 @@
   std::vector<hsql::UpdateClause*>* update_vec;
   std::vector<hsql::WithDescription*>* with_description_vec;
   std::vector<hsql::LockingClause*>* locking_clause_vec;
+  std::vector<std::vector<hsql::Expr*>*>* list_vec;
 
   std::pair<int64_t, int64_t>* ival_pair;
 
@@ -205,6 +207,7 @@
     %token TRUE FALSE BOOLEAN
     %token TRANSACTION BEGIN COMMIT ROLLBACK
     %token NOWAIT SKIP LOCKED SHARE
+    %token HELP SYNC
 
     /*********************************
      ** Non-Terminal types (http://www.gnu.org/software/bison/manual/html_node/Type-Decl.html)
@@ -213,6 +216,7 @@
     %type <statement>              statement preparable_statement
     %type <exec_stmt>              execute_statement
     %type <transaction_stmt>       transaction_statement
+    %type <other_stmt>		   other_statement
     %type <prep_stmt>              prepare_statement
     %type <select_stmt>            select_statement select_with_paren select_no_paren select_clause select_within_set_operation select_within_set_operation_no_parentheses
     %type <import_stmt>            import_statement
@@ -356,7 +360,8 @@ preparable_statement : select_statement { $$ = $1; }
 | drop_statement { $$ = $1; }
 | alter_statement { $$ = $1; }
 | execute_statement { $$ = $1; }
-| transaction_statement { $$ = $1; };
+| transaction_statement { $$ = $1; }
+| other_statement { $$ = $1; };
 
 /******************************
  * Hints
@@ -394,6 +399,13 @@ transaction_statement : BEGIN opt_transaction_keyword { $$ = new TransactionStat
 
 opt_transaction_keyword : TRANSACTION | /* empty */
     ;
+
+/******************************
+ * Other Statement
+ ******************************/
+
+other_statement : HELP { $$ = new OtherStatement(kHelp); }
+| SYNC { $$ = new OtherStatement(kSync); };
 
 /******************************
  * Prepared Statement

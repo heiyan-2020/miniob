@@ -3,27 +3,38 @@
 
 auto IntType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.int_ == right.value_.int_};
+  return Value{BOOL, compare(left, right) == 0};
 }
 auto IntType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.int_ != right.value_.int_};
+  return Value{BOOL, compare(left, right) != 0};
 }
 auto IntType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.int_ < right.value_.int_};
+  return Value{BOOL, compare(left, right) < 0};
 }
 auto IntType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.int_ <= right.value_.int_};
+  return Value{BOOL, compare(left, right) <= 0};
 }
 auto IntType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.int_ > right.value_.int_};
+  return Value{BOOL, compare(left, right) > 0};
 }
 auto IntType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, left.value_.int_ >= right.value_.int_};
+  return Value{BOOL, compare(left, right) >= 0};
+}
+
+auto IntType::compare(const Value &left, const Value &right) const -> int
+{
+  if (left.value_.int_ < right.value_.int_) {
+    return -1;
+  } else if (left.value_.int_ > right.value_.int_) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 auto IntType::add(const Value &left, const Value &right) const -> Value
