@@ -47,7 +47,10 @@ void ProjectNode::prepareSchema(SchemaRef input_schema)
         columns.insert(columns.end(), tmp.begin(), tmp.end());
       }
     } else if (expr->type == hsql::kExprColumnRef) {
-      tmp = input_schema->find_columns(expr->table, expr->getName());
+      std::string table_name;
+      if (expr->table != nullptr)
+        table_name = expr->table;
+      tmp = input_schema->find_columns(table_name, expr->getName());
       assert(tmp.size() == 1);
       if (expr->hasAlias()) {
         tmp[0].set_alias(expr->alias);

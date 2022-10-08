@@ -2,6 +2,8 @@
 #define MINIDB_TUPLE_H
 
 #include <cstdint>
+#include <memory>
+
 #include "type/type_id.h"
 #include "type/value.h"
 #include "storage/record/record.h"
@@ -11,7 +13,6 @@ class Tuple;
 using TupleRef = std::shared_ptr<Tuple>;
 
 
-class Schema;
 
 class Tuple {
 public:

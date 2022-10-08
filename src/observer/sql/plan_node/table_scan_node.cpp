@@ -14,16 +14,36 @@ RC TableScanNode::prepare()
 
 RC TableScanNode::next()
 {
-  if (!record_scanner_.has_next()) {
-    return RC::RECORD_EOF;
+  RC rc;
+  while (record_scanner_.has_next()) {
+    rc = record_scanner_.next(current_record_);
+    if (rc == RC::SUCCESS && is_selected(std::make_shared<Tuple>(&current_record_))) {
+      return rc;
+    }
   }
 
-  RC rc = record_scanner_.next(current_record_);
-  return rc;
+  return RC::RECORD_EOF;
+
 }
 
 TupleRef TableScanNode::current_tuple()
 {
   current_ = std::make_shared<Tuple>(&current_record_);
   return current_;
+}
+
+bool TableScanNode::is_selected(TupleRef tuple)
+{
+  if (!predicate_)
+    return true;
+
+  env_->clear();
+  env_->add_tuple(output_schema_, tuple);
+  Value val;
+  RC rc = predicate_->evaluate(env_, val);
+  if (rc == RC::SUCCESS) {
+    return val.value_.bool_;
+  }
+  LOG_ERROR("Evaluation failed");
+  return false;
 }

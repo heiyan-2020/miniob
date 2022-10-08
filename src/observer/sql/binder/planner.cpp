@@ -66,7 +66,7 @@ RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *p
       LOG_ERROR("Scan node shouldn't have predicate now.");
       return RC::GENERIC_ERROR;
     }
-    scan_node->set_predicate(predicate);
+    scan_node->set_predicate(bind_expression(predicate));
     return RC::SUCCESS;
   }
   return RC::UNIMPLENMENT;
@@ -96,4 +96,24 @@ RC Planner::make_plan(const hsql::SelectStatement *sel_stmt, std::shared_ptr<Pla
   }
 
   return rc;
+}
+
+AbstractExpressionRef Planner::bind_expression(hsql::Expr *expr)
+{
+  switch (expr->type) {
+    case hsql::kExprLiteralInt: {
+      return std::make_shared<ConstantValueExpression>(Value(TypeId::INT, (int32_t) expr->ival));
+    }
+    case hsql::kExprColumnRef: {
+      return std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
+    }
+    case hsql::kExprOperator: {
+      AbstractExpressionRef lhs = bind_expression(expr->expr), rhs = bind_expression(expr->expr2);
+      return std::make_shared<ComparisonExpression>(lhs, rhs, bind_operator(expr->opType));
+    }
+    default: {
+      LOG_ERROR("Unsupported expression type: %d", expr->type);
+    }
+  }
+  return nullptr;
 }

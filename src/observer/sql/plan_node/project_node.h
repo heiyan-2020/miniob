@@ -12,10 +12,8 @@
 class ProjectNode : public PlanNode {
 public:
   ProjectNode(std::shared_ptr<PlanNode> left_child, std::vector<hsql::Expr *> projection_specs)
-      : left_child_(std::move(left_child)), projection_spec_(std::move(projection_specs))
+      : PlanNode(), left_child_(std::move(left_child)), projection_spec_(std::move(projection_specs))
   {}
-  explicit ProjectNode(std::vector<hsql::Expr *> selValues);
-  ProjectNode() = default;
   ~ProjectNode() override = default;
 
   RC prepare() override;

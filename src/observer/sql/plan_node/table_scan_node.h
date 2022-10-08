@@ -11,7 +11,7 @@
 
 class TableScanNode : public PlanNode {
 public:
-  TableScanNode(Table *table, hsql::Expr *predicate) : table_(table), predicate_(predicate)
+  TableScanNode(Table *table, AbstractExpressionRef predicate) : PlanNode(), table_(table), predicate_(predicate)
   {}
   ~TableScanNode() override
   {
@@ -26,18 +26,21 @@ public:
 
   TupleRef current_tuple() override;
 
-  hsql::Expr *get_predicate()
+  AbstractExpressionRef get_predicate()
   {
     return predicate_;
   }
-  void set_predicate(hsql::Expr *expr)
+  void set_predicate(AbstractExpressionRef expr)
   {
     predicate_ = expr;
   }
 
 private:
+  bool is_selected(TupleRef tuple);
+
+private:
   Table *table_;
-  hsql::Expr *predicate_;
+  AbstractExpressionRef predicate_;
   TupleRef current_;
   RecordFileScanner record_scanner_;
   Record current_record_;

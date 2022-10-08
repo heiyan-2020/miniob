@@ -7,6 +7,9 @@
 #include <string>
 #include <cstring>
 
+class TableScanNode;
+enum class CmpBool { CmpFalse = 0, CmpTrue = 1, CmpNull = 2 };
+
 class Value {
   friend class Type;
   friend class CharType;
@@ -14,6 +17,7 @@ class Value {
   friend class FloatType;
   friend class DateType;
   friend class BoolType;
+  friend class TableScanNode;
 
 public:
   Value() : Value{TypeId::UNDEFINED}

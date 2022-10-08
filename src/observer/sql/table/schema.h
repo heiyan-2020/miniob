@@ -38,6 +38,7 @@ public:
       }
     }
     LOG_ERROR("can't find column");
+    assert(false);
     return -1;
   }
 

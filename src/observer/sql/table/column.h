@@ -9,9 +9,11 @@
 #include "type/type.h"
 
 class Column;
+class Environment;
 
 class ColumnName {
   friend class TableMeta;
+  friend class Environment;
   friend class Schema;
   friend class Column;
 
@@ -20,9 +22,20 @@ public:
   explicit ColumnName(std::string column_name) :
         table_name_{}, column_name_{std::move(column_name)}
   {}
-  ColumnName(std::string table_name, std::string column_name) :
-        table_name_{std::move(table_name)}, column_name_{std::move(column_name)}
+  ColumnName(const char *table_name, const char *column_name)
+  {
+    if (table_name == nullptr) {
+      table_name_ = {};
+    } else {
+      table_name = table_name;
+    }
+    column_name_ = column_name;
+  }
+
+  ColumnName(std::string table_name, std::string column_name):
+        table_name_(std::move(table_name)), column_name_(std::move(column_name))
   {}
+
   ColumnName(const ColumnName &other)
   {
     // TODO(zyx): shallow copy, may be wrong.

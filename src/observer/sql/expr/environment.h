@@ -8,6 +8,9 @@
 
 #include "sql/table/schema.h"
 #include "sql/table/tuple.h"
+#include "rc.h"
+
+
 class Environment;
 using EnvRef = std::shared_ptr<Environment>;
 
@@ -31,29 +34,24 @@ public:
     return RC::SUCCESS;
   }
 
-//  RC get_column_value(const char *table_name, const char *column_name, TupleCell &ret)
-//  {
-//    assert(column_name != nullptr);
-//    RC rc = RC::SUCCESS;
-//    for (int i = 0; i < current_tuples_.size(); i++) {
-//      TupleRef tuple = current_tuples_[i];
-//      SchemaRef schema = current_schemas_[i];
-//
-//      std::vector<ColumnRef> found = schema->findColumns(table_name, column_name);
-//      if (found.size() > 1) {
-//        LOG_ERROR("column name[%s.%s] is ambiguous", table_name, column_name);
-//        return RC::INTERNAL;
-//      }
-//      rc = tuple->cell_at(found[0]->get_index(), ret);
-//      if (rc != RC::SUCCESS) {
-//        LOG_ERROR("Couldn't find %s.%s", table_name, column_name);
-//        return rc;
-//      }
-//      return rc;
-//    }
-//    LOG_ERROR("May be in the parent env which hasn't implemented yet.");
-//    return RC::UNIMPLENMENT;
-//  }
+  RC get_column_value(ColumnName name, Value &out_value)
+  {
+    RC rc = RC::SUCCESS;
+    for (int i = 0; i < current_tuples_.size(); i++) {
+      TupleRef tuple = current_tuples_[i];
+      SchemaRef schema = current_schemas_[i];
+
+      std::vector<Column> found = schema->find_columns(name.table_name_, name.column_name_);
+      if (found.size() > 1) {
+        LOG_ERROR("column name[%s.%s] is ambiguous", name.table_name_.c_str(), name.column_name_.c_str());
+        return RC::INTERNAL;
+      }
+      out_value = tuple->get_value(schema, schema->get_column_idx(found[0].get_name()));
+      return rc;
+    }
+    LOG_ERROR("May be in the parent env which hasn't implemented yet.");
+    return RC::UNIMPLENMENT;
+  }
 
 private:
   std::vector<SchemaRef> current_schemas_;

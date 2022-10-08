@@ -12,13 +12,17 @@
 #include "sql/parser/hsql/sql/Expr.h"
 #include "common/log/log.h"
 #include "sql/table/tuple.h"
+#include "sql/expr/abstract_expression.h"
 
 class PlanNode;
 using PlanNodeRef = std::shared_ptr<PlanNode>;
 
 class PlanNode {
 public:
-  PlanNode() = default;
+  PlanNode()
+  {
+    env_ = std::make_shared<Environment>();
+  }
   explicit PlanNode(std::shared_ptr<PlanNode> left_child)
   {}
   PlanNode(std::shared_ptr<PlanNode> left_child, std::shared_ptr<PlanNode> right_child)
