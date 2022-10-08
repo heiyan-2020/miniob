@@ -308,7 +308,7 @@ union HSQL_STYPE
   std::vector<char*>* str_vec;
   std::unordered_set<hsql::ConstraintType>* column_constraint_set;
   std::vector<hsql::Expr*>* expr_vec;
-  std::vector<std::vector<hsql::Expr *>*> *list_vec;
+  std::vector<std::vector<hsql::Expr *>*> * list_vec;
   std::vector<hsql::OrderDescription*>* order_vec;
   std::vector<hsql::SQLStatement*>* stmt_vec;
   std::vector<hsql::TableElement*>* table_element_vec;
