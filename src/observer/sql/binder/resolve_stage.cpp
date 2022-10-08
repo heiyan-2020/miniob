@@ -34,6 +34,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/command/update_command.h"
 #include "sql/command/delete_command.h"
 #include "planner.h"
+#include "sql/command/other_command.h"
 
 using namespace common;
 
@@ -118,8 +119,11 @@ void ResolveStage::handle_event(StageEvent *event)
     case hsql::kStmtDelete:
       sql_event->set_command(std::make_unique<DeleteCommand>(dynamic_cast<const hsql::DeleteStatement *>(stmt)));
       break;
-    default:
+    case hsql::kStmtOther:
+      sql_event->set_command(std::make_unique<OtherCommand>(dynamic_cast<const hsql::OtherStatement *>(stmt)));
       break;
+    default:
+      session_event->set_response("Unsupported");
   }
 
   query_cache_stage_->handle_event(sql_event);

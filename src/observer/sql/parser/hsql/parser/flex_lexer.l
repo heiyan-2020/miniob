@@ -216,6 +216,9 @@ WITH        TOKEN(WITH)
 YEAR        TOKEN(YEAR)
 YEARS       TOKEN(YEARS)
 
+HELP        TOKEN(HELP)
+SYNC        TOKEN(SYNC)
+
 CHARACTER[ \t\n]+VARYING TOKEN(CHARACTER_VARYING)
 
             /* Allow =/== see https://sqlite.org/lang_expr.html#collateop */
