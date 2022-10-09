@@ -27,6 +27,7 @@ public:
 
 private:
   RC prepareSchema(SchemaRef input_schema);
+  TupleRef project_tuple(TupleRef tuple);
 
   PlanNodeRef left_child_;
   std::vector<hsql::Expr *> projection_spec_;

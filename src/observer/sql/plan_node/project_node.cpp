@@ -29,7 +29,7 @@ RC ProjectNode::next()
 TupleRef ProjectNode::current_tuple()
 {
   current_ = left_child_->current_tuple();
-  return current_;
+  return project_tuple(current_);
 }
 
 RC ProjectNode::prepareSchema(SchemaRef input_schema)
@@ -65,4 +65,16 @@ RC ProjectNode::prepareSchema(SchemaRef input_schema)
   }
   output_schema_ = std::make_shared<Schema>(columns);
   return RC::SUCCESS;
+}
+
+TupleRef ProjectNode::project_tuple(TupleRef tuple)
+{
+  SchemaRef input_schema = left_child_->get_schema();
+  std::vector<Value> project_values;
+  for (size_t i = 0; i < output_schema_->get_column_count(); i++) {
+    const auto &out_col = output_schema_->get_column(i);
+    size_t idx = input_schema->get_column_idx(out_col.get_name());
+    project_values.push_back(tuple->get_value(input_schema, idx));
+  }
+  return std::make_shared<Tuple>(project_values, output_schema_);
 }

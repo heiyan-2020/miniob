@@ -54,6 +54,8 @@ RC Planner::handle_select_clause(const hsql::SelectStatement *sel_stmt, std::sha
     return RC::UNIMPLENMENT;
     // TODO(zyx): Support query without from tables.
   }
+  std::vector<AbstractExpressionRef> projection_spec;
+  // TODO(zyx): Bind select values before construct project node.
   plan = std::make_shared<ProjectNode>(plan, *sel_stmt->selectList);
   return RC::SUCCESS;
 }
