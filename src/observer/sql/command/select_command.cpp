@@ -20,7 +20,11 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
     session_event->set_response("FAILURE");
     return rc;
   }
-  sp->prepare();
+  rc = sp->prepare();
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE");
+    return rc;
+  }
 
   std::stringstream ss;
   print_header(ss, sp->get_schema());

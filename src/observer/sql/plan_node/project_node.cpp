@@ -8,13 +8,14 @@
 
 RC ProjectNode::prepare()
 {
+  RC rc = RC::SUCCESS;
   if (left_child_) {
     left_child_->prepare();
-    prepareSchema(left_child_->get_schema());
+    rc = prepareSchema(left_child_->get_schema());
   } else {
     LOG_WARN("Not implemented!");
   }
-  return RC::SUCCESS;
+  return rc;
 }
 
 RC ProjectNode::next()
