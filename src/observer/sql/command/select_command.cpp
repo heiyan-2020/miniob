@@ -4,6 +4,7 @@
 #include "session/session.h"
 #include "storage/common/table.h"
 #include "sql/table/column.h"
+#include "sql/binder/binder.h"
 
 SelectCommand::SelectCommand(const hsql::SelectStatement *stmt) : Command{hsql::kStmtSelect}, stmt_{stmt}
 {}
@@ -13,9 +14,15 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   SessionEvent *session_event = sql_event->session_event();
   Db *db = session_event->session()->get_current_db();
 
+  Binder binder(db);
+  RC rc = binder.bind_select(stmt_);
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE");
+    return rc;
+  }
   Planner planner(db);
   std::shared_ptr<PlanNode> sp;
-  RC rc = planner.make_plan(stmt_, sp);
+  rc = planner.make_plan(stmt_, sp);
   if (rc != RC::SUCCESS) {
     session_event->set_response("FAILURE");
     return rc;

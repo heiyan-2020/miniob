@@ -71,3 +71,14 @@ std::vector<Column> Schema::find_columns(std::string table_name, std::string col
   return found_columns;
 }
 
+std::unordered_set<std::string> Schema::get_involved_tables() const
+{
+  std::unordered_set<std::string> names;
+  for (const auto &col: columns_) {
+    if (names.find(col.get_name().table_name_) == names.end()) {
+      names.insert(col.get_name().table_name_);
+    }
+  }
+  return names;
+}
+

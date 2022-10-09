@@ -20,8 +20,8 @@ See the Mulan PSL v2 for more details. */
 #include <unordered_map>
 
 #include "rc.h"
-#include "sql/table/schema.h"
 
+class Schema;
 class Table;
 
 class Db {
