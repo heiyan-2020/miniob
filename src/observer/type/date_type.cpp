@@ -59,11 +59,11 @@ auto DateType::divide(const Value &left, const Value &right) const -> Value
 
 auto DateType::min(const Value &left, const Value &right) const -> Value
 {
-  return Date{(void *)left.value_.date_} <= Date{(void *)right.value_.date_} ? left : right;
+  return compare(left, right) <= 0 ? left : right;
 }
 auto DateType::max(const Value &left, const Value &right) const -> Value
 {
-  return Date{(void *)left.value_.date_} >= Date{(void *)right.value_.date_} ? left : right;
+  return compare(left, right) >= 0 ? left : right;
 }
 
 auto DateType::conjunction(const Value &left, const Value &right) const -> Value
