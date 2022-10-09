@@ -27,7 +27,7 @@ public:
     if (table_name == nullptr) {
       table_name_ = {};
     } else {
-      table_name = table_name;
+      table_name_ = table_name;
     }
     column_name_ = column_name;
   }
@@ -57,6 +57,21 @@ public:
   {
     if (table_name_visible)
       return to_string();
+    return column_name_;
+  }
+
+  bool is_wild_card() const
+  {
+    return column_name_.empty();
+  }
+
+  std::string table_name() const
+  {
+    return table_name_;
+  }
+
+  std::string column_name() const
+  {
     return column_name_;
   }
 

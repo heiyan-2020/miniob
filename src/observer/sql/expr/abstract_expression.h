@@ -3,11 +3,12 @@
 #include "environment.h"
 #include "type/type.h"
 #include "sql/parser/hsql/sql/Expr.h"
+#include "expression_processor.h"
 
 class AbstractExpression;
 using AbstractExpressionRef = std::shared_ptr<AbstractExpression>;
 
-class AbstractExpression {
+class AbstractExpression : public std::enable_shared_from_this<AbstractExpression>{
 public:
   AbstractExpression(std::vector<AbstractExpressionRef> &&children, TypeId ret_type)
       : children_{std::move(children)}, ret_type_{ret_type} {}
@@ -23,7 +24,11 @@ public:
 
   virtual TypeId get_return_type() const { return ret_type_; }
 
-private:
+  virtual AbstractExpressionRef traverse(ProcessorRef processor) = 0;
+
+  std::vector<ColumnName> getAllSymbols();
+
+protected:
   std::vector<AbstractExpressionRef> children_;
   TypeId ret_type_;
 };

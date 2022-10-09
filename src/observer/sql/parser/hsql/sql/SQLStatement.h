@@ -43,6 +43,8 @@ struct SQLStatement {
 
   std::vector<Expr *> *hints;
 
+
+
 private:
   StatementType type_;
 };
