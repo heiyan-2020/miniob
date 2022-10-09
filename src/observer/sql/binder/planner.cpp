@@ -2,6 +2,7 @@
 // Created by 37034 on 10/4/2022.
 //
 #include "planner.h"
+#include "util/date.h"
 
 RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -77,7 +78,7 @@ RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *p
 
 RC Planner::make_plan(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
-  RC rc = RC::SUCCESS;
+  RC rc;
 
   rc = handle_from_clause(sel_stmt->fromTable, plan);
   if (rc != RC::SUCCESS) {
@@ -104,14 +105,32 @@ AbstractExpressionRef Planner::bind_expression(hsql::Expr *expr)
 {
   switch (expr->type) {
     case hsql::kExprLiteralInt: {
-      return std::make_shared<ConstantValueExpression>(Value(TypeId::INT, (int32_t) expr->ival));
+      return std::make_shared<ConstantValueExpression>(Value(TypeId::INT, static_cast<int32_t>(expr->ival)));
+    }
+    case hsql::kExprLiteralFloat: {
+      return std::make_shared<ConstantValueExpression>(Value(TypeId::FLOAT, static_cast<float>(expr->fval)));
+    }
+    case hsql::kExprLiteralString: {
+      // handle DATE and CHAR here
+      // TODO(vgalaxy): check
+      void *dst = calloc(1, sizeof(int32_t[3]));
+      RC rc = Date::parse_date(dst, expr->name);
+      if (rc != RC::SUCCESS) {
+        free(dst);
+      } else {
+        Value val{TypeId::DATE, static_cast<const int32_t *>(dst)};
+        free(dst);
+        return std::make_shared<ConstantValueExpression>(std::move(val));
+      }
+      return std::make_shared<ConstantValueExpression>(Value(TypeId::CHAR, expr->name, strlen(expr->name)));
     }
     case hsql::kExprColumnRef: {
       return std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
     }
     case hsql::kExprOperator: {
-      AbstractExpressionRef lhs = bind_expression(expr->expr), rhs = bind_expression(expr->expr2);
-      return std::make_shared<ComparisonExpression>(lhs, rhs, bind_operator(expr->opType));
+      AbstractExpressionRef lhs = bind_expression(expr->expr);
+      AbstractExpressionRef rhs = bind_expression(expr->expr2);
+      return std::make_shared<ComparisonExpression>(std::move(lhs), std::move(rhs), bind_operator(expr->opType));
     }
     default: {
       LOG_ERROR("Unsupported expression type: %d", expr->type);

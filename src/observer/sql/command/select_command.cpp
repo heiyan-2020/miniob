@@ -15,13 +15,15 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
 
   Planner planner(db);
   std::shared_ptr<PlanNode> sp;
-  planner.make_plan(stmt_, sp);
+  RC rc = planner.make_plan(stmt_, sp);
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE");
+    return rc;
+  }
   sp->prepare();
 
   std::stringstream ss;
-
   print_header(ss, sp->get_schema());
-
   while (RC::SUCCESS == sp->next()) {
     TupleRef tuple = sp->current_tuple();
     tuple_to_string(ss, *tuple, sp->get_schema());

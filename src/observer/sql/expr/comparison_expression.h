@@ -5,7 +5,7 @@ enum class ComparisonType { Equal, NotEqual, LessThan, LessThanOrEqual, GreaterT
 
 class ComparisonExpression : public AbstractExpression {
 public:
-  ComparisonExpression(AbstractExpressionRef left, AbstractExpressionRef right, ComparisonType comp_type)
+  ComparisonExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, ComparisonType comp_type)
       : AbstractExpression({std::move(left), std::move(right)}, TypeId::BOOL), comp_type_{comp_type} {}
 
   RC evaluate(EnvRef env, Value &out_value) const  override {
@@ -44,6 +44,7 @@ private:
         return lhs.compare_greater_than_equals(rhs);
       default:
         LOG_ERROR("Evaluate compare failed");
+        assert(false);
     }
   }
 };

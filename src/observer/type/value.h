@@ -2,6 +2,7 @@
 
 #include "type_id.h"
 #include "type.h"
+#include "util/macros.h"
 
 #include <cstddef>
 #include <string>
@@ -27,8 +28,29 @@ public:
   ~Value()
   {
     if (type_id_ == CHAR) {
-      free(value_.char_);
+      // double free
+      if (value_.char_ != nullptr) {
+        free(value_.char_);
+      }
+      value_.char_ = nullptr;
     }
+  }
+  Value(const Value &o)
+  {
+    this->type_id_ = o.type_id_;
+    this->len_ = o.len_;
+    if (o.type_id_ == CHAR) {
+      this->value_.char_ = (char *)calloc(o.len_ + 1, sizeof(char));
+      memcpy(this->value_.char_, o.value_.char_, this->len_);
+    } else {
+      this->value_ = o.value_;
+    }
+  }
+  Value &operator=(const Value &o)
+  {
+    this->~Value();
+    new (this) Value{o};
+    return *this;
   }
 
   Value(TypeId type, bool b) : type_id_{type}, len_{Type::get_type_size(type)}
@@ -87,6 +109,8 @@ public:
   auto deserialize_from(const char *storage) -> Value;
 
   auto to_string() const -> std::string;
+
+//  DISALLOW_COPY(Value);
 
 protected:
   TypeId type_id_;

@@ -107,11 +107,7 @@ void SessionStage::callback_event(StageEvent *event, CallbackContext *context)
   }
 
   std::string response = std::string{sev->get_response()};
-  if (response.empty()) {
-    response = "no response from server";
-  }
-
-  // TODO: assume
+  // TODO(vgalaxy): assume
   if ((response.at(response.length() - 1)) != '\n') {
       response += "\n";
   }
