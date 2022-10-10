@@ -42,17 +42,20 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
     }
   }
 
-  // Bind where exprs.
-  AbstractExpressionRef expr = bind_expression(sel_stmt->whereClause);
-  std::vector<ColumnName> symbols = expr->getAllSymbols();
-  for (auto const &name : symbols) {
-    std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
-    if (found.size() != 1) {
-      LOG_PANIC("where expression has wrong column reference");
-      return RC::SCHEMA_FIELD_NOT_EXIST;
+  // Bind where expression if there is.
+  if (sel_stmt->whereClause) {
+    AbstractExpressionRef expr = bind_expression(sel_stmt->whereClause);
+    std::vector<ColumnName> symbols = expr->getAllSymbols();
+    for (auto const &name : symbols) {
+      std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
+      if (found.size() != 1) {
+        LOG_PANIC("where expression has wrong column reference");
+        return RC::SCHEMA_FIELD_NOT_EXIST;
+      }
     }
   }
 
+  return RC::SUCCESS;
 }
 
 RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
