@@ -53,11 +53,11 @@ public:
     return table_name_ + "." + column_name_;
   }
 
-  std::string to_string(bool table_name_visible) const
+  std::string to_string(bool table_name_ignorable) const
   {
-    if (table_name_visible)
-      return to_string();
-    return column_name_;
+    if (table_name_ignorable)
+      return column_name_;
+    return to_string();
   }
 
   bool is_wild_card() const

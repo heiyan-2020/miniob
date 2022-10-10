@@ -52,13 +52,13 @@ void SelectCommand::print_header(std::ostream &os, SchemaRef schema)
 {
   std::string header;
   bool first = true;
-  bool table_name_visible = schema->table_name_visible();
+  bool table_name_ignorable = schema->table_name_ignorable();
   for (const auto &column : schema->get_columns()) {
     if (column.is_visible()) {
       if (!first) {
         header += " | ";
       }
-      header += column.get_name().to_string(table_name_visible);
+      header += column.get_name().to_string(table_name_ignorable);
       first = false;
     }
   }
