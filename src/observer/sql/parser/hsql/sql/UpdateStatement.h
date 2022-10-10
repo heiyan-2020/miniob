@@ -13,6 +13,7 @@ struct UpdateClause {
 };
 
 // Represents SQL Update statements.
+// Example: "UPDATE s1 SET col1=1 WHERE col2=3;"
 struct UpdateStatement : SQLStatement {
   UpdateStatement();
   ~UpdateStatement() override;
