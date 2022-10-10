@@ -52,15 +52,15 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
   const TableMeta &table_meta = table->table_meta();
   const std::vector<FieldMeta> *field_metas = table_meta.field_metas();
 
-  std::vector<Value> insert_values;
+  std::vector<std::vector<Value>> insert_values_list{};
+  // check all values before insertion
   for (auto val_list : *stmt_->values) {
-    insert_values.clear();
-
     if (static_cast<int>(val_list->size()) + table_meta.sys_field_num() != table_meta.field_num()) {
       LOG_WARN("Input values don't match the table's schema, table name %s", table_meta.name().c_str());
       return RC::SCHEMA_FIELD_MISSING;
     }
 
+    std::vector<Value> insert_values{};
     size_t curr_index = table_meta.sys_field_num();
     for (auto expr : *val_list) {
       const FieldMeta &field_meta = field_metas->at(curr_index);
@@ -101,7 +101,10 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
       }
       curr_index += 1;
     }
+    insert_values_list.emplace_back(insert_values);
+  }
 
+  for (const auto& insert_values : insert_values_list) {
     rc = table->insert_record(nullptr, insert_values);
     if (rc != RC::SUCCESS) {
       return rc;
