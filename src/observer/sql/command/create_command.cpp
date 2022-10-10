@@ -74,7 +74,7 @@ RC CreateCommand::do_create_index(const SQLStageEvent *sql_event)
 {
   SessionEvent *session_event = sql_event->session_event();
   Db *db = session_event->session()->get_current_db();
-  Table *table = db->find_table(this->stmt_->indexName);
+  Table *table = db->find_table(this->stmt_->tableName);
   if (nullptr == table) {
     session_event->set_response("FAILURE");
     return RC::SCHEMA_TABLE_NOT_EXIST;
@@ -85,7 +85,7 @@ RC CreateCommand::do_create_index(const SQLStageEvent *sql_event)
     attribute_names.emplace_back(col);
   }
   if (attribute_names.size() > MAX_ATTR_NUM) {
-    return RC::GENERIC_ERROR;  // TODO: support up to 4 multi index
+    return RC::GENERIC_ERROR;  // TODO(vgalaxy): currently support up to 4 multi index
   }
 
   RC rc = table->create_index(nullptr, this->stmt_->indexName, attribute_names, this->stmt_->isUnique);

@@ -452,7 +452,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
 
   std::vector<FieldMeta> field_metas{};
   for (const auto &attribute_name : attribute_names) {
-    const FieldMeta *field_meta = table_meta_.field(attribute_name.c_str());
+    const FieldMeta *field_meta = table_meta_.field(attribute_name);
     if (!field_meta) {
       LOG_INFO("Invalid input arguments, there is no field of %s in table %s", attribute_name.c_str(), name().c_str());
       return RC::SCHEMA_FIELD_MISSING;
@@ -721,7 +721,8 @@ RC Table::drop(const char *table_name)
   // drop data file
   std::string data_file = table_data_file(base_dir_.c_str(), table_name);
   LOG_INFO("Begin to drop data file %s", data_file.c_str());
-  bpm.close_file(data_file.c_str());  // ignore rc
+  // should not close data file, handled in `Table::~Table()`
+  // bpm.close_file(data_file.c_str());  // ignore rc
   res = remove(data_file.c_str());
   if (res != 0) {
     LOG_ERROR("Failed to drop data file %s, err %s", data_file.c_str(), strerror(errno));

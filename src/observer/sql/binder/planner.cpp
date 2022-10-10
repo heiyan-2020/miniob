@@ -3,6 +3,7 @@
 //
 #include "planner.h"
 #include "util/date.h"
+#include "binder.h"
 
 RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -64,12 +65,13 @@ RC Planner::handle_select_clause(const hsql::SelectStatement *sel_stmt, std::sha
 RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *predicate)
 {
   std::shared_ptr<TableScanNode> scan_node = std::dynamic_pointer_cast<TableScanNode>(plan);
+  Binder binder(db_);
   if (scan_node) {
     if (scan_node->get_predicate() != nullptr) {
       LOG_ERROR("Scan node shouldn't have predicate now.");
       return RC::GENERIC_ERROR;
     }
-    scan_node->set_predicate(bind_expression(predicate));
+    scan_node->set_predicate(binder.bind_expression(predicate));
     return RC::SUCCESS;
   }
   return RC::UNIMPLENMENT;
@@ -99,42 +101,4 @@ RC Planner::make_plan(const hsql::SelectStatement *sel_stmt, std::shared_ptr<Pla
   }
 
   return rc;
-}
-
-AbstractExpressionRef Planner::bind_expression(hsql::Expr *expr)
-{
-  switch (expr->type) {
-    case hsql::kExprLiteralInt: {
-      return std::make_shared<ConstantValueExpression>(Value(TypeId::INT, static_cast<int32_t>(expr->ival)));
-    }
-    case hsql::kExprLiteralFloat: {
-      return std::make_shared<ConstantValueExpression>(Value(TypeId::FLOAT, static_cast<float>(expr->fval)));
-    }
-    case hsql::kExprLiteralString: {
-      // handle DATE and CHAR here
-      // TODO(vgalaxy): check
-      void *dst = calloc(1, sizeof(int32_t[3]));
-      RC rc = Date::parse_date(dst, expr->name);
-      if (rc != RC::SUCCESS) {
-        free(dst);
-      } else {
-        Value val{TypeId::DATE, static_cast<const int32_t *>(dst)};
-        free(dst);
-        return std::make_shared<ConstantValueExpression>(std::move(val));
-      }
-      return std::make_shared<ConstantValueExpression>(Value(TypeId::CHAR, expr->name, strlen(expr->name)));
-    }
-    case hsql::kExprColumnRef: {
-      return std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
-    }
-    case hsql::kExprOperator: {
-      AbstractExpressionRef lhs = bind_expression(expr->expr);
-      AbstractExpressionRef rhs = bind_expression(expr->expr2);
-      return std::make_shared<ComparisonExpression>(std::move(lhs), std::move(rhs), bind_operator(expr->opType));
-    }
-    default: {
-      LOG_ERROR("Unsupported expression type: %d", expr->type);
-    }
-  }
-  return nullptr;
 }

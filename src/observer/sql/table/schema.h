@@ -5,7 +5,7 @@
 
 #include "column.h"
 #include "common/log/log.h"
-//#include "storage/common/table.h"
+#include "unordered_set"
 
 class Table;
 class FieldMeta;
@@ -52,6 +52,10 @@ public:
     return length_;
   }
 
+  /**
+   * return true when all columns belong to same table i.e. we can ignore table_name.
+   * @return
+   */
   bool table_name_visible() const
   {
     std::string table_name = columns_[0].get_name().table_name_;
@@ -62,6 +66,8 @@ public:
     }
     return true;
   }
+
+  std::unordered_set<std::string> get_involved_tables() const;
 
   std::vector<Column> find_columns(std::string table_name, std::string column_name);
 

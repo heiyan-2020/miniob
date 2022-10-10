@@ -73,7 +73,7 @@ auto CharType::negation(const Value &value) const -> Value
 auto CharType::serialize_to(const Value &val, char *storage) const -> void
 {
   const char *ori = val.str_value_.char_.c_str();
-  for (auto i = 0; i < val.str_value_.len_; ++i) { // without '\0'
+  for (size_t i = 0; i < val.str_value_.len_; ++i) { // without '\0'
     storage[i] = ori[i];
   }
 }

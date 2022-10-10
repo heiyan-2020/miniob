@@ -2,7 +2,6 @@
 
 #include "type_id.h"
 #include "type.h"
-#include "util/macros.h"
 
 #include <cstddef>
 #include <string>
@@ -89,8 +88,6 @@ public:
   auto deserialize_from(const char *storage) -> Value;
 
   auto to_string() const -> std::string;
-
-//  DISALLOW_COPY(Value);
 
 protected:
   TypeId type_id_;

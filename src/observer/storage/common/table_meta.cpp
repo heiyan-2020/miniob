@@ -124,7 +124,7 @@ const FieldMeta *TableMeta::field(int index) const
 const FieldMeta *TableMeta::field(const std::string &field_name) const
 {
   for (const FieldMeta &field : fields_) {
-    if (field.name() == name_) {
+    if (field.name() == field_name) {
       return &field;
     }
   }
