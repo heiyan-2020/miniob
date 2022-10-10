@@ -56,7 +56,7 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
   for (auto val_list : *stmt_->values) {
     insert_values.clear();
 
-    if (val_list->size() + table_meta.sys_field_num() != table_meta.field_num()) {
+    if (static_cast<int>(val_list->size()) + table_meta.sys_field_num() != table_meta.field_num()) {
       LOG_WARN("Input values don't match the table's schema, table name %s", table_meta.name().c_str());
       return RC::SCHEMA_FIELD_MISSING;
     }
