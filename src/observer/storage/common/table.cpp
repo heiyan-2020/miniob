@@ -721,7 +721,8 @@ RC Table::drop(const char *table_name)
   // drop data file
   std::string data_file = table_data_file(base_dir_.c_str(), table_name);
   LOG_INFO("Begin to drop data file %s", data_file.c_str());
-  bpm.close_file(data_file.c_str());  // ignore rc
+  // should not close data file, handled in `Table::~Table()`
+  // bpm.close_file(data_file.c_str());  // ignore rc
   res = remove(data_file.c_str());
   if (res != 0) {
     LOG_ERROR("Failed to drop data file %s, err %s", data_file.c_str(), strerror(errno));
