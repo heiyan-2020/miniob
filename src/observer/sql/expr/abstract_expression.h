@@ -5,6 +5,8 @@
 #include "sql/parser/hsql/sql/Expr.h"
 #include "expression_processor.h"
 
+enum class OperatorType { Equal, NotEqual, LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, NOT, AND, OR};
+
 class AbstractExpression;
 using AbstractExpressionRef = std::shared_ptr<AbstractExpression>;
 
@@ -27,6 +29,9 @@ public:
   virtual AbstractExpressionRef traverse(ProcessorRef processor) = 0;
 
   std::vector<ColumnName> getAllSymbols();
+
+  // create expression according to the operator type.
+  static AbstractExpressionRef expression_factory(AbstractExpressionRef lhs, AbstractExpressionRef rhs, OperatorType ope_type);
 
 protected:
   std::vector<AbstractExpressionRef> children_;

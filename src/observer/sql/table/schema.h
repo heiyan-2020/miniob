@@ -56,7 +56,7 @@ public:
    * return true when all columns belong to same table i.e. we can ignore table_name.
    * @return
    */
-  bool table_name_visible() const
+  bool table_name_ignorable() const
   {
     std::string table_name = columns_[0].get_name().table_name_;
     for (const auto &column : columns_) {
