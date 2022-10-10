@@ -28,7 +28,7 @@ auto CharType::compare_greater_than_equals(const Value &left, const Value &right
 
 auto CharType::compare(const Value &left, const Value &right) const -> int
 {
-  return strcmp(left.value_.char_, right.value_.char_);
+  return strcmp(left.str_value_.char_.c_str(), right.str_value_.char_.c_str());
 }
 
 auto CharType::add(const Value &left, const Value &right) const -> Value
@@ -50,11 +50,11 @@ auto CharType::divide(const Value &left, const Value &right) const -> Value
 
 auto CharType::min(const Value &left, const Value &right) const -> Value
 {
-  return left.value_.char_ <= right.value_.char_ ? left : right;
+  return compare(left, right) <= 0 ? left : right;
 }
 auto CharType::max(const Value &left, const Value &right) const -> Value
 {
-  return left.value_.char_ >= right.value_.char_ ? left : right;
+  return compare(left, right) >= 0 ? left : right;
 }
 
 auto CharType::conjunction(const Value &left, const Value &right) const -> Value
@@ -72,7 +72,10 @@ auto CharType::negation(const Value &value) const -> Value
 
 auto CharType::serialize_to(const Value &val, char *storage) const -> void
 {
-  memcpy(storage, val.value_.char_, val.len_);  // without '\0'
+  const char *ori = val.str_value_.char_.c_str();
+  for (auto i = 0; i < val.str_value_.len_; ++i) { // without '\0'
+    storage[i] = ori[i];
+  }
 }
 auto CharType::deserialize_from(const char *storage) const -> Value
 {
@@ -81,5 +84,5 @@ auto CharType::deserialize_from(const char *storage) const -> Value
 
 auto CharType::to_string(const Value &val) const -> std::string
 {
-  return val.value_.char_;
+  return val.str_value_.char_;
 }

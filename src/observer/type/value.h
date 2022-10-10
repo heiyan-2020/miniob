@@ -23,56 +23,33 @@ class Value {
 public:
   Value() : Value{TypeId::UNDEFINED}
   {}
-  explicit Value(const TypeId type) : type_id_{type}, len_{Type::get_type_size(type)}
+  explicit Value(const TypeId type) : type_id_{type}
   {}
-  ~Value()
-  {
-    if (type_id_ == CHAR) {
-      // double free
-      if (value_.char_ != nullptr) {
-        free(value_.char_);
-      }
-      value_.char_ = nullptr;
-    }
-  }
-  Value(const Value &o)
-  {
-    this->type_id_ = o.type_id_;
-    this->len_ = o.len_;
-    if (o.type_id_ == CHAR) {
-      this->value_.char_ = (char *)calloc(o.len_ + 1, sizeof(char));
-      memcpy(this->value_.char_, o.value_.char_, this->len_);
-    } else {
-      this->value_ = o.value_;
-    }
-  }
-  Value &operator=(const Value &o)
-  {
-    this->~Value();
-    new (this) Value{o};
-    return *this;
-  }
 
-  Value(TypeId type, bool b) : type_id_{type}, len_{Type::get_type_size(type)}
+  Value(TypeId type, bool b) : type_id_{type}
   {
     value_.bool_ = b;
   }
-  Value(TypeId type, int32_t i) : type_id_{type}, len_{Type::get_type_size(type)}
+  Value(TypeId type, int32_t i) : type_id_{type}
   {
     value_.int_ = i;
   }
-  Value(TypeId type, float f) : type_id_{type}, len_{Type::get_type_size(type)}
+  Value(TypeId type, float f) : type_id_{type}
   {
     value_.float_ = f;
   }
-  Value(TypeId type, const int32_t *d) : type_id_{type}, len_{Type::get_type_size(type)}
+  Value(TypeId type, const int32_t *d) : type_id_{type}
   {
     memcpy(value_.date_, d, sizeof(int32_t[3]));
   }
-  Value(TypeId type, const char *c, size_t len) : type_id_{type}, len_{len}
+  Value(TypeId type, const char *c, size_t len) : type_id_{type}
   {
-    value_.char_ = (char *)calloc(len + 1, sizeof(char));
-    memcpy(value_.char_, c, std::min(len, strlen(c)));
+    str_value_.len_ = len;
+    str_value_.char_ = c;
+    if (strlen(c) > len) {
+      str_value_.char_ = str_value_.char_.substr(0, len);
+    }
+    str_value_.char_.reserve(len + 1);
   }
 
   auto get_type() const -> TypeId
@@ -81,7 +58,10 @@ public:
   }
   auto get_len() const -> size_t
   {
-    return len_;
+    if (type_id_ == CHAR) {
+      return str_value_.len_;
+    }
+    return Type::get_type_size(type_id_);
   }
 
   auto compare_equals(const Value &o) const -> Value;
@@ -115,16 +95,18 @@ public:
 protected:
   TypeId type_id_;
 
-  union Val {
+  union {
     bool bool_;
     int32_t int_;
     float float_;
     int32_t date_[3];
-    char *char_;
   } value_{};
 
-  size_t len_{};
+  struct {
+    std::string char_{};
+    size_t len_{};
+  } str_value_;
 
-  // TODO
+  // TODO(vgalaxy): support null field
   bool is_null_{};
 };
