@@ -74,9 +74,9 @@ auto Value::serialize_to(char *storage) const -> void
 {
   Type::get_instance(type_id_)->serialize_to(*this, storage);
 }
-auto Value::deserialize_from(const char *storage) -> Value
+auto Value::deserialize_from(const char *storage, size_t length) -> Value
 {
-  return Type::get_instance(type_id_)->deserialize_from(storage);
+  return Type::get_instance(type_id_)->deserialize_from(storage, length);
 }
 
 auto Value::to_string() const -> std::string

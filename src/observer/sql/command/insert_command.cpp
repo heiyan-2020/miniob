@@ -104,6 +104,7 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
     insert_values_list.emplace_back(insert_values);
   }
 
+  // now insert
   for (const auto& insert_values : insert_values_list) {
     rc = table->insert_record(nullptr, insert_values);
     if (rc != RC::SUCCESS) {

@@ -31,9 +31,9 @@ Value Tuple::get_value(SchemaRef schema, size_t column_idx) const
 {
   assert(schema);
   assert(data_);
-  const TypeId column_type = schema->get_column(column_idx).get_type();
+  const auto &column = schema->get_column(column_idx);
   const char *data_ptr = get_data_ptr(schema, column_idx);
-  return Value{column_type}.deserialize_from(data_ptr);
+  return Value{column.get_type()}.deserialize_from(data_ptr, column.get_len());
 }
 
 const char *Tuple::get_data_ptr(SchemaRef schema, const size_t column_idx) const

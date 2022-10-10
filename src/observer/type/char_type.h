@@ -30,7 +30,7 @@ public:
   auto negation(const Value &value) const -> Value override;
 
   auto serialize_to(const Value &val, char *storage) const -> void override;
-  auto deserialize_from(const char *storage) const -> Value override;
+  auto deserialize_from(const char *storage, size_t length) const -> Value override;
 
   auto to_string(const Value &val) const -> std::string override;
 };

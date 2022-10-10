@@ -90,6 +90,11 @@ public:
       : visible_(visible), name_(column_name), column_type_(type), fixed_length_(length)
   {}
 
+  size_t get_len() const
+  {
+    return fixed_length_;
+  }
+
   size_t get_offset() const
   {
     return column_offset_;

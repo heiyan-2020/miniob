@@ -77,9 +77,9 @@ auto CharType::serialize_to(const Value &val, char *storage) const -> void
     storage[i] = ori[i];
   }
 }
-auto CharType::deserialize_from(const char *storage) const -> Value
+auto CharType::deserialize_from(const char *storage, size_t length) const -> Value
 {
-  return {CHAR, storage, strlen(storage)};
+  return {CHAR, storage, length};
 }
 
 auto CharType::to_string(const Value &val) const -> std::string

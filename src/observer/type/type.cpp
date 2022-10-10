@@ -89,7 +89,7 @@ auto Type::serialize_to(const Value &val, char *storage) const -> void
 {
   // do nothing
 }
-auto Type::deserialize_from(const char *storage) const -> Value
+auto Type::deserialize_from(const char *storage, size_t length) const -> Value
 {
   return Value{};
 }

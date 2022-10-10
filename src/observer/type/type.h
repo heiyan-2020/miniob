@@ -74,7 +74,7 @@ public:
   virtual auto negation(const Value &value) const -> Value;
 
   virtual auto serialize_to(const Value &val, char *storage) const -> void;
-  virtual auto deserialize_from(const char *storage) const -> Value;
+  virtual auto deserialize_from(const char *storage, size_t length) const -> Value;
 
   virtual auto to_string(const Value &val) const -> std::string;
 

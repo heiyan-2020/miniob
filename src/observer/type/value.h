@@ -7,6 +7,7 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <cassert>
 
 class TableScanNode;
 class BoolExpression;
@@ -46,11 +47,13 @@ public:
   Value(TypeId type, const char *c, size_t len) : type_id_{type}
   {
     str_value_.len_ = len;
-    str_value_.char_ = c;
-    if (strlen(c) > len) {
-      str_value_.char_ = str_value_.char_.substr(0, len);
+    str_value_.char_.reserve(len);
+    size_t min_len = std::min(len, strnlen(c, len));
+    for (size_t i = 0; i < min_len; ++i) {
+      str_value_.char_.append(1, c[i]);
     }
-    str_value_.char_.reserve(len + 1);
+    str_value_.char_.append(len - min_len, '\0');
+    assert(str_value_.char_.size() == len);
   }
 
   auto get_type() const -> TypeId
@@ -87,7 +90,7 @@ public:
   auto negation() const -> Value;
 
   auto serialize_to(char *storage) const -> void;
-  auto deserialize_from(const char *storage) -> Value;
+  auto deserialize_from(const char *storage, size_t length) -> Value;
 
   auto to_string() const -> std::string;
 
@@ -101,6 +104,7 @@ protected:
     int32_t date_[3];
   } value_{};
 
+  // invariant: `char_.size() == len_`
   struct {
     std::string char_{};
     size_t len_{};

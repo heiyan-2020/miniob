@@ -105,7 +105,7 @@ auto DateType::serialize_to(const Value &val, char *storage) const -> void
   trans[1] = val.value_.date_[1];
   trans[2] = val.value_.date_[2];
 }
-auto DateType::deserialize_from(const char *storage) const -> Value
+auto DateType::deserialize_from(const char *storage, size_t length) const -> Value
 {
   return {DATE, reinterpret_cast<const int32_t *>(storage)};
 }

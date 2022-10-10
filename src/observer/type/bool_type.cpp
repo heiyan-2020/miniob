@@ -75,9 +75,9 @@ auto BoolType::serialize_to(const Value &val, char *storage) const -> void
 {
   Type::serialize_to(val, storage);
 }
-auto BoolType::deserialize_from(const char *storage) const -> Value
+auto BoolType::deserialize_from(const char *storage, size_t length) const -> Value
 {
-  return Type::deserialize_from(storage);
+  return Type::deserialize_from(storage, length);
 }
 
 auto BoolType::to_string(const Value &val) const -> std::string

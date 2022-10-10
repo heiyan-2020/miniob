@@ -88,7 +88,7 @@ auto FloatType::serialize_to(const Value &val, char *storage) const -> void
 {
   *reinterpret_cast<float *>(storage) = val.value_.float_;
 }
-auto FloatType::deserialize_from(const char *storage) const -> Value
+auto FloatType::deserialize_from(const char *storage, size_t length) const -> Value
 {
   float val = *reinterpret_cast<const float *>(storage);
   return {FLOAT, val};

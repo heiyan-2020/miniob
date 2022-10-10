@@ -97,7 +97,7 @@ auto IntType::serialize_to(const Value &val, char *storage) const -> void
 {
   *reinterpret_cast<int32_t *>(storage) = val.value_.int_;
 }
-auto IntType::deserialize_from(const char *storage) const -> Value
+auto IntType::deserialize_from(const char *storage, size_t length) const -> Value
 {
   int32_t val = *reinterpret_cast<const int32_t *>(storage);
   return {INT, val};
