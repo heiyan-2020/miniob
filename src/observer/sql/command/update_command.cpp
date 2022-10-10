@@ -10,7 +10,27 @@
 UpdateCommand::UpdateCommand(const hsql::UpdateStatement *stmt) : Command{hsql::kStmtUpdate}, stmt_{stmt}
 {}
 
+/**
+ * update操作
+ * （写完删）：目前跑不通，待改写planner
+ * 支持where（待改写planner）
+ * 只支持单字段set
+ * @param sql_event
+ * @return
+ */
 RC UpdateCommand::execute(const SQLStageEvent *sql_event)
+{
+  SessionEvent *session_event = sql_event->session_event();
+  RC rc = do_update(sql_event);
+  if (rc == RC::SUCCESS) {
+    session_event->set_response("SUCCESS");
+  } else {
+    session_event->set_response("FAILURE");
+  }
+  return rc;
+}
+
+RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
 {
   SessionEvent *session_event = sql_event->session_event();
   Db *db = session_event->session()->get_current_db();
@@ -26,11 +46,11 @@ RC UpdateCommand::execute(const SQLStageEvent *sql_event)
   Planner planner(db);
   std::shared_ptr<PlanNode> sp;
   // TODO(pjz): make update planner
-// rc = planner.make_plan(stmt_, sp);
-//  if (rc != RC::SUCCESS) {
-//    session_event->set_response("FAILURE");
-//    return rc;
-//  }
+  // rc = planner.make_plan(stmt_, sp);
+  //  if (rc != RC::SUCCESS) {
+  //    session_event->set_response("FAILURE");
+  //    return rc;
+  //  }
   sp->prepare();
 
   const TableMeta &table_meta = table->table_meta();
@@ -58,13 +78,13 @@ RC UpdateCommand::execute(const SQLStageEvent *sql_event)
         return rc;
       }
       Record old_record = tuple->get_record();
-      // update data
+
       int record_size = table_meta.record_size();
       char *data = new char[record_size];
       memcpy(data, old_record.data(), record_size);
       const hsql::Expr *expr = updateClause->value;
       // TODO(pjz): construct new record.
-//      memcpy(data + field_meta.offset(), , field_meta.len());
+      //      memcpy(data + field_meta.offset(), , field_meta.len());
 
       Record new_record;
       new_record.set_rid(old_record.rid());

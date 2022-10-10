@@ -13,6 +13,8 @@ public:
 
   RC execute(const SQLStageEvent *sql_event) override;
 
+  RC do_update(const SQLStageEvent *sql_event);
+
 private:
   const hsql::UpdateStatement *stmt_;
 };
