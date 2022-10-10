@@ -93,7 +93,6 @@ struct Expr {
   virtual ~Expr();
 
   ExprType type;
-
   // TODO: Replace expressions by list.
   Expr *expr;   // left child
   Expr *expr2;  // right child

@@ -43,3 +43,11 @@ const char *Tuple::get_data_ptr(SchemaRef schema, const size_t column_idx) const
   const auto &col = schema->get_column(column_idx);
   return (data_ + col.get_offset());
 }
+
+Record Tuple::get_record() const
+{
+  Record record;
+  record.set_rid(rid_);
+  record.set_data(data_);
+  return record;
+}

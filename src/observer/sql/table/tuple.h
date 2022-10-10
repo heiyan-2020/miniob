@@ -32,6 +32,8 @@ public:
 
   Value get_value(SchemaRef schema, size_t column_idx) const;
 
+  Record get_record() const;
+
 private:
   const char *get_data_ptr(SchemaRef schema, size_t column_idx) const;
   RID rid_{};  // if pointing to the table heap, the rid is valid
