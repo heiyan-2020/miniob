@@ -13,6 +13,8 @@ public:
 
   RC execute(const SQLStageEvent *sql_event) override;
 
+  RC do_delete(const SQLStageEvent *sql_event);
+
 private:
   const hsql::DeleteStatement *stmt_;
 };
