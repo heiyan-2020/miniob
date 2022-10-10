@@ -17,9 +17,14 @@ RC TableScanNode::next()
   RC rc;
   while (record_scanner_.has_next()) {
     rc = record_scanner_.next(current_record_);
-    if (rc == RC::SUCCESS) {
-      bool result = false;
-      rc = is_selected(std::make_shared<Tuple>(&current_record_), result);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+
+    bool result = false;
+    rc = is_selected(std::make_shared<Tuple>(&current_record_), result);
+
+    if (rc != RC::SUCCESS || result) {
       return rc;
     }
   }

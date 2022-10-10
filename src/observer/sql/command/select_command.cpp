@@ -35,10 +35,14 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
 
   std::stringstream ss;
   print_header(ss, sp->get_schema());
-  while (RC::SUCCESS == sp->next()) {
+  while ((rc = sp->next()) == RC::SUCCESS) {
     TupleRef tuple = sp->current_tuple();
     tuple_to_string(ss, *tuple, sp->get_schema());
     ss << std::endl;
+  }
+  if (rc != RC::RECORD_EOF) {
+    session_event->set_response("FAILURE");
+    return rc;
   }
   session_event->set_response(ss.str());
   return RC::SUCCESS;

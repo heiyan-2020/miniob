@@ -110,3 +110,5 @@ protected:
   // TODO(vgalaxy): support null field
   bool is_null_{};
 };
+
+inline auto bool_to_value(bool boolean) -> Value {return boolean ? Value{TypeId::BOOL, true} : Value{TypeId::BOOL, false};}

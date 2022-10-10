@@ -21,6 +21,9 @@ public:
       return rc;
     }
     out_value = perform_comparison(lhs, rhs);
+    if (out_value.get_type() == TypeId::UNDEFINED) {
+      rc = RC::EVALUATE;
+    }
     return rc;
   }
 

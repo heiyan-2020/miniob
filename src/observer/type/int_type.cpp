@@ -1,29 +1,50 @@
 #include "int_type.h"
 #include "value.h"
 
+#define INT_COMPARE_FUNC(OP)  \
+  switch (right.get_type()) { \
+    case TypeId::INT:         \
+      return bool_to_value(left.value_.int_ OP right.value_.int_); \
+    default :                 \
+      break;                  \
+}
+
 auto IntType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) == 0};
+
+  INT_COMPARE_FUNC(==)
+
+  return Value();
 }
 auto IntType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) != 0};
+  INT_COMPARE_FUNC(!=);
+
+  return Value();
 }
 auto IntType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) < 0};
+  INT_COMPARE_FUNC(<);
+
+  return Value();
 }
 auto IntType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) <= 0};
+  INT_COMPARE_FUNC(<=);
+
+  return Value();
 }
 auto IntType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) > 0};
+  INT_COMPARE_FUNC(>);
+
+  return Value();
 }
 auto IntType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) >= 0};
+  INT_COMPARE_FUNC(>=);
+
+  return Value();
 }
 
 auto IntType::compare(const Value &left, const Value &right) const -> int
