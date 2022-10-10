@@ -1,53 +1,68 @@
 #include "int_type.h"
 #include "value.h"
 
-#define INT_COMPARE_FUNC(OP)  \
-  switch (right.get_type()) { \
-    case TypeId::INT:         \
-      return bool_to_value(left.value_.int_ OP right.value_.int_); \
-    default :                 \
-      break;                  \
-}
-
 auto IntType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  INT_COMPARE_FUNC(==)
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::EQ);
 }
 auto IntType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  INT_COMPARE_FUNC(!=);
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::EQ);
 }
 auto IntType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  INT_COMPARE_FUNC(<);
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::LT);
 }
 auto IntType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  INT_COMPARE_FUNC(<=);
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::GT);
 }
 auto IntType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  INT_COMPARE_FUNC(>);
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::GT);
 }
 auto IntType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  INT_COMPARE_FUNC(>=);
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::LT);
 }
 
-auto IntType::compare(const Value &left, const Value &right) const -> int
+auto IntType::compare(const Value &left, const Value &right) const -> CmpRes
 {
-  if (left.value_.int_ < right.value_.int_) {
-    return -1;
-  } else if (left.value_.int_ > right.value_.int_) {
-    return 1;
-  } else {
-    return 0;
+  switch (right.get_type()) {
+    case TypeId::INT:
+      if (left.value_.int_ < right.value_.int_) {
+        return CmpRes::LT;
+      } else if (left.value_.int_ > right.value_.int_) {
+        return CmpRes::GT;
+      } else {
+        return CmpRes::EQ;
+      }
+    default:
+      return CmpRes::UNDEFINED;
   }
 }
 

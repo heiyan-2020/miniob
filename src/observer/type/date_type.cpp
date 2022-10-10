@@ -1,61 +1,74 @@
 #include "date_type.h"
 #include "value.h"
 
-#define DATE_COMPARE_FUNC(OP)             \
-  Date lhs{(void *)(left.value_.date_)};  \
-  Date rhs{(void *)(right.value_.date_)}; \
-  if (lhs.validate() && rhs.validate()) { \
-    switch (right.get_type()) {           \
-      case TypeId::DATE:                  \
-        return bool_to_value(lhs OP rhs); \
-      default :                           \
-        break;                            \
-    }                                     \
-}
-
-
 auto DateType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  DATE_COMPARE_FUNC(==)
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::EQ);
 }
 auto DateType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  DATE_COMPARE_FUNC(!=)
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::EQ);
 }
 auto DateType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  DATE_COMPARE_FUNC(<)
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::LT);
 }
 auto DateType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  DATE_COMPARE_FUNC(<=)
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::GT);
 }
 auto DateType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  DATE_COMPARE_FUNC(>)
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::GT);
 }
 auto DateType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  DATE_COMPARE_FUNC(>=)
-  return {};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::LT);
 }
 
-auto DateType::compare(const Value &left, const Value &right) const -> int
+auto DateType::compare(const Value &left, const Value &right) const -> CmpRes
 {
-  Date lhs{(void *)(left.value_.date_)};
-  Date rhs{(void *)(right.value_.date_)};
-  // TODO(vgalaxy): validate
-  if (lhs < rhs) {
-    return -1;
-  } else if (lhs > rhs) {
-    return 1;
-  } else {
-    return 0;
+  switch (right.get_type()) {
+    case TypeId::DATE: {
+      Date lhs{(void *)(left.value_.date_)};
+      Date rhs{(void *)(right.value_.date_)};
+      if (!lhs.validate() || !rhs.validate()) {
+        return CmpRes::UNDEFINED;
+      }
+      if (lhs < rhs) {
+        return CmpRes::LT;
+      } else if (lhs > rhs) {
+        return CmpRes::GT;
+      } else {
+        return CmpRes::EQ;
+      }
+    }
+    default:
+      return CmpRes::UNDEFINED;
   }
 }
 
@@ -78,11 +91,27 @@ auto DateType::divide(const Value &left, const Value &right) const -> Value
 
 auto DateType::min(const Value &left, const Value &right) const -> Value
 {
-  return compare(left, right) <= 0 ? left : right;
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  if (res != CmpRes::GT) {
+    return left;
+  } else {
+    return right;
+  }
 }
 auto DateType::max(const Value &left, const Value &right) const -> Value
 {
-  return compare(left, right) >= 0 ? left : right;
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  if (res != CmpRes::LT) {
+    return left;
+  } else {
+    return right;
+  }
 }
 
 auto DateType::conjunction(const Value &left, const Value &right) const -> Value

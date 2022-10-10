@@ -41,9 +41,9 @@ auto Type::compare_greater_than_equals(const Value &left, const Value &right) co
   return Value{};
 }
 
-auto Type::compare(const Value &left, const Value &right) const -> int
+auto Type::compare(const Value &left, const Value &right) const -> CmpRes
 {
-  return 0;
+  return CmpRes::UNDEFINED;
 }
 
 auto Type::add(const Value &left, const Value &right) const -> Value

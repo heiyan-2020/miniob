@@ -45,22 +45,22 @@ public:
       case INT: {
         Value lhs{INT, *(int32_t *)v1};
         Value rhs{INT, *(int32_t *)v2};
-        return lhs.compare(rhs);
+        return cmp_res_to_int(lhs.compare(rhs));
       }
       case FLOAT: {
         Value lhs{FLOAT, *(float *)v1};
         Value rhs{FLOAT, *(float *)v2};
-        return lhs.compare(rhs);
+        return cmp_res_to_int(lhs.compare(rhs));
       }
       case CHAR: {
         Value lhs{CHAR, v1, static_cast<size_t>(attr_length_)};
         Value rhs{CHAR, v2, static_cast<size_t>(attr_length_)};
-        return lhs.compare(rhs);
+        return cmp_res_to_int(lhs.compare(rhs));
       }
       case DATE: {
         Value lhs{DATE, (const int32_t *)v1};
         Value rhs{DATE, (const int32_t *)v2};
-        return lhs.compare(rhs);
+        return cmp_res_to_int(lhs.compare(rhs));
       }
       default: {
         LOG_ERROR("unknown attr type %d", attr_type_);

@@ -7,39 +7,69 @@ const double epsilon = 1E-6;
 
 auto FloatType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) == 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::EQ);
 }
 auto FloatType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) != 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::EQ);
 }
 auto FloatType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) < 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::LT);
 }
 auto FloatType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) <= 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::GT);
 }
 auto FloatType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) > 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::GT);
 }
 auto FloatType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) >= 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::LT);
 }
 
-auto FloatType::compare(const Value &left, const Value &right) const -> int
+auto FloatType::compare(const Value &left, const Value &right) const -> CmpRes
 {
-  float cmp = left.value_.float_ - right.value_.float_;
-  if (cmp > epsilon) {
-    return 1;
+  switch (right.get_type()) {
+    case TypeId::FLOAT: {
+      float cmp = left.value_.float_ - right.value_.float_;
+      if (cmp > epsilon) {
+        return CmpRes::GT;
+      }
+      if (cmp < -epsilon) {
+        return CmpRes::LT;
+      }
+      return CmpRes::EQ;
+    }
+    default:
+      return CmpRes::UNDEFINED;
   }
-  if (cmp < -epsilon) {
-    return -1;
-  }
-  return 0;
 }
 
 auto FloatType::add(const Value &left, const Value &right) const -> Value

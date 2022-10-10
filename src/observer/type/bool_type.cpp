@@ -26,7 +26,7 @@ auto BoolType::compare_greater_than_equals(const Value &left, const Value &right
   return Value{};
 }
 
-auto BoolType::compare(const Value &left, const Value &right) const -> int
+auto BoolType::compare(const Value &left, const Value &right) const -> CmpRes
 {
   return Type::compare(left, right);
 }

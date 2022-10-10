@@ -97,7 +97,7 @@ public:
   auto compare_greater_than(const Value &o) const -> Value;
   auto compare_greater_than_equals(const Value &o) const -> Value;
 
-  auto compare(const Value &o) const -> int;
+  auto compare(const Value &o) const -> CmpRes;
 
   auto add(const Value &o) const -> Value;
   auto subtract(const Value &o) const -> Value;
@@ -134,4 +134,19 @@ protected:
   bool is_null_{};
 };
 
-inline auto bool_to_value(bool boolean) -> Value {return boolean ? Value{TypeId::BOOL, true} : Value{TypeId::BOOL, false};}
+inline auto bool_to_value(bool boolean) -> Value
+{
+  return boolean ? Value{TypeId::BOOL, true} : Value{TypeId::BOOL, false};
+}
+
+inline auto cmp_res_to_int(CmpRes res) -> int
+{
+  if (res == CmpRes::LT) {
+    return -1;
+  } else if (res == CmpRes::GT) {
+    return 1;
+  } else {
+    // TODO(vgalaxy): undefined
+    return 0;
+  }
+}

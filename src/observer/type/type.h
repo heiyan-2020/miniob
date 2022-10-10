@@ -7,6 +7,8 @@
 
 class Value;
 
+enum class CmpRes { UNDEFINED, GT, EQ, LT };
+
 class Type {
 public:
   Type() : Type{UNDEFINED}
@@ -58,7 +60,7 @@ public:
   virtual auto compare_greater_than(const Value &left, const Value &right) const -> Value;
   virtual auto compare_greater_than_equals(const Value &left, const Value &right) const -> Value;
 
-  virtual auto compare(const Value &left, const Value &right) const -> int;
+  virtual auto compare(const Value &left, const Value &right) const -> CmpRes;
 
   virtual auto add(const Value &left, const Value &right) const -> Value;
   virtual auto subtract(const Value &left, const Value &right) const -> Value;

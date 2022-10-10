@@ -3,39 +3,75 @@
 
 auto CharType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) == 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::EQ);
 }
 auto CharType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) != 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::EQ);
 }
 auto CharType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) < 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::LT);
 }
 auto CharType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) <= 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::GT);
 }
 auto CharType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) > 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res == CmpRes::GT);
 }
 auto CharType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) >= 0};
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  return bool_to_value(res != CmpRes::LT);
 }
 
-auto CharType::compare(const Value &left, const Value &right) const -> int
+auto CharType::compare(const Value &left, const Value &right) const -> CmpRes
 {
-  std::string lhs{left.value_.char_};
-  std::string rhs{right.value_.char_};
-  if (lhs < rhs) {
-    return -1;
-  } else if (lhs > rhs) {
-    return 1;
-  } else {
-    return 0;
+  switch (right.get_type()) {
+    case TypeId::CHAR: {
+      size_t min_len = std::min(left.len_, right.len_);
+      auto res = strncmp(left.value_.char_, right.value_.char_, min_len);
+      if (res < 0) {
+        return CmpRes::LT;
+      } else if (res > 0) {
+        return CmpRes::GT;
+      } else {
+        if (left.len_ < right.len_ && right.value_.char_[left.len_] != 0) {
+          return CmpRes::LT;
+        } else if (left.len_ > right.len_ && left.value_.char_[right.len_] != 0) {
+          return CmpRes::GT;
+        } else {
+          return CmpRes::EQ;
+        }
+      }
+    }
+    default:
+      return CmpRes::UNDEFINED;
   }
 }
 
@@ -58,11 +94,27 @@ auto CharType::divide(const Value &left, const Value &right) const -> Value
 
 auto CharType::min(const Value &left, const Value &right) const -> Value
 {
-  return compare(left, right) <= 0 ? left : right;
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  if (res != CmpRes::GT) {
+    return left;
+  } else {
+    return right;
+  }
 }
 auto CharType::max(const Value &left, const Value &right) const -> Value
 {
-  return compare(left, right) >= 0 ? left : right;
+  auto res = compare(left, right);
+  if (res == CmpRes::UNDEFINED) {
+    return Value{};
+  }
+  if (res != CmpRes::LT) {
+    return left;
+  } else {
+    return right;
+  }
 }
 
 auto CharType::conjunction(const Value &left, const Value &right) const -> Value
