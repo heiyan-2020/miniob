@@ -10,6 +10,7 @@
 #include <cstdlib>
 
 class TableScanNode;
+class BoolExpression;
 
 class Value {
   friend class Type;
@@ -19,6 +20,7 @@ class Value {
   friend class DateType;
   friend class BoolType;
   friend class TableScanNode;
+  friend class BoolExpression;
 
 public:
   Value() : Value{TypeId::UNDEFINED}

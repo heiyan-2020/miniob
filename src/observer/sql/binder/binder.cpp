@@ -2,6 +2,7 @@
 #include "sql/table/schema.h"
 #include "util/date.h"
 #include "sql/expr/symbol_finder.h"
+#include "sql/expr/bool_expression.h"
 
 RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 {
@@ -86,6 +87,10 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
 
 AbstractExpressionRef Binder::bind_expression(hsql::Expr *expr)
 {
+  if (expr == nullptr) {
+    return nullptr;
+  }
+
   switch (expr->type) {
     case hsql::kExprLiteralInt: {
       return std::make_shared<ConstantValueExpression>(Value(TypeId::INT, static_cast<int32_t>(expr->ival)));
@@ -113,11 +118,39 @@ AbstractExpressionRef Binder::bind_expression(hsql::Expr *expr)
     case hsql::kExprOperator: {
       AbstractExpressionRef lhs = bind_expression(expr->expr);
       AbstractExpressionRef rhs = bind_expression(expr->expr2);
-      return std::make_shared<ComparisonExpression>(std::move(lhs), std::move(rhs), bind_operator(expr->opType));
+
+      return AbstractExpression::expression_factory(lhs, rhs, bind_operator(expr->opType));
     }
     default: {
       LOG_ERROR("Unsupported expression type: %d", expr->type);
     }
   }
-  return nullptr;
+  LOG_PANIC("Bind expression error");
+  assert(false);
+}
+
+OperatorType Binder::bind_operator(hsql::OperatorType opt)
+{
+  const struct info {
+    hsql::OperatorType opt;
+    OperatorType ct;
+  } infos[] = {
+      {hsql::OperatorType::kOpEquals, OperatorType::Equal},
+      {hsql::OperatorType::kOpGreater, OperatorType::GreaterThan},
+      {hsql::OperatorType::kOpGreaterEq, OperatorType::GreaterThanOrEqual},
+      {hsql::OperatorType::kOpNotEquals, OperatorType::NotEqual},
+      {hsql::OperatorType::kOpLess, OperatorType::LessThan},
+      {hsql::OperatorType::kOpLessEq, OperatorType::LessThanOrEqual},
+      {hsql::OperatorType::kOpAnd, OperatorType::AND},
+      {hsql::OperatorType::kOpOr, OperatorType::OR},
+      {hsql::OperatorType::kOpNot, OperatorType::NOT}
+  };
+  for (auto info : infos) {
+    if (info.opt == opt) {
+      return info.ct;
+    }
+  }
+  LOG_ERROR("Bind operator type failed");
+  assert(false);
+  return {}; // dummy return value, because program will halt before.
 }

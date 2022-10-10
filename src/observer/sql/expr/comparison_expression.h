@@ -1,11 +1,9 @@
 #pragma once
 #include "abstract_expression.h"
 
-enum class ComparisonType { Equal, NotEqual, LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual };
-
 class ComparisonExpression : public AbstractExpression {
 public:
-  ComparisonExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, ComparisonType comp_type)
+  ComparisonExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType comp_type)
       : AbstractExpression({std::move(left), std::move(right)}, TypeId::BOOL), comp_type_{comp_type} {}
 
   RC evaluate(EnvRef env, Value &out_value) const  override {
@@ -39,22 +37,22 @@ public:
   }
 
 private:
-  ComparisonType comp_type_;
+  OperatorType comp_type_;
 
 private:
   auto perform_comparison(const Value &lhs, const Value &rhs) const -> Value {
     switch (comp_type_) {
-      case ComparisonType::Equal:
+      case OperatorType::Equal:
         return lhs.compare_equals(rhs);
-      case ComparisonType::NotEqual:
+      case OperatorType::NotEqual:
         return lhs.compare_not_equals(rhs);
-      case ComparisonType::LessThan:
+      case OperatorType::LessThan:
         return lhs.compare_less_than(rhs);
-      case ComparisonType::LessThanOrEqual:
+      case OperatorType::LessThanOrEqual:
         return lhs.compare_less_than_equals(rhs);
-      case ComparisonType::GreaterThan:
+      case OperatorType::GreaterThan:
         return lhs.compare_greater_than(rhs);
-      case ComparisonType::GreaterThanOrEqual:
+      case OperatorType::GreaterThanOrEqual:
         return lhs.compare_greater_than_equals(rhs);
       default:
         LOG_ERROR("Evaluate compare failed");
