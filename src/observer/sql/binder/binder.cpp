@@ -42,8 +42,8 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
     }
   }
 
-  // Bind where exprs.
-  if (sel_stmt->whereClause != nullptr) {
+  // Bind where expression if there is.
+  if (sel_stmt->whereClause) {
     AbstractExpressionRef expr = bind_expression(sel_stmt->whereClause);
     std::vector<ColumnName> symbols = expr->getAllSymbols();
     for (auto const &name : symbols) {

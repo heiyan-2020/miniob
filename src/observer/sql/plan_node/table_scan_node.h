@@ -36,7 +36,8 @@ public:
   }
 
 private:
-  bool is_selected(TupleRef tuple);
+  // support error handling, so use out_param to convey return value.
+  RC is_selected(TupleRef tuple, bool &result);
 
 private:
   Table *table_;

@@ -1,29 +1,48 @@
 #include "date_type.h"
 #include "value.h"
 
+#define DATE_COMPARE_FUNC(OP)             \
+  Date lhs{(void *)(left.value_.date_)};  \
+  Date rhs{(void *)(right.value_.date_)}; \
+  if (lhs.validate() && rhs.validate()) { \
+    switch (right.get_type()) {           \
+      case TypeId::DATE:                  \
+        return bool_to_value(lhs OP rhs); \
+      default :                           \
+        break;                            \
+    }                                     \
+}
+
+
 auto DateType::compare_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) == 0};
+  DATE_COMPARE_FUNC(==)
+  return {};
 }
 auto DateType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) != 0};
+  DATE_COMPARE_FUNC(!=)
+  return {};
 }
 auto DateType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) < 0};
+  DATE_COMPARE_FUNC(<)
+  return {};
 }
 auto DateType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) <= 0};
+  DATE_COMPARE_FUNC(<=)
+  return {};
 }
 auto DateType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) > 0};
+  DATE_COMPARE_FUNC(>)
+  return {};
 }
 auto DateType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
-  return Value{BOOL, compare(left, right) >= 0};
+  DATE_COMPARE_FUNC(>=)
+  return {};
 }
 
 auto DateType::compare(const Value &left, const Value &right) const -> int
