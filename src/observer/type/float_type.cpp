@@ -1,6 +1,8 @@
 #include "float_type.h"
 #include "value.h"
 
+#include <sstream>
+
 const double epsilon = 1E-6;
 
 auto FloatType::compare_equals(const Value &left, const Value &right) const -> Value
@@ -94,5 +96,7 @@ auto FloatType::deserialize_from(const char *storage) const -> Value
 
 auto FloatType::to_string(const Value &val) const -> std::string
 {
-  return std::to_string(val.value_.float_);
+  std::ostringstream oss;
+  oss << val.value_.float_;
+  return std::string{oss.str()};
 }
