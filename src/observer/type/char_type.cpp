@@ -28,7 +28,15 @@ auto CharType::compare_greater_than_equals(const Value &left, const Value &right
 
 auto CharType::compare(const Value &left, const Value &right) const -> int
 {
-  return strcmp(left.str_value_.char_.c_str(), right.str_value_.char_.c_str());
+  std::string lhs{left.value_.char_};
+  std::string rhs{right.value_.char_};
+  if (lhs < rhs) {
+    return -1;
+  } else if (lhs > rhs) {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 auto CharType::add(const Value &left, const Value &right) const -> Value
@@ -72,9 +80,8 @@ auto CharType::negation(const Value &value) const -> Value
 
 auto CharType::serialize_to(const Value &val, char *storage) const -> void
 {
-  const char *ori = val.str_value_.char_.c_str();
-  for (size_t i = 0; i < val.str_value_.len_; ++i) { // without '\0'
-    storage[i] = ori[i];
+  for (size_t i = 0; i < val.len_; ++i) {
+    storage[i] = val.value_.char_[i];
   }
 }
 auto CharType::deserialize_from(const char *storage, size_t length) const -> Value
@@ -84,5 +91,5 @@ auto CharType::deserialize_from(const char *storage, size_t length) const -> Val
 
 auto CharType::to_string(const Value &val) const -> std::string
 {
-  return val.str_value_.char_;
+  return std::string{val.value_.char_};
 }
