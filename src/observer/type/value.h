@@ -73,7 +73,7 @@ public:
   Value(TypeId type, const char *c, size_t len) : type_id_{type}
   {
     this->len_ = len;
-    this->value_.char_ = (char *)calloc(len, sizeof(char));
+    this->value_.char_ = (char *)calloc(len + 1, sizeof(char));  // one more to occupy '\0'
     size_t min_len = std::min(len, strnlen(c, len));
     memcpy(this->value_.char_, c, min_len);
   }

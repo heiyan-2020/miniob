@@ -408,7 +408,10 @@ RC RecordFileScanner::fetch_next_record()
 {
   RC rc = RC::SUCCESS;
   if (record_page_iterator_.is_valid()) {
-    return fetch_next_record_in_page();
+    rc = fetch_next_record_in_page();
+    if (rc != RECORD_EOF) {
+      return rc;
+    }
   }
 
   while (bp_iterator_.has_next()) {
