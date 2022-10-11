@@ -39,7 +39,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
   std::shared_ptr<PlanNode> sp;
   rc = planner.make_plan_upd(stmt_, sp);
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
     return rc;
   }
   sp->prepare();
@@ -48,7 +48,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
   const std::vector<FieldMeta> *field_metas = table_meta.field_metas();
   size_t curr_index = table_meta.sys_field_num();
 
-  // 由于比赛只要求 set 单个字段，所以其实这里的 for 循环只会执行一次。
+  // 由于比赛只要求 set 单个字段，所以其实这里的 for 循环只会执行一次
   for (auto updateClause: *stmt_->updates) {
 
     // find appropriate filed

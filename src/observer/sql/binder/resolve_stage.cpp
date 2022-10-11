@@ -123,7 +123,7 @@ void ResolveStage::handle_event(StageEvent *event)
       sql_event->set_command(std::make_unique<OtherCommand>(dynamic_cast<const hsql::OtherStatement *>(stmt)));
       break;
     default:
-      session_event->set_response("Unsupported");
+      session_event->set_response("Unsupported\n");
   }
 
   query_cache_stage_->handle_event(sql_event);
