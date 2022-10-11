@@ -10,22 +10,26 @@ std::vector<ColumnName> AbstractExpression::getAllSymbols()
   return symbol_finder->symbols_;
 }
 
-AbstractExpressionRef AbstractExpression::expression_factory(AbstractExpressionRef lhs, AbstractExpressionRef rhs, OperatorType ope_type)
+RC AbstractExpression::expression_factory(AbstractExpressionRef lhs, AbstractExpressionRef rhs, OperatorType ope_type, AbstractExpressionRef out)
 {
   switch (ope_type) {
     case OperatorType::OR :
     case OperatorType::AND :
-    case OperatorType::NOT :
-      return std::make_shared<BoolExpression>(std::move(lhs), std::move(rhs), ope_type);
+    case OperatorType::NOT : {
+      out = std::make_shared<BoolExpression>(std::move(lhs), std::move(rhs), ope_type);
+      return RC::SUCCESS;
+    }
     case OperatorType::LessThanOrEqual:
     case OperatorType::LessThan:
     case OperatorType::NotEqual:
     case OperatorType::GreaterThanOrEqual:
     case OperatorType::GreaterThan:
-    case OperatorType::Equal:
-      return std::make_shared<ComparisonExpression>(std::move(lhs), std::move(rhs), ope_type);
+    case OperatorType::Equal: {
+      out = std::make_shared<ComparisonExpression>(std::move(lhs), std::move(rhs), ope_type);
+      return RC::SUCCESS;
+    }
     default:
       LOG_PANIC("create expression error");
-      assert(false);
+      return RC::UNIMPLENMENT;
   }
 }
