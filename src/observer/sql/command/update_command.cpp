@@ -12,21 +12,20 @@ UpdateCommand::UpdateCommand(const hsql::UpdateStatement *stmt) : Command{hsql::
 
 /**
  * update操作
- * （写完删）：目前跑不通，待改写planner
- * 支持where（待改写planner）
+ * （写完删）：目前只支持int
  * 只支持单字段set
  * @param sql_event
  * @return
  */
 RC UpdateCommand::execute(const SQLStageEvent *sql_event)
 {
-  return RC::UNIMPLENMENT;
+//  return RC::UNIMPLENMENT;
   SessionEvent *session_event = sql_event->session_event();
   RC rc = do_update(sql_event);
   if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
+    session_event->set_response("SUCCESS\n");
   } else {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
   }
   return rc;
 }
@@ -46,12 +45,11 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
 
   Planner planner(db);
   std::shared_ptr<PlanNode> sp;
-  // TODO(pjz): make update planner
-  // rc = planner.make_plan(stmt_, sp);
-  //  if (rc != RC::SUCCESS) {
-  //    session_event->set_response("FAILURE");
-  //    return rc;
-  //  }
+  rc = planner.make_plan_upd(stmt_, sp);
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE");
+    return rc;
+  }
   sp->prepare();
 
   const TableMeta &table_meta = table->table_meta();
@@ -84,9 +82,10 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       char *data = new char[record_size];
       memcpy(data, old_record.data(), record_size);
       const hsql::Expr *expr = updateClause->value;
-      // TODO(pjz): construct new record.
-      //      memcpy(data + field_meta.offset(), , field_meta.len());
-
+      // TODO(pjz): 支持除INT外的其他类型
+      auto* new_data = malloc(sizeof(expr->ival));
+      memcpy(new_data, &expr->ival, sizeof(expr->ival));
+      memcpy(data + field_meta.offset(), new_data, field_meta.len());
       Record new_record;
       new_record.set_rid(old_record.rid());
       new_record.set_data(data);
