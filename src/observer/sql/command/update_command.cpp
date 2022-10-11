@@ -62,6 +62,13 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       field_meta = field_metas->at(curr_index);
     }
 
+    // check schema
+    rc = check_schema(field_meta, updateClause);
+    if (rc != RC::SUCCESS) {
+      LOG_WARN("update with invalid value!: %s", strrc(rc));
+      return rc;
+    }
+
     bool is_record_find = false;
     while (RC::SUCCESS == sp->next()) {
       if (!is_record_find) is_record_find = true;
@@ -135,5 +142,32 @@ RC UpdateCommand::data_2_byte(const hsql::Expr *expr, void* &new_data) {
     }
     default: return RC::UNIMPLENMENT;
   }
+  return rc;
+}
+
+RC UpdateCommand::check_schema(const FieldMeta& field_meta, const hsql::UpdateClause *updateClause)
+{
+  RC rc = RC::SUCCESS;
+  hsql::Expr* expr = updateClause->value;
+  switch (field_meta.type()) {
+    case INT: {
+      if (expr->type == hsql::kExprLiteralInt) return rc;
+      break;
+    }
+    case FLOAT: {
+      if (expr->type == hsql::kExprLiteralFloat) return rc;
+      break;
+    }
+    case CHAR: {
+      if (expr->type == hsql::kExprLiteralString) return rc;
+      break;
+    }
+    case DATE: {
+      if (expr->type == hsql::kExprLiteralString) return rc;
+      break;
+    }
+    default: return RC::UNIMPLENMENT;
+  }
+  rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
   return rc;
 }
