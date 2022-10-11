@@ -70,33 +70,80 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       }
     }
 
+    bool is_record_find = false;
     while (RC::SUCCESS == sp->next()) {
+      if (!is_record_find) is_record_find = true;
       TupleRef tuple = sp->current_tuple();
       if (nullptr == tuple) {
         LOG_WARN("failed to get current record: %s", strrc(rc));
         return rc;
       }
-      Record old_record = tuple->get_record();
 
+      Record old_record = tuple->get_record();
       int record_size = table_meta.record_size();
       char *data = new char[record_size];
       memcpy(data, old_record.data(), record_size);
+
       const hsql::Expr *expr = updateClause->value;
       // TODO(pjz): 支持除INT外的其他类型
-      auto* new_data = malloc(sizeof(expr->ival));
-      memcpy(new_data, &expr->ival, sizeof(expr->ival));
+      void *new_data = nullptr;
+      rc = data_2_byte(expr, new_data);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("failed to convert new record to byte code due to type constraint: %s", strrc(rc));
+        return rc;
+      }
+
       memcpy(data + field_meta.offset(), new_data, field_meta.len());
       Record new_record;
       new_record.set_rid(old_record.rid());
       new_record.set_data(data);
 
-      // update record
       rc = table->update_record(nullptr, &old_record, &new_record);
       if (rc != RC::SUCCESS) {
         LOG_WARN("failed to update record: %s", strrc(rc));
         return rc;
       }
     }
+    
+    if (!is_record_find) return RC::RECORD_RECORD_NOT_EXIST;
   }
   return RC::SUCCESS;
+}
+
+/**
+ * serialize expr->val to byte code
+ * @param expr
+ * @return
+ */
+RC UpdateCommand::data_2_byte(const hsql::Expr *expr, void* &new_data) {
+  RC rc = RC::SUCCESS;
+  switch (expr->type) {
+    case hsql::kExprLiteralInt: {
+      new_data = malloc(sizeof(expr->ival));
+      memcpy(new_data, &expr->ival, sizeof(expr->ival));
+      break;
+    }
+    case hsql::kExprLiteralFloat: {
+      new_data = malloc(sizeof(expr->fval));
+      memcpy(new_data, &expr->fval, sizeof(expr->fval));
+      break;
+    }
+    case hsql::kExprLiteralString: {
+      new_data = strdup(expr->name);
+      break;
+    }
+    case hsql::kExprLiteralDate: {
+      void *dst = calloc(1, sizeof(char[12]));
+      RC rc = Date::parse_date(dst, expr->name);
+      if (rc != RC::SUCCESS) {
+        new_data = nullptr;
+        return RC::INVALID_ARGUMENT;
+      } else {
+        new_data = dst;
+      }
+      break;
+    }
+    default: return RC::UNIMPLENMENT;
+  }
+  return rc;
 }
