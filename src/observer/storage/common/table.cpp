@@ -732,7 +732,8 @@ RC Table::drop(const char *table_name)
   for (Index *index : indexes_) {
     std::string index_file = table_index_file(base_dir_.c_str(), table_name, index->index_meta().name().c_str());
     LOG_INFO("Begin to drop index file %s", index_file.c_str());
-    bpm.close_file(index_file.c_str());  // ignore rc
+    // should not close index file, handled in `BplusTreeIndex::~BplusTreeIndex()`
+    // bpm.close_file(index_file.c_str());  // ignore rc
     res = remove(index_file.c_str());
     if (res != 0) {
       LOG_ERROR("Failed to drop index file %s, err %s", index_file.c_str(), strerror(errno));
