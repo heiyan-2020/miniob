@@ -130,15 +130,11 @@ RC UpdateCommand::data_2_byte(const hsql::Expr *expr, void* &new_data) {
       break;
     }
     case hsql::kExprLiteralString: {
-      new_data = strdup(expr->name);
-      break;
-    }
-    case hsql::kExprLiteralDate: {
-      void *dst = calloc(1, sizeof(char[12]));
-      RC rc = Date::parse_date(dst, expr->name);
-      if (rc != RC::SUCCESS) {
-        new_data = nullptr;
-        return RC::INVALID_ARGUMENT;
+      // char and date
+      void *dst = calloc(1, sizeof(int32_t[3]));
+      if (Date::parse_date(dst, expr->name) != RC::SUCCESS) {
+        free(dst);
+        new_data = strdup(expr->name);
       } else {
         new_data = dst;
       }
