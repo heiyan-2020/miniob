@@ -10,10 +10,10 @@ public:
 
   RC bind_from(hsql::TableRef *root_table, SchemaRef &out_schema);
 
-  AbstractExpressionRef bind_expression(hsql::Expr *expr);
+  RC bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr);
 
 private:
-  OperatorType bind_operator(hsql::OperatorType opt);
+  RC bind_operator(hsql::OperatorType opt, OperatorType &out);
 
 private:
   Db *db_;

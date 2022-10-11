@@ -71,7 +71,11 @@ RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *p
       LOG_ERROR("Scan node shouldn't have predicate now.");
       return RC::GENERIC_ERROR;
     }
-    scan_node->set_predicate(binder.bind_expression(predicate));
+    AbstractExpressionRef expr;
+    if (binder.bind_expression(predicate, expr) != RC::SUCCESS) {
+      return RC::INTERNAL;
+    }
+    scan_node->set_predicate(expr);
     return RC::SUCCESS;
   }
   return RC::UNIMPLENMENT;

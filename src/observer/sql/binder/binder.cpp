@@ -45,7 +45,11 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 
   // Bind where expression if there is.
   if (sel_stmt->whereClause) {
-    AbstractExpressionRef expr = bind_expression(sel_stmt->whereClause);
+    AbstractExpressionRef expr;
+    rc = bind_expression(sel_stmt->whereClause, expr);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
     std::vector<ColumnName> symbols = expr->getAllSymbols();
     for (auto const &name : symbols) {
       std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
@@ -84,18 +88,20 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
   }
 }
 
-AbstractExpressionRef Binder::bind_expression(hsql::Expr *expr)
+RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
 {
   if (expr == nullptr) {
-    return nullptr;
+    return RC::SUCCESS; // nullptr won't be bound, caller should handle potential error.
   }
 
   switch (expr->type) {
     case hsql::kExprLiteralInt: {
-      return std::make_shared<ConstantValueExpression>(Value(TypeId::INT, static_cast<int32_t>(expr->ival)));
+      out_expr = std::make_shared<ConstantValueExpression>(Value(TypeId::INT, static_cast<int32_t>(expr->ival)));
+      return RC::SUCCESS;
     }
     case hsql::kExprLiteralFloat: {
-      return std::make_shared<ConstantValueExpression>(Value(TypeId::FLOAT, static_cast<float>(expr->fval)));
+      out_expr = std::make_shared<ConstantValueExpression>(Value(TypeId::FLOAT, static_cast<float>(expr->fval)));
+      return RC::SUCCESS;
     }
     case hsql::kExprLiteralString: {
       // handle DATE and CHAR here
@@ -107,28 +113,43 @@ AbstractExpressionRef Binder::bind_expression(hsql::Expr *expr)
       } else {
         Value val{TypeId::DATE, static_cast<const int32_t *>(dst)};
         free(dst);
-        return std::make_shared<ConstantValueExpression>(std::move(val));
+        out_expr = std::make_shared<ConstantValueExpression>(std::move(val));
+        return RC::SUCCESS;
       }
-      return std::make_shared<ConstantValueExpression>(Value(TypeId::CHAR, expr->name, strlen(expr->name)));
+      out_expr = std::make_shared<ConstantValueExpression>(Value(TypeId::CHAR, expr->name, strlen(expr->name)));
+      return RC::SUCCESS;
     }
     case hsql::kExprColumnRef: {
-      return std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
+      out_expr = std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
+      return RC::SUCCESS;
     }
     case hsql::kExprOperator: {
-      AbstractExpressionRef lhs = bind_expression(expr->expr);
-      AbstractExpressionRef rhs = bind_expression(expr->expr2);
-
-      return AbstractExpression::expression_factory(lhs, rhs, bind_operator(expr->opType));
+      AbstractExpressionRef lhs, rhs;
+      RC rc = bind_expression(expr->expr, lhs);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      rc = bind_expression(expr->expr2, rhs);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      OperatorType op;
+      rc = bind_operator(expr->opType, op);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      out_expr = AbstractExpression::expression_factory(lhs, rhs, op);
+      return RC::SUCCESS;
     }
     default: {
       LOG_ERROR("Unsupported expression type: %d", expr->type);
+      return RC::UNIMPLENMENT;
     }
   }
-  LOG_PANIC("Bind expression error");
-  assert(false);
+  return RC::INTERNAL;
 }
 
-OperatorType Binder::bind_operator(hsql::OperatorType opt)
+RC Binder::bind_operator(hsql::OperatorType opt, OperatorType &out)
 {
   const struct info {
     hsql::OperatorType opt;
@@ -146,10 +167,10 @@ OperatorType Binder::bind_operator(hsql::OperatorType opt)
   };
   for (auto info : infos) {
     if (info.opt == opt) {
-      return info.ct;
+      out = info.ct;
+      return RC::SUCCESS;
     }
   }
-  LOG_ERROR("Bind operator type failed");
-  assert(false);
-  return {}; // dummy return value, because program will halt before.
+  LOG_WARN("Unsupported operator type: %d", opt);
+  return RC::UNIMPLENMENT;
 }
