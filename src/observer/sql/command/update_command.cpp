@@ -104,7 +104,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
         return rc;
       }
     }
-    
+
     if (!is_record_find) return RC::RECORD_RECORD_NOT_EXIST;
   }
   return RC::SUCCESS;
@@ -124,8 +124,9 @@ RC UpdateCommand::data_2_byte(const hsql::Expr *expr, void* &new_data) {
       break;
     }
     case hsql::kExprLiteralFloat: {
-      new_data = malloc(sizeof(expr->fval));
-      memcpy(new_data, &expr->fval, sizeof(expr->fval));
+      auto f = (float)expr->fval;
+      new_data = malloc(sizeof(f));
+      memcpy(new_data, &f, sizeof(f));
       break;
     }
     case hsql::kExprLiteralString: {
