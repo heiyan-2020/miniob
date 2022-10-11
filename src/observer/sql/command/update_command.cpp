@@ -12,7 +12,6 @@ UpdateCommand::UpdateCommand(const hsql::UpdateStatement *stmt) : Command{hsql::
 
 /**
  * update操作
- * （写完删）：目前只支持int
  * 只支持单字段set
  * @param sql_event
  * @return
@@ -85,7 +84,6 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       memcpy(data, old_record.data(), record_size);
 
       const hsql::Expr *expr = updateClause->value;
-      // TODO(pjz): 支持除INT外的其他类型
       void *new_data = nullptr;
       rc = data_2_byte(expr, new_data);
       if (rc != RC::SUCCESS) {

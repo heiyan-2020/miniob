@@ -11,9 +11,6 @@ DeleteCommand::DeleteCommand(const hsql::DeleteStatement *stmt) : Command{hsql::
 
 /**
  * delete操作
- * （写完删）：目前跑不通，待改写planner
- * （写完删）：没找到官方测试用例
- * 支持where（待改写planner）
  * @param sql_event
  * @return
  */
