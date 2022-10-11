@@ -20,6 +20,7 @@ UpdateCommand::UpdateCommand(const hsql::UpdateStatement *stmt) : Command{hsql::
  */
 RC UpdateCommand::execute(const SQLStageEvent *sql_event)
 {
+  return RC::UNIMPLENMENT;
   SessionEvent *session_event = sql_event->session_event();
   RC rc = do_update(sql_event);
   if (rc == RC::SUCCESS) {
