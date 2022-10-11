@@ -122,7 +122,7 @@ RC ParseStage::handle_request(StageEvent *event)
     if (result.isValid()) {
       sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
     } else {
-      sql_event->session_event()->set_response("Failed to parse sql");
+      sql_event->session_event()->set_response("Failed to parse sql\n");
       result.reset();
       return RC::INTERNAL;
     }
