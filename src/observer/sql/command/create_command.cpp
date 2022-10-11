@@ -63,9 +63,9 @@ RC CreateCommand::do_create_table(const SQLStageEvent *sql_event)
   Db *db = session_event->session()->get_current_db();
   RC rc = db->create_table(this->stmt_->tableName, Schema{cols});
   if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
+    session_event->set_response("SUCCESS\n");
   } else {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
   }
   return rc;
 }
@@ -76,7 +76,7 @@ RC CreateCommand::do_create_index(const SQLStageEvent *sql_event)
   Db *db = session_event->session()->get_current_db();
   Table *table = db->find_table(this->stmt_->tableName);
   if (nullptr == table) {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
 
@@ -90,9 +90,9 @@ RC CreateCommand::do_create_index(const SQLStageEvent *sql_event)
 
   RC rc = table->create_index(nullptr, this->stmt_->indexName, attribute_names, this->stmt_->isUnique);
   if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
+    session_event->set_response("SUCCESS\n");
   } else {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
   }
   return rc;
 }

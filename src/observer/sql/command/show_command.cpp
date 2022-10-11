@@ -27,7 +27,7 @@ RC ShowCommand::do_show_tables(const SQLStageEvent *sql_event)
   std::vector<std::string> all_tables;
   db->all_tables(all_tables);
   if (all_tables.empty()) {
-    session_event->set_response("No table");
+    session_event->set_response("No table\n");
   } else {
     std::stringstream ss;
     for (const auto &table : all_tables) {

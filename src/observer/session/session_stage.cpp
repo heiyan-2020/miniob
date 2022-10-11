@@ -106,14 +106,18 @@ void SessionStage::callback_event(StageEvent *event, CallbackContext *context)
     return;
   }
 
-  std::string response = std::string{sev->get_response()};
-  // TODO(vgalaxy): assume
-  if ((response.at(response.length() - 1)) != '\n') {
-      response += "\n";
+  std::string response = sev->get_response();
+  int len = static_cast<int>(response.size());
+  if (response.empty()) {
+    response = "No data\n";
+    len = static_cast<int>(response.length()) + 1;
   }
-
-  Server::send(sev->get_client(), response.c_str(),
-      static_cast<int>(response.length() + 1));  // include '\0'
+  Server::send(sev->get_client(), response.c_str(), len);
+  if ('\0' != response[len - 1]) {
+    // 这里强制性的给发送一个消息终结符，如果需要发送多条消息，需要调整
+    char end = 0;
+    Server::send(sev->get_client(), &end, 1);
+  }
 
   LOG_TRACE("Exit");
 }

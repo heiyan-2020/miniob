@@ -22,9 +22,9 @@ RC DropCommand::do_drop_table(const SQLStageEvent *sql_event)
   Db *db = session_event->session()->get_current_db();
   RC rc = db->drop_table(stmt_->name);
   if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
+    session_event->set_response("SUCCESS\n");
   } else {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
   }
   return RC::SUCCESS;
 }

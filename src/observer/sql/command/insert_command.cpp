@@ -26,9 +26,9 @@ RC InsertCommand::execute(const SQLStageEvent *sql_event)
     case hsql::kInsertValues: {
       RC rc = do_insert_values(sql_event);
       if (rc == RC::SUCCESS) {
-        session_event->set_response("SUCCESS");
+        session_event->set_response("SUCCESS\n");
       } else {
-        session_event->set_response("FAILURE");
+        session_event->set_response("FAILURE\n");
       }
       return rc;
     }

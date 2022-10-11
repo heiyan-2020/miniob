@@ -33,7 +33,12 @@ RC OtherCommand::do_help(const SQLStageEvent *sql_event)
 
 RC OtherCommand::do_sync(const SQLStageEvent *sql_event)
 {
+  auto session_event = sql_event->session_event();
   RC rc = DefaultHandler::get_default().sync();
-  sql_event->session_event()->set_response(strrc(rc));
-  return RC::SUCCESS;
+  if (rc == RC::SUCCESS) {
+    session_event->set_response("SUCCESS\n");
+  } else {
+    session_event->set_response("FAILURE\n");
+  }
+  return rc;
 }

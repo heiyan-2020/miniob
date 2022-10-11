@@ -17,19 +17,19 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   Binder binder(db);
   RC rc = binder.bind_select(stmt_);
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
     return rc;
   }
   Planner planner(db);
   std::shared_ptr<PlanNode> sp;
   rc = planner.make_plan(stmt_, sp);
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
     return rc;
   }
   rc = sp->prepare();
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
     return rc;
   }
 
@@ -41,7 +41,7 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
     ss << std::endl;
   }
   if (rc != RC::RECORD_EOF) {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
     return rc;
   }
   session_event->set_response(ss.str());

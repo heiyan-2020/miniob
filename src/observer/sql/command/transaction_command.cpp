@@ -32,8 +32,12 @@ RC TransactionCommand::do_commit(const SQLStageEvent *sql_event)
   Trx *trx = session->current_trx();
   RC rc = trx->commit();
   session->set_trx_multi_operation_mode(false);
-  session_event->set_response(strrc(rc));
-  return RC::SUCCESS;
+  if (rc == RC::SUCCESS) {
+    session_event->set_response("SUCCESS\n");
+  } else {
+    session_event->set_response("FAILURE\n");
+  }
+  return rc;
 }
 
 RC TransactionCommand::do_rollback(const SQLStageEvent *sql_event)
@@ -43,8 +47,12 @@ RC TransactionCommand::do_rollback(const SQLStageEvent *sql_event)
   Trx *trx = session_event->get_client()->session->current_trx();
   RC rc = trx->rollback();
   session->set_trx_multi_operation_mode(false);
-  session_event->set_response(strrc(rc));
-  return RC::SUCCESS;
+  if (rc == RC::SUCCESS) {
+    session_event->set_response("SUCCESS\n");
+  } else {
+    session_event->set_response("FAILURE\n");
+  }
+  return rc;
 }
 
 void end_trx_if_need(Session *session, Trx *trx, bool all_right)
