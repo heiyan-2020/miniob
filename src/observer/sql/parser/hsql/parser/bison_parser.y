@@ -146,7 +146,7 @@
   std::vector<char*>* str_vec;
   std::unordered_set<hsql::ConstraintType>* column_constraint_set;
   std::vector<hsql::Expr*>* expr_vec;
-  std::vector<std::vector<hsql::Expr>*>* list_vec;
+  std::vector<std::vector<hsql::Expr*>*>* list_vec;
   std::vector<hsql::OrderDescription*>* order_vec;
   std::vector<hsql::SQLStatement*>* stmt_vec;
   std::vector<hsql::TableElement*>* table_element_vec;
@@ -154,7 +154,6 @@
   std::vector<hsql::UpdateClause*>* update_vec;
   std::vector<hsql::WithDescription*>* with_description_vec;
   std::vector<hsql::LockingClause*>* locking_clause_vec;
-  std::vector<std::vector<hsql::Expr*>*>* list_vec;
 
   std::pair<int64_t, int64_t>* ival_pair;
 
@@ -207,7 +206,7 @@
     %token TRUE FALSE BOOLEAN
     %token TRANSACTION BEGIN COMMIT ROLLBACK
     %token NOWAIT SKIP LOCKED SHARE
-    %token HELP SYNC
+    %token HELP SYNC NULLABLE
 
     /*********************************
      ** Non-Terminal types (http://www.gnu.org/software/bison/manual/html_node/Type-Decl.html)
@@ -625,7 +624,8 @@ column_constraint_set : column_constraint {
 column_constraint : PRIMARY KEY { $$ = ConstraintType::PrimaryKey; }
 | UNIQUE { $$ = ConstraintType::Unique; }
 | NULL { $$ = ConstraintType::Null; }
-| NOT NULL { $$ = ConstraintType::NotNull; };
+| NOT NULL { $$ = ConstraintType::NotNull; }
+| NULLABLE { $$ = ConstraintType::Null; };
 
 table_constraint : PRIMARY KEY '(' ident_commalist ')' { $$ = new TableConstraint(ConstraintType::PrimaryKey, $4); }
 | UNIQUE '(' ident_commalist ')' { $$ = new TableConstraint(ConstraintType::Unique, $3); };
