@@ -37,7 +37,7 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
   std::shared_ptr<PlanNode> sp;
   rc = planner.make_plan_del(stmt_, sp);
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
     return rc;
   }
   sp->prepare();
