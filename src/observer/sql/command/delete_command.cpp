@@ -19,13 +19,13 @@ DeleteCommand::DeleteCommand(const hsql::DeleteStatement *stmt) : Command{hsql::
  */
 RC DeleteCommand::execute(const SQLStageEvent *sql_event)
 {
-  return RC::UNIMPLENMENT;
+//  return RC::UNIMPLENMENT;
   SessionEvent *session_event = sql_event->session_event();
   RC rc = do_delete(sql_event);
   if (rc == RC::SUCCESS) {
-    session_event->set_response("SUCCESS");
+    session_event->set_response("SUCCESS\n");
   } else {
-    session_event->set_response("FAILURE");
+    session_event->set_response("FAILURE\n");
   }
   return rc;
 }
@@ -44,18 +44,16 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
 
   Planner planner(db);
   std::shared_ptr<PlanNode> sp;
-  // TODO(pjz): make update planner
-  // rc = planner.make_plan(stmt_, sp);
-  //  if (rc != RC::SUCCESS) {
-  //    session_event->set_response("FAILURE");
-  //    return rc;
-  //  }
+  rc = planner.make_plan_del(stmt_, sp);
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE");
+    return rc;
+  }
   sp->prepare();
 
-  const TableMeta &table_meta = table->table_meta();
-  const std::vector<FieldMeta> *field_metas = table_meta.field_metas();
-
+  bool is_record_find = false;
   while (RC::SUCCESS == sp->next()) {
+    if (!is_record_find) is_record_find = true;
     TupleRef tuple = sp->current_tuple();
     if (nullptr == tuple) {
       LOG_WARN("failed to get current record: %s", strrc(rc));
@@ -70,6 +68,8 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
       return rc;
     }
   }
+
+  if (!is_record_find) return RC::RECORD_RECORD_NOT_EXIST;
 
   return RC::SUCCESS;
 }

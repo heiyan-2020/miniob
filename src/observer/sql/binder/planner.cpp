@@ -140,3 +140,32 @@ RC Planner::make_plan_upd(const hsql::UpdateStatement *upd_stmt, std::shared_ptr
 
   return rc;
 }
+
+RC Planner::make_plan_del(const hsql::DeleteStatement *del_stmt, std::shared_ptr<PlanNode> &plan)
+{
+  RC rc;
+
+  // tableScanNode
+  const char *table_name = del_stmt->tableName;
+  if (nullptr == table_name) {
+    rc = RC::INVALID_ARGUMENT;
+    LOG_WARN("failed to plan 'FROM' statement");
+    return rc;
+  }
+  Table *tp = db_->find_table(table_name);
+  if (!tp) {
+    rc = RC::SCHEMA_TABLE_NOT_EXIST;
+    LOG_WARN("failed to plan 'FROM' statement");
+    return rc;
+  }
+  plan = std::make_shared<TableScanNode>(tp, nullptr);
+
+  // predNode
+  rc = handle_where_clause(del_stmt->expr, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan 'WHERE' statement");
+    return rc;
+  }
+
+  return rc;
+}
