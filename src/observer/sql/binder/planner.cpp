@@ -32,23 +32,6 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
   return RC::SUCCESS;
 }
 
-//RC Planner::handle_where_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
-//{
-//  hsql::Expr *predicate = sel_stmt->whereClause;
-//  RC rc = RC::SUCCESS;
-//  // TODO(zyx): find aggregates in expr.
-//
-//  if (nullptr != predicate) {
-//    rc = add_predicate_to_plan(plan, predicate);
-//    if (rc != RC::SUCCESS) {
-//      LOG_ERROR("Add predicate onto plan tree failed.\n");
-//      return RC::GENERIC_ERROR;
-//    }
-//  }
-//
-//  return RC::SUCCESS;
-//}
-
 RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan)
 {
   RC rc = RC::SUCCESS;

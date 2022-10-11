@@ -28,7 +28,6 @@ public:
   RC make_plan_upd(const hsql::UpdateStatement *upd_stmt, std::shared_ptr<PlanNode> &plan);
   RC make_plan_del(const hsql::DeleteStatement *del_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan);
-//  RC handle_where_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan);
   RC handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
 

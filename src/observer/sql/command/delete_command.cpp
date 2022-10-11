@@ -16,7 +16,6 @@ DeleteCommand::DeleteCommand(const hsql::DeleteStatement *stmt) : Command{hsql::
  */
 RC DeleteCommand::execute(const SQLStageEvent *sql_event)
 {
-//  return RC::UNIMPLENMENT;
   SessionEvent *session_event = sql_event->session_event();
   RC rc = do_delete(sql_event);
   if (rc == RC::SUCCESS) {
