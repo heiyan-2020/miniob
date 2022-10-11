@@ -55,11 +55,11 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
     FieldMeta field_meta = field_metas->at(curr_index);
     while (field_meta.name() != updateClause->column) {
       curr_index++;
-      field_meta = field_metas->at(curr_index);
       if (curr_index >= field_metas->size()) {
         LOG_WARN("update stmt offset has no related field");
         return RC::INTERNAL;
       }
+      field_meta = field_metas->at(curr_index);
     }
 
     bool is_record_find = false;
@@ -109,6 +109,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
  */
 RC UpdateCommand::data_2_byte(const hsql::Expr *expr, void* &new_data) {
   RC rc = RC::SUCCESS;
+  // TODO(pjz): support text.
   switch (expr->type) {
     case hsql::kExprLiteralInt: {
       new_data = malloc(sizeof(expr->ival));
