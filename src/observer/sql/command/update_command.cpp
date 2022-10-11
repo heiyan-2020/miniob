@@ -10,12 +10,6 @@
 UpdateCommand::UpdateCommand(const hsql::UpdateStatement *stmt) : Command{hsql::kStmtUpdate}, stmt_{stmt}
 {}
 
-/**
- * update操作
- * 只支持单字段set
- * @param sql_event
- * @return
- */
 RC UpdateCommand::execute(const SQLStageEvent *sql_event)
 {
   SessionEvent *session_event = sql_event->session_event();
@@ -54,7 +48,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
   const std::vector<FieldMeta> *field_metas = table_meta.field_metas();
   size_t curr_index = table_meta.sys_field_num();
 
-  // 由于比赛只要求set单个字段，所以其实这里的for循环只会执行一次。
+  // 由于比赛只要求 set 单个字段，所以其实这里的 for 循环只会执行一次。
   for (auto updateClause: *stmt_->updates) {
 
     // find appropriate filed
@@ -71,8 +65,9 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
     bool is_record_find = false;
     while (RC::SUCCESS == sp->next()) {
       if (!is_record_find) is_record_find = true;
-      TupleRef tuple = sp->current_tuple();
-      if (nullptr == tuple) {
+      TupleRef tuple;
+      rc = sp->current_tuple(tuple);
+      if (rc != RC::SUCCESS) {
         LOG_WARN("failed to get current record: %s", strrc(rc));
         return rc;
       }

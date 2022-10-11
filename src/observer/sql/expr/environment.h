@@ -47,7 +47,11 @@ public:
         LOG_ERROR("column name[%s.%s] is ambiguous", name.table_name_.c_str(), name.column_name_.c_str());
         return RC::INTERNAL;
       }
-      out_value = tuple->get_value(schema, schema->get_column_idx(found[0].get_name()));
+      size_t idx;
+      if (schema->get_column_idx(found[0].get_name(), idx) != RC::SUCCESS) {
+        return RC::INTERNAL;
+      }
+      out_value = tuple->get_value(schema, idx);
       return rc;
     }
     LOG_ERROR("May be in the parent env which hasn't implemented yet.");

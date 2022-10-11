@@ -33,10 +33,11 @@ RC TableScanNode::next()
 
 }
 
-TupleRef TableScanNode::current_tuple()
+RC TableScanNode::current_tuple(TupleRef &tuple)
 {
   current_ = std::make_shared<Tuple>(&current_record_);
-  return current_;
+  tuple = current_;
+  return RC::SUCCESS;
 }
 
 RC TableScanNode::is_selected(TupleRef tuple, bool &result)

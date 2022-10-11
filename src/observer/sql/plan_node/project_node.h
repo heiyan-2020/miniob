@@ -23,11 +23,11 @@ public:
   }
   RC next() override;
 
-  TupleRef current_tuple() override;
+  RC current_tuple(TupleRef &tuple) override;
 
 private:
   RC prepareSchema(SchemaRef input_schema);
-  TupleRef project_tuple(TupleRef tuple);
+  RC project_tuple(TupleRef original_tuple, TupleRef &out_tuple);
 
   PlanNodeRef left_child_;
   std::vector<hsql::Expr *> projection_spec_;
