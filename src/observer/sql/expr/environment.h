@@ -43,6 +43,10 @@ public:
       SchemaRef schema = current_schemas_[i];
 
       std::vector<Column> found = schema->find_columns(name.table_name_, name.column_name_);
+      if (found.empty()) {
+        LOG_ERROR("invalid column name: %s", name.column_name_.c_str());
+        return RC::INTERNAL;
+      }
       if (found.size() > 1) {
         LOG_ERROR("column name[%s.%s] is ambiguous", name.table_name_.c_str(), name.column_name_.c_str());
         return RC::INTERNAL;
