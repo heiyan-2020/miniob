@@ -31,7 +31,7 @@ public:
   std::vector<ColumnName> getAllSymbols();
 
   // create expression according to the operator type.
-  static RC expression_factory(AbstractExpressionRef lhs, AbstractExpressionRef rhs, OperatorType ope_type, AbstractExpressionRef out);
+  static RC expression_factory(AbstractExpressionRef lhs, AbstractExpressionRef rhs, OperatorType ope_type, AbstractExpressionRef &out);
 
 protected:
   std::vector<AbstractExpressionRef> children_;

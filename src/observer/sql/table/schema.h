@@ -6,6 +6,7 @@
 #include "column.h"
 #include "common/log/log.h"
 #include "unordered_set"
+#include "rc.h"
 
 class Table;
 class FieldMeta;
@@ -30,16 +31,15 @@ public:
     return columns_[col_idx];
   }
 
-  size_t get_column_idx(const ColumnName &name) const
+  RC get_column_idx(const ColumnName &name, size_t &idx) const
   {
     for (size_t i = 0; i < columns_.size(); ++i) {
       if (columns_[i].name_ == name) {
-        return i;
+        idx = i;
+        return RC::SUCCESS;
       }
     }
-    LOG_ERROR("can't find column");
-    assert(false);
-    return -1;
+    return RC::SUCCESS;
   }
 
   size_t get_column_count() const

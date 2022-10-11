@@ -10,7 +10,7 @@ std::vector<ColumnName> AbstractExpression::getAllSymbols()
   return symbol_finder->symbols_;
 }
 
-RC AbstractExpression::expression_factory(AbstractExpressionRef lhs, AbstractExpressionRef rhs, OperatorType ope_type, AbstractExpressionRef out)
+RC AbstractExpression::expression_factory(AbstractExpressionRef lhs, AbstractExpressionRef rhs, OperatorType ope_type, AbstractExpressionRef &out)
 {
   switch (ope_type) {
     case OperatorType::OR :

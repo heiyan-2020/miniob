@@ -33,7 +33,7 @@ public:
   virtual RC prepare() = 0;
   virtual RC initialize() = 0;
   virtual RC next() = 0;
-  virtual TupleRef current_tuple() = 0;
+  virtual RC current_tuple(TupleRef &tuple) = 0;
 
   SchemaRef get_schema()
   {

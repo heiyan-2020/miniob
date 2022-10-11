@@ -24,7 +24,7 @@ public:
   }
   RC next() override;
 
-  TupleRef current_tuple() override;
+  RC current_tuple(TupleRef &tuple) override;
 
   AbstractExpressionRef get_predicate()
   {

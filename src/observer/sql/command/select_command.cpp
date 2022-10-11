@@ -35,8 +35,12 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
 
   std::stringstream ss;
   print_header(ss, sp->get_schema());
+  TupleRef tuple;
   while ((rc = sp->next()) == RC::SUCCESS) {
-    TupleRef tuple = sp->current_tuple();
+    rc = sp->current_tuple(tuple);
+    if (rc != RC::SUCCESS) {
+      break;
+    }
     tuple_to_string(ss, *tuple, sp->get_schema());
     ss << std::endl;
   }

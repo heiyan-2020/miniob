@@ -27,10 +27,18 @@ RC ProjectNode::next()
   return RC::GENERIC_ERROR;
 }
 
-TupleRef ProjectNode::current_tuple()
+RC ProjectNode::current_tuple(TupleRef &tuple)
 {
-  current_ = left_child_->current_tuple();
-  return project_tuple(current_);
+  RC rc;
+  rc = left_child_->current_tuple(current_);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+  rc = project_tuple(current_, tuple);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+  return RC::SUCCESS;
 }
 
 RC ProjectNode::prepareSchema(SchemaRef input_schema)
@@ -68,14 +76,18 @@ RC ProjectNode::prepareSchema(SchemaRef input_schema)
   return RC::SUCCESS;
 }
 
-TupleRef ProjectNode::project_tuple(TupleRef tuple)
+RC ProjectNode::project_tuple(TupleRef original_tuple, TupleRef &out_tuple)
 {
   SchemaRef input_schema = left_child_->get_schema();
   std::vector<Value> project_values;
   for (size_t i = 0; i < output_schema_->get_column_count(); i++) {
     const auto &out_col = output_schema_->get_column(i);
-    size_t idx = input_schema->get_column_idx(out_col.get_name());
-    project_values.push_back(tuple->get_value(input_schema, idx));
+    size_t idx = 0;
+    if (input_schema->get_column_idx(out_col.get_name(), idx) != RC::SUCCESS) {
+      return RC::INTERNAL;
+    }
+    project_values.push_back(original_tuple->get_value(input_schema, idx));
   }
-  return std::make_shared<Tuple>(project_values, output_schema_);
+  out_tuple = std::make_shared<Tuple>(project_values, output_schema_);
+  return RC::SUCCESS;
 }

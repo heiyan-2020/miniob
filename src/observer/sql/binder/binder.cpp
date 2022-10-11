@@ -138,8 +138,8 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       if (rc != RC::SUCCESS) {
         return rc;
       }
-      out_expr = AbstractExpression::expression_factory(lhs, rhs, op);
-      return RC::SUCCESS;
+      rc = AbstractExpression::expression_factory(lhs, rhs, op, out_expr);
+      return rc;
     }
     default: {
       LOG_ERROR("Unsupported expression type: %d", expr->type);

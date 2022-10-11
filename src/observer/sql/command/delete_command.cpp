@@ -55,9 +55,10 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
   const TableMeta &table_meta = table->table_meta();
   const std::vector<FieldMeta> *field_metas = table_meta.field_metas();
 
+  TupleRef tuple;
   while (RC::SUCCESS == sp->next()) {
-    TupleRef tuple = sp->current_tuple();
-    if (nullptr == tuple) {
+    rc = sp->current_tuple(tuple);
+    if (rc != RC::SUCCESS) {
       LOG_WARN("failed to get current record: %s", strrc(rc));
       return rc;
     }
