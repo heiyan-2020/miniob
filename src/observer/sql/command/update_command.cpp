@@ -116,6 +116,8 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
 /**
  * serialize expr->val to value for further serialization
  * @param expr
+ * @param value
+ * @param field_meta
  * @return
  */
 RC UpdateCommand::data_2_value(const hsql::Expr *expr, Value &value, const FieldMeta &field_meta) {
