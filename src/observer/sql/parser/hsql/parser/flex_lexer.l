@@ -218,6 +218,7 @@ YEARS       TOKEN(YEARS)
 
 HELP        TOKEN(HELP)
 SYNC        TOKEN(SYNC)
+NULLABLE    TOKEN(NULLABLE)
 
 CHARACTER[ \t\n]+VARYING TOKEN(CHARACTER_VARYING)
 
@@ -231,8 +232,8 @@ CHARACTER[ \t\n]+VARYING TOKEN(CHARACTER_VARYING)
 
 [-+*/(){},.;<>=^%:?[\]|]    { return yytext[0]; }
 
-[0-9]+"."[0-9]* |
-"."[0-9]*  {
+-?[0-9]+"."[0-9]* |
+-?"."[0-9]*  {
   yylval->fval = atof(yytext);
   return SQL_FLOATVAL;
 }
@@ -247,7 +248,7 @@ CHARACTER[ \t\n]+VARYING TOKEN(CHARACTER_VARYING)
   return SQL_INTVAL;
 }
 
-[0-9]+ {
+-?[0-9]+ {
   errno = 0;
   yylval->ival = strtoll(yytext, nullptr, 0);
   if (errno) {

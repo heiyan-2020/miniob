@@ -249,14 +249,15 @@ extern int hsql_debug;
     SQL_SHARE = 416,               /* SHARE  */
     SQL_HELP = 417,                /* HELP  */
     SQL_SYNC = 418,                /* SYNC  */
-    SQL_EQUALS = 419,              /* EQUALS  */
-    SQL_NOTEQUALS = 420,           /* NOTEQUALS  */
-    SQL_LESS = 421,                /* LESS  */
-    SQL_GREATER = 422,             /* GREATER  */
-    SQL_LESSEQ = 423,              /* LESSEQ  */
-    SQL_GREATEREQ = 424,           /* GREATEREQ  */
-    SQL_NOTNULL = 425,             /* NOTNULL  */
-    SQL_UMINUS = 426               /* UMINUS  */
+    SQL_NULLABLE = 419,            /* NULLABLE  */
+    SQL_EQUALS = 420,              /* EQUALS  */
+    SQL_NOTEQUALS = 421,           /* NOTEQUALS  */
+    SQL_LESS = 422,                /* LESS  */
+    SQL_GREATER = 423,             /* GREATER  */
+    SQL_LESSEQ = 424,              /* LESSEQ  */
+    SQL_GREATEREQ = 425,           /* GREATEREQ  */
+    SQL_NOTNULL = 426,             /* NOTNULL  */
+    SQL_UMINUS = 427               /* UMINUS  */
   };
   typedef enum hsql_tokentype hsql_token_kind_t;
 #endif
@@ -317,7 +318,7 @@ union HSQL_STYPE
   std::vector<char*>* str_vec;
   std::unordered_set<hsql::ConstraintType>* column_constraint_set;
   std::vector<hsql::Expr*>* expr_vec;
-  std::vector<std::vector<hsql::Expr *>*> * list_vec;
+  std::vector<std::vector<hsql::Expr*>*>* list_vec;
   std::vector<hsql::OrderDescription*>* order_vec;
   std::vector<hsql::SQLStatement*>* stmt_vec;
   std::vector<hsql::TableElement*>* table_element_vec;
@@ -331,7 +332,7 @@ union HSQL_STYPE
   hsql::RowLockMode lock_mode_t;
   hsql::RowLockWaitPolicy lock_wait_policy_t;
 
-#line 335 "bison_parser.h"
+#line 336 "bison_parser.h"
 
 };
 typedef union HSQL_STYPE HSQL_STYPE;

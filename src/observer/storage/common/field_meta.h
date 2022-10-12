@@ -30,7 +30,7 @@ public:
   FieldMeta();
   ~FieldMeta() = default;
 
-  RC init(const char *name, TypeId attr_type, int attr_offset, int attr_len, bool visible);
+  RC init(const char *name, TypeId attr_type, int attr_offset, int attr_len, bool visible, bool nullable);
 
 public:
   std::string name() const;
@@ -52,5 +52,6 @@ protected:
   int attr_offset_;
   int attr_len_;
   bool visible_;
+  bool nullable_;
 };
 #endif  // __OBSERVER_STORAGE_COMMON_FIELD_META_H__
