@@ -27,8 +27,6 @@ public:
 
   AbstractExpressionRef traverse(ProcessorRef processor) override
   {
-    // leaf node
-    // TODO(zyx): Avoid creating second manager object for this.
     std::shared_ptr<AbstractExpression> sp = shared_from_this();
     processor->enter(sp);
     children_[0] = children_[0]->traverse(processor);

@@ -83,7 +83,8 @@ auto IntType::divide(const Value &left, const Value &right) const -> Value
   if (right.value_.int_ == 0) {
     return Value{};
   }
-  return Value{INT, left.value_.int_ / right.value_.int_};
+  // Return a floating number according to test case.
+  return Value{FLOAT, (float) left.value_.int_ / (float) right.value_.int_};
 }
 
 auto IntType::min(const Value &left, const Value &right) const -> Value

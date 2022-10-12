@@ -15,5 +15,8 @@ public:
 
   AbstractExpressionRef traverse(ProcessorRef processor) override;
 private:
+  auto perform_arithmetic(const Value &lhs, const Value &rhs) const -> Value;
+
+private:
   OperatorType ope_type_;
 };
