@@ -68,8 +68,8 @@ RC ProjectNode::prepareSchema(SchemaRef input_schema)
       }
       columns.insert(columns.end(), tmp.begin(), tmp.end());
     } else {
-      return RC::INTERNAL;
       LOG_WARN("select raw value not supported.");
+      return RC::INTERNAL;
     }
   }
   output_schema_ = std::make_shared<Schema>(columns);

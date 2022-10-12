@@ -11,7 +11,7 @@ Schema::Schema(const Table *table, const std::vector<FieldMeta> *table_schema)
   std::vector<Column> columns;
   for (const auto &field : *table_schema) {
     ColumnName col_name(table->name(), field.name());
-    columns.emplace_back(col_name, field.type(), field.len(), field.visible());
+    columns.emplace_back(col_name, field.type(), field.len(), field.visible(), field.nullable());
   }
 
   set_columns(columns);
@@ -19,7 +19,7 @@ Schema::Schema(const Table *table, const std::vector<FieldMeta> *table_schema)
 
 void Schema::set_columns(const std::vector<Column> &columns)
 {
-  size_t curr_offset = 0;
+  size_t curr_offset = 4;
   for (auto column : columns) {
     // set column offset
     column.column_offset_ = curr_offset;

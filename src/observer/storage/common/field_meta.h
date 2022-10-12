@@ -38,6 +38,7 @@ public:
   int offset() const;
   int len() const;
   bool visible() const;
+  bool nullable() const;
 
 public:
   void desc(std::ostream &os) const;

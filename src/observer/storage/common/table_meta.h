@@ -47,8 +47,8 @@ public:
   {
     return &fields_;
   }
-  int field_num() const;  // sys field included
-  int sys_field_num() const;
+  size_t field_num() const;  // sys field included
+  static size_t sys_field_num() ;
 
   const IndexMeta *index(const std::string &index_name) const;
   const IndexMeta *find_index_by_field(const std::string &field_name) const;

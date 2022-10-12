@@ -55,13 +55,13 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
   std::vector<std::vector<Value>> insert_values_list{};
   // check all values before insertion
   for (auto val_list : *stmt_->values) {
-    if (static_cast<int>(val_list->size()) + table_meta.sys_field_num() != table_meta.field_num()) {
+    if (val_list->size() + TableMeta::sys_field_num() != table_meta.field_num()) {
       LOG_WARN("Input values don't match the table's schema, table name %s", table_meta.name().c_str());
       return RC::SCHEMA_FIELD_MISSING;
     }
 
     std::vector<Value> insert_values{};
-    size_t curr_index = table_meta.sys_field_num();
+    size_t curr_index = TableMeta::sys_field_num();
     for (auto expr : *val_list) {
       const FieldMeta &field_meta = field_metas->at(curr_index);
       switch (expr->type) {
@@ -92,6 +92,13 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
             CHECK_FIELD_TYPE(CHAR);
             insert_values.emplace_back(CHAR, expr->name, field_meta.len());
           }
+          break;
+        }
+        case hsql::ExprType::kExprLiteralNull: {
+          if (!field_meta.nullable()) {
+            return RC::CONSTRAINT_NOTNULL;
+          }
+          insert_values.emplace_back(field_meta.type());
           break;
         }
         default: {

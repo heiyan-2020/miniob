@@ -74,17 +74,22 @@ void SelectCommand::print_header(std::ostream &os, SchemaRef schema)
 void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema)
 {
   // Transforming result set into strings.
-    std::string row;
-    bool first = true;
-    for (auto i = 0; i < schema->get_column_count(); i++) {
-      const auto &column = schema->get_column(i);
-      if (column.is_visible()) {
-        if (!first) {
-          row += " | ";
-        }
-        row += tuple.get_value(schema, i).to_string();
-        first = false;
+  std::string row;
+  bool first = true;
+  common::Bitmap null_field_bitmap{tuple.get_record().data(), 32};
+  for (auto i = 0; i < schema->get_column_count(); i++) {
+    const auto &column = schema->get_column(i);
+    if (column.is_visible()) {
+      if (!first) {
+        row += " | ";
       }
+      if (null_field_bitmap.get_bit(i)) {
+        row += "NULL";
+      } else {
+        row += tuple.get_value(schema, i).to_string();
+      }
+      first = false;
     }
-    os << row;
+  }
+  os << row;
 }

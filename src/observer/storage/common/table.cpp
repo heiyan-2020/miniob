@@ -271,11 +271,17 @@ RC Table::insert_record(Trx *trx, const std::vector<Value> &values)
   char *record_data = (char *)calloc(table_meta_.record_size(), sizeof(char));
   DEFER([&]() { free(record_data); });
 
-  // TODO(vgalaxy): assume only one trx field
-  size_t curr_offset{static_cast<size_t>(table_meta_.trx_field()->len())};
-  size_t curr_index{1};
-  for (const auto &value : values) {
-    value.serialize_to(record_data + curr_offset);
+  common::Bitmap null_field_bitmap{record_data, 32};
+
+  size_t curr_offset{static_cast<size_t>(table_meta_.trx_field()->offset() + table_meta_.trx_field()->len())};
+  size_t curr_index{TableMeta::sys_field_num()};
+  for (size_t i = 0; i < values.size(); ++i) {
+    const auto &value = values[i];
+    if (!value.is_null()) {
+      value.serialize_to(record_data + curr_offset);
+    } else {
+      null_field_bitmap.set_bit(i + curr_index);
+    }
     curr_offset += table_meta_.field(curr_index)->len();
     curr_index += 1;
   }
