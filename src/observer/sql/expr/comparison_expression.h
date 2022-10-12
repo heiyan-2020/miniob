@@ -4,7 +4,7 @@
 class ComparisonExpression : public AbstractExpression {
 public:
   ComparisonExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType comp_type)
-      : AbstractExpression({std::move(left), std::move(right)}, TypeId::BOOL), comp_type_{comp_type} {}
+      : AbstractExpression({std::move(left), std::move(right)}), comp_type_{comp_type} {}
 
   RC evaluate(EnvRef env, Value &out_value) const  override {
     Value lhs, rhs;

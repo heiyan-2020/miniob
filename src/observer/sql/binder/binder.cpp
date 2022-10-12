@@ -167,7 +167,8 @@ RC Binder::bind_operator(hsql::OperatorType opt, OperatorType &out)
       {hsql::OperatorType::kOpSlash, OperatorType::SLASH},
       {hsql::OperatorType::kOpAsterisk, OperatorType::MUL},
       {hsql::OperatorType::kOpPlus, OperatorType::PLUS},
-      {hsql::OperatorType::kOpMinus, OperatorType::SUB}
+      {hsql::OperatorType::kOpMinus, OperatorType::SUB},
+      {hsql::OperatorType::kOpUnaryMinus, OperatorType::NEG}
 
   };
   for (auto info : infos) {

@@ -57,16 +57,10 @@ auto FloatType::compare_greater_than_equals(const Value &left, const Value &righ
 auto FloatType::compare(const Value &left, const Value &right) const -> CmpRes
 {
   switch (right.get_type()) {
-    case TypeId::FLOAT: {
-      float cmp = left.value_.float_ - right.value_.float_;
-      if (cmp > epsilon) {
-        return CmpRes::GT;
-      }
-      if (cmp < -epsilon) {
-        return CmpRes::LT;
-      }
-      return CmpRes::EQ;
-    }
+    case TypeId::FLOAT:
+      return cmp_float_helper(left.value_.float_, right.value_.float_);
+    case TypeId::INT:
+      return cmp_float_helper(left.value_.float_, (float) right.value_.int_);
     default:
       return CmpRes::UNDEFINED;
   }
@@ -74,22 +68,47 @@ auto FloatType::compare(const Value &left, const Value &right) const -> CmpRes
 
 auto FloatType::add(const Value &left, const Value &right) const -> Value
 {
-  return Value{FLOAT, left.value_.float_ + right.value_.float_};
+  switch (right.get_type()) {
+    case TypeId::FLOAT:
+      return Value{TypeId::FLOAT, left.value_.float_ + right.value_.float_};
+    case TypeId::INT:
+      return Value{TypeId::FLOAT, left.value_.float_ + right.value_.int_};
+    default:
+      return Value{};
+  }
 }
 auto FloatType::subtract(const Value &left, const Value &right) const -> Value
 {
-  return Value{FLOAT, left.value_.float_ - right.value_.float_};
+  switch (right.get_type()) {
+    case TypeId::FLOAT:
+      return Value{TypeId::FLOAT, left.value_.float_ - right.value_.float_};
+    case TypeId::INT:
+      return Value{TypeId::FLOAT, left.value_.float_ - right.value_.int_};
+    default:
+      return Value{};
+  }
 }
 auto FloatType::multiply(const Value &left, const Value &right) const -> Value
 {
-  return Value{FLOAT, left.value_.float_ * right.value_.float_};
+  switch (right.get_type()) {
+    case TypeId::FLOAT:
+      return Value{TypeId::FLOAT, left.value_.float_ * right.value_.float_};
+    case TypeId::INT:
+      return Value{TypeId::FLOAT, left.value_.float_ * right.value_.int_};
+    default:
+      return Value{};
+  }
 }
 auto FloatType::divide(const Value &left, const Value &right) const -> Value
 {
-  if (right.value_.float_ == 0) {
-    return Value{};
+  switch (right.get_type()) {
+    case TypeId::FLOAT:
+      return FloatType::div_float_helper(left.value_.float_, right.value_.float_);
+    case TypeId::INT:
+      return FloatType::div_float_helper(left.value_.float_, right.value_.int_);
+    default:
+      return Value{};
   }
-  return Value{FLOAT, left.value_.float_ / right.value_.float_};
 }
 
 auto FloatType::min(const Value &left, const Value &right) const -> Value
@@ -129,4 +148,24 @@ auto FloatType::to_string(const Value &val) const -> std::string
   std::ostringstream oss;
   oss << val.value_.float_;
   return std::string{oss.str()};
+}
+
+auto FloatType::cmp_float_helper(const float lhs, const float rhs) -> CmpRes
+{
+  float cmp = lhs - rhs;
+  if (cmp > epsilon) {
+    return CmpRes::GT;
+  }
+  if (cmp < -epsilon) {
+    return CmpRes::LT;
+  }
+  return CmpRes::EQ;
+}
+
+auto FloatType::div_float_helper(const float lhs, const float rhs) -> Value
+{
+  if (rhs < epsilon && rhs > -epsilon) {
+    return Value{}; // divide zero -> undefined
+  }
+  return Value{FLOAT, lhs / rhs};
 }

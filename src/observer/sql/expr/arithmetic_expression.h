@@ -9,7 +9,7 @@ class ArithmeticExpression : public AbstractExpression {
 public:
 public:
   ArithmeticExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType type)
-      : AbstractExpression({std::move(left), std::move(right)}, TypeId::BOOL), ope_type_(type) {}
+      : AbstractExpression({std::move(left), std::move(right)}), ope_type_(type) {}
 
   RC evaluate(EnvRef env, Value &out_value) const override;
 
