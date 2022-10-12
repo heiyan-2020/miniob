@@ -84,14 +84,14 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       memcpy(data, old_record.data(), record_size);
 
       const hsql::Expr *expr = updateClause->value;
-      void *new_data = nullptr;
-      rc = data_2_byte(expr, new_data);
+      Value new_value;
+      rc = data_2_value(expr, new_value, field_meta);
       if (rc != RC::SUCCESS) {
         LOG_WARN("failed to convert new record to byte code due to type constraint: %s", strrc(rc));
         return rc;
       }
 
-      memcpy(data + field_meta.offset(), new_data, field_meta.len());
+      new_value.serialize_to(data + field_meta.offset());
       Record new_record;
       new_record.set_rid(old_record.rid());
       new_record.set_data(data);
@@ -114,23 +114,20 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
 }
 
 /**
- * serialize expr->val to byte code
+ * serialize expr->val to value for further serialization
  * @param expr
  * @return
  */
-RC UpdateCommand::data_2_byte(const hsql::Expr *expr, void* &new_data) {
+RC UpdateCommand::data_2_value(const hsql::Expr *expr, Value &value, const FieldMeta &field_meta) {
   RC rc = RC::SUCCESS;
-  // TODO(pjz): support text.
+
   switch (expr->type) {
     case hsql::kExprLiteralInt: {
-      new_data = malloc(sizeof(expr->ival));
-      memcpy(new_data, &expr->ival, sizeof(expr->ival));
+      value = Value(INT, static_cast<int32_t>(expr->ival));
       break;
     }
     case hsql::kExprLiteralFloat: {
-      auto f = (float)expr->fval;
-      new_data = malloc(sizeof(f));
-      memcpy(new_data, &f, sizeof(f));
+      value = Value(FLOAT, static_cast<float>(expr->fval));
       break;
     }
     case hsql::kExprLiteralString: {
@@ -138,9 +135,9 @@ RC UpdateCommand::data_2_byte(const hsql::Expr *expr, void* &new_data) {
       void *dst = calloc(1, sizeof(int32_t[3]));
       if (Date::parse_date(dst, expr->name) != RC::SUCCESS) {
         free(dst);
-        new_data = strdup(expr->name);
+        value = Value(CHAR, expr->name, field_meta.len());
       } else {
-        new_data = dst;
+        value = Value(DATE, static_cast<const int32_t *>(dst));
       }
       break;
     }
@@ -175,3 +172,4 @@ RC UpdateCommand::check_schema(const FieldMeta& field_meta, const hsql::UpdateCl
   rc = RC::SCHEMA_FIELD_TYPE_MISMATCH;
   return rc;
 }
+
