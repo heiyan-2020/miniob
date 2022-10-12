@@ -114,7 +114,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
 }
 
 /**
- * serialize expr->val to value for further serialization
+ * expr->val to Value for further serialization
  * @param expr
  * @param value
  * @param field_meta
