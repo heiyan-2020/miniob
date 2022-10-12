@@ -5,7 +5,7 @@
 #include "util/date.h"
 #include "binder.h"
 
-RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
+RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
   if (table != nullptr) {
     switch (table->type) {
@@ -32,12 +32,12 @@ RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<Plan
   return RC::SUCCESS;
 }
 
-RC Planner::handle_where_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
+RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan)
 {
-  hsql::Expr *predicate = sel_stmt->whereClause;
   RC rc = RC::SUCCESS;
   // TODO(zyx): find aggregates in expr.
 
+  // update's where clause only have AND case.
   if (nullptr != predicate) {
     rc = add_predicate_to_plan(plan, predicate);
     if (rc != RC::SUCCESS) {
@@ -45,8 +45,7 @@ RC Planner::handle_where_clause(const hsql::SelectStatement *sel_stmt, std::shar
       return RC::GENERIC_ERROR;
     }
   }
-
-  return RC::SUCCESS;
+  return rc;
 }
 
 RC Planner::handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
@@ -82,17 +81,18 @@ RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *p
   // TODO(zyx): Add filter node..
 }
 
-RC Planner::make_plan(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
+RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
   RC rc;
 
-  rc = handle_from_clause(sel_stmt->fromTable, plan);
+  // here represents 'handle_from_clause()'
+  rc = handle_table_name_clause(sel_stmt->fromTable, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan 'FROM' statement");
     return rc;
   }
 
-  rc = handle_where_clause(sel_stmt, plan);
+  rc = handle_where_clause(sel_stmt->whereClause, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan 'WHERE' statement");
     return rc;
@@ -101,6 +101,56 @@ RC Planner::make_plan(const hsql::SelectStatement *sel_stmt, std::shared_ptr<Pla
   rc = handle_select_clause(sel_stmt, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan 'SELECT' statement");
+    return rc;
+  }
+
+  return rc;
+}
+
+RC Planner::make_plan_upd(const hsql::UpdateStatement *upd_stmt, std::shared_ptr<PlanNode> &plan)
+{
+  RC rc;
+
+  // tableScanNode
+  rc = handle_table_name_clause(upd_stmt->table, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan 'FROM' statement");
+    return rc;
+  }
+
+  // predNode
+  rc = handle_where_clause(upd_stmt->where, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan 'WHERE' statement");
+    return rc;
+  }
+
+  return rc;
+}
+
+RC Planner::make_plan_del(const hsql::DeleteStatement *del_stmt, std::shared_ptr<PlanNode> &plan)
+{
+  RC rc;
+
+  // tableScanNode
+  const char *table_name = del_stmt->tableName;
+  if (nullptr == table_name) {
+    rc = RC::INVALID_ARGUMENT;
+    LOG_WARN("failed to plan 'FROM' statement");
+    return rc;
+  }
+  Table *tp = db_->find_table(table_name);
+  if (!tp) {
+    rc = RC::SCHEMA_TABLE_NOT_EXIST;
+    LOG_WARN("failed to plan 'FROM' statement");
+    return rc;
+  }
+  plan = std::make_shared<TableScanNode>(tp, nullptr);
+
+  // predNode
+  rc = handle_where_clause(del_stmt->expr, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan 'WHERE' statement");
     return rc;
   }
 

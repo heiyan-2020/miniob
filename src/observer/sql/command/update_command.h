@@ -2,6 +2,8 @@
 
 #include "command.h"
 #include "sql/parser/hsql/sql/UpdateStatement.h"
+#include "storage/common/field_meta.h"
+#include "type/value.h"
 
 class Session;
 class Table;
@@ -15,6 +17,9 @@ public:
 
   RC do_update(const SQLStageEvent *sql_event);
 
+  RC data_2_value(const hsql::Expr *expr, Value &value, const FieldMeta &fieldMeta);
+
+  RC check_schema(const FieldMeta& field_meta, const hsql::UpdateClause * updateClause);
 private:
   const hsql::UpdateStatement *stmt_;
 };

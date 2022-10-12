@@ -21,7 +21,7 @@ RC TransactionCommand::execute(const SQLStageEvent *sql_event)
 
 RC TransactionCommand::do_begin(const SQLStageEvent *sql_event)
 {
-  sql_event->session_event()->set_response("SUCCESS");
+  sql_event->session_event()->set_response("SUCCESS\n");
   return RC::SUCCESS;
 }
 
