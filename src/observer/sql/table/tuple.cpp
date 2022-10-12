@@ -6,7 +6,7 @@ Tuple::Tuple(std::vector<Value> values, SchemaRef schema)
   assert(values.size() == schema->get_column_count());
 
   // 1. Calculate the size of the tuple.
-  uint32_t tuple_size = schema->get_length() + 4;
+  uint32_t tuple_size = schema->get_length();
 
   // 2. Allocate memory.
   size_ = tuple_size;
