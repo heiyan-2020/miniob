@@ -135,7 +135,6 @@ protected:
   // for CHAR type
   size_t len_{};
 
-  // TODO(vgalaxy): support null field
   bool is_null_{};
 };
 

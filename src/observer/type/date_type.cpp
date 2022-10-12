@@ -3,6 +3,7 @@
 
 auto DateType::compare_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -11,6 +12,7 @@ auto DateType::compare_equals(const Value &left, const Value &right) const -> Va
 }
 auto DateType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -19,6 +21,7 @@ auto DateType::compare_not_equals(const Value &left, const Value &right) const -
 }
 auto DateType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -27,6 +30,7 @@ auto DateType::compare_less_than(const Value &left, const Value &right) const ->
 }
 auto DateType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -35,6 +39,7 @@ auto DateType::compare_less_than_equals(const Value &left, const Value &right) c
 }
 auto DateType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -43,6 +48,7 @@ auto DateType::compare_greater_than(const Value &left, const Value &right) const
 }
 auto DateType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};

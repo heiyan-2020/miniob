@@ -165,7 +165,7 @@ auto FloatType::cmp_float_helper(const float lhs, const float rhs) -> CmpRes
 auto FloatType::div_float_helper(const float lhs, const float rhs) -> Value
 {
   if (rhs < epsilon && rhs > -epsilon) {
-    return Value{}; // divide zero -> undefined
+    return Value{FLOAT}; // divide zero -> null
   }
   return Value{FLOAT, lhs / rhs};
 }
