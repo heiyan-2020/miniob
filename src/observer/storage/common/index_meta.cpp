@@ -26,7 +26,7 @@ const static Json::StaticString FIELD_INDEX_NAME("index_name");
 const static Json::StaticString FIELD_FIELDS_NAME("fields_name");
 const static Json::StaticString FIELD_IS_UNIQUE("is_unique");
 
-RC IndexMeta::init(const char *name, std::vector<std::string> fields, int is_unique)
+RC IndexMeta::init(const char *name, std::vector<std::string> fields, bool is_unique)
 {
   if (common::is_blank(name)) {
     LOG_ERROR("Failed to init index, name is empty.");
@@ -81,23 +81,14 @@ RC IndexMeta::from_json(const TableMeta &table, const Json::Value &json_value, I
     fields.emplace_back(field_value.asCString());
   }
 
-  if (!is_unique_value.isInt()) {
-    LOG_ERROR("Field name of index [%s] is not a integer. json value=%s",
-        name_value.asCString(),
-        is_unique_value.toStyledString().c_str());
-    return RC::GENERIC_ERROR;
-  }
-
-  int is_unique = is_unique_value.asInt();
-  if (is_unique != 0 && is_unique != 1) {
-    // is_unique_value is not 0 or 1
+  if (!is_unique_value.isBool()) {
     LOG_ERROR("Field name of index [%s] is not a boolean. json value=%s",
         name_value.asCString(),
         is_unique_value.toStyledString().c_str());
     return RC::GENERIC_ERROR;
   }
 
-  return index.init(name_value.asCString(), fields, is_unique);
+  return index.init(name_value.asCString(), fields, is_unique_value.asBool());
 }
 
 const std::string &IndexMeta::name() const

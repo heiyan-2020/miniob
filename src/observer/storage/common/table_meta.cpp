@@ -43,7 +43,7 @@ RC TableMeta::init_sys_fields()
 {
   sys_fields_.reserve(1);
   FieldMeta field_meta;
-  RC rc = field_meta.init(Trx::trx_field_name(), Trx::trx_field_type(), 0, Trx::trx_field_len(), false);
+  RC rc = field_meta.init(Trx::trx_field_name(), Trx::trx_field_type(), 0, Trx::trx_field_len(), false, false);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to init trx field. rc = %d:%s", rc, strrc(rc));
     return rc;
@@ -81,11 +81,7 @@ RC TableMeta::init(const char *name, const Schema& schema)
   for (int i = 0; i < cols.size(); i++) {
     const Column &col = cols[i];
     rc = fields_[i + sys_fields_.size()].init(
-        col.name_.column_name_.c_str(),
-        col.column_type_,
-        field_offset,
-        col.fixed_length_,
-        true);
+        col.name_.column_name_.c_str(), col.column_type_, field_offset, col.fixed_length_, true, col.nullable_);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, col.name_.column_name_.c_str());
       return rc;

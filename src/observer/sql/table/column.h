@@ -86,8 +86,8 @@ class Column {
   friend class TableMeta;
 
 public:
-  Column(const ColumnName &column_name, TypeId type, size_t length, bool visible=true)
-      : visible_(visible), name_(column_name), column_type_(type), fixed_length_(length)
+  Column(const ColumnName &column_name, TypeId type, size_t length, bool visible = true, bool nullable = false)
+      : name_(column_name), column_type_(type), fixed_length_(length), visible_(visible), nullable_(nullable)
   {}
 
   size_t get_len() const
@@ -120,12 +120,18 @@ public:
     return visible_;
   }
 
+  bool is_nullable() const
+  {
+    return nullable_;
+  }
+
 private:
-  bool visible_;
   ColumnName name_;
   TypeId column_type_;
   size_t fixed_length_;
-  size_t column_offset_{0};
+  size_t column_offset_{};
+  bool visible_{};
+  bool nullable_{};
 };
 
 using ColumnRef = std::shared_ptr<Column>;

@@ -27,37 +27,43 @@ RC CreateCommand::do_create_table(const SQLStageEvent *sql_event)
     ColumnName column_name{};
     TypeId type{};
     size_t length{};
+    bool nullable{};
     const auto &col_type = col->type;
     switch (col_type.data_type) {
       case hsql::DataType::CHAR:
         type = TypeId::CHAR;
         length = col_type.length;
         column_name = ColumnName{col->name};
+        nullable = col->nullable;
         break;
       case hsql::DataType::DATE:
         type = TypeId::DATE;
         length = Type::get_type_size(type);
         column_name = ColumnName{col->name};
+        nullable = col->nullable;
         break;
       case hsql::DataType::FLOAT:
         type = TypeId::FLOAT;
         length = Type::get_type_size(type);
         column_name = ColumnName{col->name};
+        nullable = col->nullable;
         break;
       case hsql::DataType::INT:
         type = TypeId::INT;
         length = Type::get_type_size(type);
         column_name = ColumnName{col->name};
+        nullable = col->nullable;
         break;
       case hsql::DataType::TEXT:
         type = TypeId::CHAR;
         length = 4096;
         column_name = ColumnName{col->name};
+        nullable = col->nullable;
         break;
       default:
         return RC::UNIMPLENMENT;
     }
-    cols.emplace_back(column_name, type, length);
+    cols.emplace_back(column_name, type, length, false, nullable);
   }
   SessionEvent *session_event = sql_event->session_event();
   Db *db = session_event->session()->get_current_db();
