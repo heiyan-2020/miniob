@@ -1,19 +1,23 @@
 #include "tuple.h"
+#include "common/lang/bitmap.h"
 #include <string>
 
-Tuple::Tuple(std::vector<Value> values, SchemaRef schema)
+Tuple::Tuple(std::vector<Value> values, SchemaRef schema, const char *null_field_bitmap)
 {
   assert(values.size() == schema->get_column_count());
 
-  // 1. Calculate the size of the tuple.
+  // Calculate the size of the tuple.
   uint32_t tuple_size = schema->get_length();
 
-  // 2. Allocate memory.
+  // Allocate memory.
   size_ = tuple_size;
   data_ = new char[size_];
   memset(data_, 0, size_);
 
-  // 3. Serialize each attribute based on the input value.
+  // Copy null field bitmap.
+  memcpy(data_, null_field_bitmap, 4);
+
+  // Serialize each attribute based on the input value.
   uint32_t column_count = schema->get_column_count();
   for (uint32_t i = 0; i < column_count; i++) {
     const auto &col = schema->get_column(i);

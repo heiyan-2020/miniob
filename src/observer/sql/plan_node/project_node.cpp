@@ -80,14 +80,28 @@ RC ProjectNode::project_tuple(TupleRef original_tuple, TupleRef &out_tuple)
 {
   SchemaRef input_schema = left_child_->get_schema();
   std::vector<Value> project_values;
+
+  common::Bitmap input_null_field_bitmap{original_tuple->get_record().data(), 32};
+  char *tmp = (char *)calloc(4, sizeof(char));
+  common::Bitmap output_null_field_bitmap{tmp, 32};
+
   for (size_t i = 0; i < output_schema_->get_column_count(); i++) {
     const auto &out_col = output_schema_->get_column(i);
     size_t idx = 0;
     if (input_schema->get_column_idx(out_col.get_name(), idx) != RC::SUCCESS) {
       return RC::INTERNAL;
     }
-    project_values.push_back(original_tuple->get_value(input_schema, idx));
+    if (input_null_field_bitmap.get_bit(idx)) {
+      // null field
+      project_values.emplace_back(out_col.get_type());
+      output_null_field_bitmap.set_bit(i);
+    } else {
+      // non-null field
+      project_values.push_back(original_tuple->get_value(input_schema, idx));
+    }
   }
-  out_tuple = std::make_shared<Tuple>(project_values, output_schema_);
+
+  out_tuple = std::make_shared<Tuple>(project_values, output_schema_, tmp);
+  free(tmp);
   return RC::SUCCESS;
 }

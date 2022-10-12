@@ -8,6 +8,7 @@
 #include "type/value.h"
 #include "storage/record/record.h"
 #include "sql/table/schema.h"
+#include "common/lang/bitmap.h"
 
 class Tuple;
 using TupleRef = std::shared_ptr<Tuple>;
@@ -20,7 +21,7 @@ public:
   Tuple() = default;
 
   // constructor for creating a new tuple based on input value
-  Tuple(std::vector<Value> values, SchemaRef schema);
+  Tuple(std::vector<Value> values, SchemaRef schema, const char *null_field_bitmap);
 
   // constructor for table heap tuple
   explicit Tuple(Record *record);

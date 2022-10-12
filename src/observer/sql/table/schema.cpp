@@ -19,6 +19,7 @@ Schema::Schema(const Table *table, const std::vector<FieldMeta> *table_schema)
 
 void Schema::set_columns(const std::vector<Column> &columns)
 {
+  // start at offset 4, for null field bitmap
   size_t curr_offset = 4;
   for (auto column : columns) {
     // set column offset

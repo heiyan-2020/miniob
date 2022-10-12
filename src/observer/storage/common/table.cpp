@@ -280,7 +280,7 @@ RC Table::insert_record(Trx *trx, const std::vector<Value> &values)
     if (!value.is_null()) {
       value.serialize_to(record_data + curr_offset);
     } else {
-      null_field_bitmap.set_bit(i + curr_index);
+      null_field_bitmap.set_bit(i + TableMeta::sys_field_num());
     }
     curr_offset += table_meta_.field(curr_index)->len();
     curr_index += 1;
