@@ -39,13 +39,23 @@ struct ColumnDefinition : TableElement {
   // notice conflicts with PRIMARY KEY table constraints.
   bool trySetNullableExplicit()
   {
-    if (column_constraints->count(ConstraintType::NotNull) || column_constraints->count(ConstraintType::PrimaryKey)) {
-      if (column_constraints->count(ConstraintType::Null)) {
+//    if (column_constraints->count(ConstraintType::NotNull) || column_constraints->count(ConstraintType::PrimaryKey)) {
+//      if (column_constraints->count(ConstraintType::Null)) {
+//        return false;
+//      }
+//      nullable = false;
+//    }
+
+    // in miniob, columns are not nullable by default
+    if (column_constraints->count(ConstraintType::Null)) {
+      if (column_constraints->count(ConstraintType::NotNull) || column_constraints->count(ConstraintType::PrimaryKey)) {
         return false;
       }
-      nullable = false;
+      nullable = true;
+      return true;
     }
 
+    nullable = false;
     return true;
   }
 
