@@ -1,6 +1,8 @@
 #include "abstract_expression.h"
 #include "bool_expression.h"
 #include "comparison_expression.h"
+#include "arithmetic_expression.h"
+#include "negate_expression.h"
 #include "symbol_finder.h"
 
 std::vector<ColumnName> AbstractExpression::getAllSymbols()
@@ -26,6 +28,17 @@ RC AbstractExpression::expression_factory(AbstractExpressionRef lhs, AbstractExp
     case OperatorType::GreaterThan:
     case OperatorType::Equal: {
       out = std::make_shared<ComparisonExpression>(std::move(lhs), std::move(rhs), ope_type);
+      return RC::SUCCESS;
+    }
+    case OperatorType::SLASH:
+    case OperatorType::SUB:
+    case OperatorType::PLUS:
+    case OperatorType::MUL: {
+      out = std::make_shared<ArithmeticExpression>(std::move(lhs), std::move(rhs), ope_type);
+      return RC::SUCCESS;
+    }
+    case OperatorType::NEG: {
+      out = std::make_shared<NegateExpression>(std::move(lhs));
       return RC::SUCCESS;
     }
     default:

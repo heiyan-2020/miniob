@@ -163,7 +163,13 @@ RC Binder::bind_operator(hsql::OperatorType opt, OperatorType &out)
       {hsql::OperatorType::kOpLessEq, OperatorType::LessThanOrEqual},
       {hsql::OperatorType::kOpAnd, OperatorType::AND},
       {hsql::OperatorType::kOpOr, OperatorType::OR},
-      {hsql::OperatorType::kOpNot, OperatorType::NOT}
+      {hsql::OperatorType::kOpNot, OperatorType::NOT},
+      {hsql::OperatorType::kOpSlash, OperatorType::SLASH},
+      {hsql::OperatorType::kOpAsterisk, OperatorType::MUL},
+      {hsql::OperatorType::kOpPlus, OperatorType::PLUS},
+      {hsql::OperatorType::kOpMinus, OperatorType::SUB},
+      {hsql::OperatorType::kOpUnaryMinus, OperatorType::NEG}
+
   };
   for (auto info : infos) {
     if (info.opt == opt) {
@@ -171,6 +177,6 @@ RC Binder::bind_operator(hsql::OperatorType opt, OperatorType &out)
       return RC::SUCCESS;
     }
   }
-  LOG_WARN("Unsupported operator type: %d", opt);
+  LOG_PANIC("Unsupported operator type: %d", opt);
   return RC::UNIMPLENMENT;
 }

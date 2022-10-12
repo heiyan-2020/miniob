@@ -4,7 +4,7 @@
 class ComparisonExpression : public AbstractExpression {
 public:
   ComparisonExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType comp_type)
-      : AbstractExpression({std::move(left), std::move(right)}, TypeId::BOOL), comp_type_{comp_type} {}
+      : AbstractExpression({std::move(left), std::move(right)}), comp_type_{comp_type} {}
 
   RC evaluate(EnvRef env, Value &out_value) const  override {
     Value lhs, rhs;
@@ -27,8 +27,6 @@ public:
 
   AbstractExpressionRef traverse(ProcessorRef processor) override
   {
-    // leaf node
-    // TODO(zyx): Avoid creating second manager object for this.
     std::shared_ptr<AbstractExpression> sp = shared_from_this();
     processor->enter(sp);
     children_[0] = children_[0]->traverse(processor);

@@ -1,4 +1,5 @@
 #include "int_type.h"
+#include "float_type.h"
 #include "value.h"
 
 auto IntType::compare_equals(const Value &left, const Value &right) const -> Value
@@ -50,6 +51,17 @@ auto IntType::compare_greater_than_equals(const Value &left, const Value &right)
   return bool_to_value(res != CmpRes::LT);
 }
 
+inline CmpRes compare_two_int(int lhs, int rhs)
+{
+  if (lhs < rhs) {
+    return CmpRes::LT;
+  } else if (lhs > rhs) {
+    return CmpRes::GT;
+  } else {
+    return CmpRes::EQ;
+  }
+}
+
 auto IntType::compare(const Value &left, const Value &right) const -> CmpRes
 {
   switch (right.get_type()) {
@@ -61,6 +73,8 @@ auto IntType::compare(const Value &left, const Value &right) const -> CmpRes
       } else {
         return CmpRes::EQ;
       }
+    case TypeId::FLOAT:
+      return FloatType::cmp_float_helper((float) left.value_.int_, right.value_.float_);
     default:
       return CmpRes::UNDEFINED;
   }
@@ -68,22 +82,47 @@ auto IntType::compare(const Value &left, const Value &right) const -> CmpRes
 
 auto IntType::add(const Value &left, const Value &right) const -> Value
 {
-  return Value{INT, left.value_.int_ + right.value_.int_};
+  switch (right.get_type()) {
+    case TypeId::FLOAT:
+      return Value{TypeId::FLOAT, left.value_.int_ + right.value_.float_};
+    case TypeId::INT:
+      return Value{TypeId::INT, left.value_.int_ + right.value_.int_};
+    default:
+      return Value{};
+  }
 }
 auto IntType::subtract(const Value &left, const Value &right) const -> Value
 {
-  return Value{INT, left.value_.int_ - right.value_.int_};
+  switch (right.get_type()) {
+    case TypeId::FLOAT:
+      return Value{TypeId::FLOAT, left.value_.int_ - right.value_.float_};
+    case TypeId::INT:
+      return Value{TypeId::INT, left.value_.int_ - right.value_.int_};
+    default:
+      return Value{};
+  }
 }
 auto IntType::multiply(const Value &left, const Value &right) const -> Value
 {
-  return Value{INT, left.value_.int_ * right.value_.int_};
+  switch (right.get_type()) {
+    case TypeId::FLOAT:
+      return Value{TypeId::FLOAT, left.value_.int_ * right.value_.float_};
+    case TypeId::INT:
+      return Value{TypeId::INT, left.value_.int_ * right.value_.int_};
+    default:
+      return Value{};
+  }
 }
 auto IntType::divide(const Value &left, const Value &right) const -> Value
 {
-  if (right.value_.int_ == 0) {
-    return Value{};
+  switch (right.get_type()) {
+    case TypeId::INT:
+      return FloatType::div_float_helper(left.value_.int_, right.value_.int_);
+    case TypeId::FLOAT:
+      return FloatType::div_float_helper(left.value_.int_, right.value_.float_);
+    default:
+      return Value{};
   }
-  return Value{INT, left.value_.int_ / right.value_.int_};
 }
 
 auto IntType::min(const Value &left, const Value &right) const -> Value

@@ -5,15 +5,15 @@
 #include "sql/parser/hsql/sql/Expr.h"
 #include "expression_processor.h"
 
-enum class OperatorType { Equal, NotEqual, LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, NOT, AND, OR};
+enum class OperatorType { Equal, NotEqual, LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, NOT, AND, OR, PLUS, SUB, MUL, SLASH, NEG};
 
 class AbstractExpression;
 using AbstractExpressionRef = std::shared_ptr<AbstractExpression>;
 
 class AbstractExpression : public std::enable_shared_from_this<AbstractExpression>{
 public:
-  AbstractExpression(std::vector<AbstractExpressionRef> &&children, TypeId ret_type)
-      : children_{std::move(children)}, ret_type_{ret_type} {}
+  AbstractExpression(std::vector<AbstractExpressionRef> &&children)
+      : children_{std::move(children)} {}
 
   // dummy expression.
   AbstractExpression() = default;
@@ -24,8 +24,6 @@ public:
 
   AbstractExpressionRef get_child_at(uint32_t child_idx) const { return children_[child_idx]; }
 
-  virtual TypeId get_return_type() const { return ret_type_; }
-
   virtual AbstractExpressionRef traverse(ProcessorRef processor) = 0;
 
   std::vector<ColumnName> getAllSymbols();
@@ -35,5 +33,4 @@ public:
 
 protected:
   std::vector<AbstractExpressionRef> children_;
-  TypeId ret_type_;
 };
