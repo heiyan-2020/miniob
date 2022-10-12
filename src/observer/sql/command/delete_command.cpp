@@ -42,9 +42,8 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
   }
   sp->prepare();
 
-  bool is_record_find = false;
-  while (RC::SUCCESS == sp->next()) {
-    if (!is_record_find) is_record_find = true;
+  rc = sp->next();
+  while (RC::SUCCESS == rc) {
     TupleRef tuple;
     rc = sp->current_tuple(tuple);
     if (rc != RC::SUCCESS) {
@@ -59,9 +58,13 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
       LOG_WARN("failed to delete record: %s", strrc(rc));
       return rc;
     }
+
+    rc = sp->next();
   }
 
-  if (!is_record_find) return RC::RECORD_RECORD_NOT_EXIST;
-
+  if (rc != RC::RECORD_EOF) {
+    LOG_WARN("failed to delete record: %s", strrc(rc));
+    return rc;
+  }
   return RC::SUCCESS;
 }
