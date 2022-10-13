@@ -11,7 +11,10 @@ RC ProjectNode::prepare()
 {
   RC rc;
   assert(left_child_);
-  left_child_->prepare();
+  rc = left_child_->prepare();
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
   input_schema_ = left_child_->get_schema();
   rc = prepare_schema(input_schema_);
   return rc;
@@ -19,11 +22,10 @@ RC ProjectNode::prepare()
 
 RC ProjectNode::next()
 {
+  assert(left_child_);
   if (left_child_) {
     return left_child_->next();
   }
-  LOG_WARN("Project node should have a child.");
-  return RC::GENERIC_ERROR;
 }
 
 RC ProjectNode::current_tuple(TupleRef &tuple)

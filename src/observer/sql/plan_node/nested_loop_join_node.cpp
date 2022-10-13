@@ -3,12 +3,16 @@
 RC NestedLoopJoinNode::prepare()
 {
   RC rc;
+  assert(left_child_);
+  assert(right_child_);
   rc = left_child_->prepare();
   if (rc != RC::SUCCESS) {
     return rc;
   }
-  right_child_->prepare();
-
+  rc = right_child_->prepare();
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
   output_schema_ = std::make_shared<Schema>(left_child_->get_schema(), right_child_->get_schema());
   return RC::SUCCESS;
 }

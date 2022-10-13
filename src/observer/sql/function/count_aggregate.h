@@ -8,7 +8,7 @@
 class CountAggregate : public AggregateFunction {
 public:
   CountAggregate() = default;
-  ~CountAggregate() = default;
+  ~CountAggregate() override = default;
 
   auto add_value(Value value) -> void override
   {
@@ -23,9 +23,9 @@ public:
     count_ = 0;
   }
 
-  auto get_return_type(std::vector<AbstractExpressionRef> args, SchemaRef schema) -> TypeId override
+  auto get_return_type(std::vector<AbstractExpressionRef> args, SchemaRef schema) -> Value override
   {
-    return TypeId::INT;
+    return Value{INT};
   }
 
 private:
