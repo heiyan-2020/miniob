@@ -23,7 +23,7 @@ public:
   RC current_tuple(TupleRef &tuple) override;
 
 private:
-//  RC prepareSchema(SchemaRef input_schema);
+//  RC prepare_schema(SchemaRef input_schema);
 
   PlanNodeRef left_child_;
   PlanNodeRef right_child_;

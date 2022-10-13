@@ -2,10 +2,12 @@
 
 #include <memory>
 #include <map>
+#include <cassert>
 
 #include "expression_processor.h"
-#include "sql/function/abstract_function.h"
 #include "function_call.h"
+#include "../function/aggregate_function.h"
+#include "../function/count_aggregate.h"
 
 class AggregationProcessor : public ExpressionProcessor {
   friend class AbstractExpression;
@@ -15,8 +17,8 @@ public:
     if (std::dynamic_pointer_cast<FunctionCall>(node)) {
       std::shared_ptr<FunctionCall> expr = std::dynamic_pointer_cast<FunctionCall>(node);
       std::string id = expr->to_string();
-      if (aggregates.find(id) == aggregates.end()) {
-        aggregates.emplace(id, expr->get_fn_name())
+      if (aggregates_.find(id) == aggregates_.end()) {
+        aggregates_.emplace(id, expr);
       }
     }
   }
@@ -26,11 +28,11 @@ public:
     return node;
   }
 
-  auto get_aggregates() -> std::map<std::string, AbstractFunctionRef>
+  auto get_aggregates() -> std::map<std::string, AbstractExpressionRef>
   {
-    return std::move(aggregates);
+    return aggregates_;
   }
 
 private:
-  std::map<std::string, AbstractFunctionRef> aggregates{};
+  std::map<std::string, AbstractExpressionRef> aggregates_{};
 };

@@ -8,7 +8,7 @@ public:
   GroupAggregateNode(
       PlanNodeRef child,
       std::vector<AbstractExpressionRef> group_by_exprs,
-      std::map<std::string, AbstractFunctionRef> aggregates);
+      std::map<std::string, AbstractExpressionRef> aggregates);
 
   ~GroupAggregateNode() override = default;
 
@@ -21,4 +21,11 @@ public:
   RC current_tuple(TupleRef &tuple) override;
 
 private:
+  RC prepare_schema(SchemaRef input_schema);
+
+private:
+  PlanNodeRef child_;
+  std::vector<AbstractExpressionRef> group_by_exprs_;
+  std::map<std::string, AbstractExpressionRef> aggregates_;
+  SchemaRef input_schema_;
 };

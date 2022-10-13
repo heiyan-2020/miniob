@@ -67,6 +67,28 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
         return RC::SCHEMA_FIELD_NOT_EXIST;
       }
     }
+    where_predicate_ = expr;
+  }
+
+  // Bind group by expression if there is.
+  if (sel_stmt->groupBy) {
+    for (auto col : *sel_stmt->groupBy->columns) {
+      AbstractExpressionRef bound_expr;
+      rc = bind_expression(col, bound_expr);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      std::vector<ColumnName> symbols = bound_expr->get_all_symbols();
+      for (auto const &name : symbols) {
+        std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
+        if (found.size() != 1) {
+          LOG_PANIC("group by expression has wrong column reference");
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+        }
+      }
+      group_by_exprs_.push_back(bound_expr);
+    }
+    // TODO(vgalaxy): bind having expr
   }
 
   return RC::SUCCESS;
@@ -137,7 +159,7 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       if (expr->hasTable()) {
         col_name.set_table_name(expr->table);
       }
-      out_expr = std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
+      out_expr = std::make_shared<ColumnValueExpression>(col_name);
       return RC::SUCCESS;
     }
     case hsql::kExprColumnRef: {
@@ -165,12 +187,12 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
     case hsql::kExprFunctionRef: {
       std::vector<AbstractExpressionRef> args{};
       for (auto arg : *expr->exprList) {
-        AbstractExpressionRef tmp{};
-        RC rc = bind_expression(arg, tmp);
+        AbstractExpressionRef bound_expr{};
+        RC rc = bind_expression(arg, bound_expr);
         if (rc != RC::SUCCESS) {
           return rc;
         }
-        args.push_back(tmp);
+        args.push_back(bound_expr);
       }
       out_expr = std::make_shared<FunctionCall>(expr->name, args);
       return RC::SUCCESS;

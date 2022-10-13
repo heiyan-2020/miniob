@@ -9,5 +9,8 @@
 
 class ScalarFunction : public AbstractFunction {
 public:
+  ScalarFunction() = default;
+  ~ScalarFunction() = default;
+
   virtual auto get_return_type(std::vector<AbstractExpressionRef> args, SchemaRef schema) -> TypeId = 0;
 };

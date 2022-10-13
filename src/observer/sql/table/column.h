@@ -50,8 +50,12 @@ public:
 
   std::string to_string(bool table_name_ignorable = false) const
   {
-    if (table_name_ignorable || table_name_.empty())
+    if (table_name_.empty() && column_name_.empty()) {
+      return "*";
+    }
+    if (table_name_ignorable || table_name_.empty()) {
       return column_name_;
+    }
     return table_name_ + "." + column_name_;
   }
 
