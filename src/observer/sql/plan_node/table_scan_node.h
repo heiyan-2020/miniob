@@ -38,7 +38,6 @@ public:
 private:
   // support error handling, so use out_param to convey return value.
   RC is_selected(TupleRef tuple, bool &result);
-  RC record_to_tuple(Record *record, TupleRef &out_tuple);
 
 private:
   Table *table_;
