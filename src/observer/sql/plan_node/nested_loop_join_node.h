@@ -3,12 +3,15 @@
 
 #include "plan_node.h"
 
-class ProjectNode : public PlanNode {
+enum JoinType {INNER = 0, CROSS};
+
+class NestedLoopJoinNode : public PlanNode {
 public:
-  ProjectNode(std::shared_ptr<PlanNode> left_child, std::vector<hsql::Expr *> projection_specs)
-      : PlanNode(), left_child_(std::move(left_child)), projection_spec_(std::move(projection_specs))
+  NestedLoopJoinNode(PlanNodeRef left_child, PlanNodeRef right_child, JoinType type, AbstractExpressionRef cond)
+      : PlanNode(), left_child_(std::move(left_child)), right_child_(std::move(right_child)), type_(std::move(type))
+                  , cond_(std::move(cond))
   {}
-  ~ProjectNode() override = default;
+  ~NestedLoopJoinNode() override = default;
 
   RC prepare() override;
   RC initialize() override
@@ -20,11 +23,12 @@ public:
   RC current_tuple(TupleRef &tuple) override;
 
 private:
-  RC prepareSchema(SchemaRef input_schema);
-  RC project_tuple(TupleRef original_tuple, TupleRef &out_tuple);
+//  RC prepareSchema(SchemaRef input_schema);
 
   PlanNodeRef left_child_;
-  std::vector<hsql::Expr *> projection_spec_;
+  PlanNodeRef right_child_;
+  AbstractExpressionRef cond_;
+  JoinType type_;
   TupleRef current_;
 
 };

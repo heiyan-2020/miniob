@@ -46,3 +46,33 @@ RC AbstractExpression::expression_factory(AbstractExpressionRef lhs, AbstractExp
       return RC::UNIMPLENMENT;
   }
 }
+
+auto AbstractExpression::op_to_string(OperatorType op_type) -> std::string
+{
+  const struct info {
+    OperatorType opt;
+    std::string str;
+  } infos[] = {
+      {OperatorType::Equal, "="},
+      {OperatorType::GreaterThan, ">"},
+      {OperatorType::GreaterThanOrEqual, ">="},
+      {OperatorType::NotEqual, "!="},
+      {OperatorType::LessThan, "<"},
+      {OperatorType::LessThanOrEqual, "<="},
+      {OperatorType::AND, "and"},
+      {OperatorType::OR, "or"},
+      {OperatorType::NOT, "not"},
+      {OperatorType::SLASH, "/"},
+      {OperatorType::MUL, "*"},
+      {OperatorType::PLUS, "+"},
+      {OperatorType::SUB, "-"},
+      {OperatorType::NEG, "-"}
+
+  };
+  for (auto info : infos) {
+    if (info.opt == op_type) {
+      return info.str;
+    }
+  };
+  assert(false);
+}

@@ -18,10 +18,15 @@
 #include "sql/expr/constant_value_expression.h"
 #include "sql/parser/hsql/sql/UpdateStatement.h"
 #include "sql/parser/hsql/sql/DeleteStatement.h"
+#include "binder.h"
+
 
 class Planner {
 public:
   explicit Planner(Db *db) : db_(db)
+  {}
+
+  Planner(Db *db, Binder binder) : db_(db), binder_(binder)
   {}
 
   RC make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
@@ -33,6 +38,7 @@ public:
 
 private:
   Db *db_;
+  Binder binder_;
 
 private:
   RC add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *predicate);
