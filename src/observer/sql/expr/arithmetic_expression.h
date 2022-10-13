@@ -38,6 +38,24 @@ public:
     // always 2 children in testcases.
     std::string left = children_[0]->to_string();
     std::string right = children_[1]->to_string();
+
+    if (ope_type_ == OperatorType::MUL || ope_type_ == OperatorType::SLASH) {
+      std::shared_ptr<ArithmeticExpression> left_expr = std::dynamic_pointer_cast<ArithmeticExpression>(children_[0]);
+      if (left_expr) {
+        OperatorType left_ope_type = left_expr->ope_type_;
+        if (left_ope_type == OperatorType::SUB || left_ope_type == OperatorType::PLUS) {
+          left = "(" + left + ")";
+        }
+      }
+      std::shared_ptr<ArithmeticExpression> right_expr = std::dynamic_pointer_cast<ArithmeticExpression>(children_[1]);
+      if (right_expr) {
+        OperatorType right_ope_type = right_expr->ope_type_;
+        if (right_ope_type == OperatorType::SUB || right_ope_type == OperatorType::PLUS) {
+          right = "(" + right + ")";
+        }
+      }
+    }
+
     return left + AbstractExpression::op_to_string(ope_type_) + right;
   }
 
