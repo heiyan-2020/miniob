@@ -26,9 +26,9 @@ public:
 
   virtual AbstractExpressionRef traverse(ProcessorRef processor) = 0;
 
-  std::vector<ColumnName> getAllSymbols();
+  std::vector<ColumnName> get_all_symbols();
 
-  virtual auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const = 0;
+  virtual auto convert_to_column(SchemaRef schema, Column &out_col) -> RC = 0;
 
   virtual std::string to_string() const = 0;
 

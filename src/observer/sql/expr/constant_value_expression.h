@@ -21,7 +21,7 @@ public:
     return processor->leave(sp);
   }
 
-  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const override
+  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
     out_col = {ColumnName{to_string()}, val_.get_type(), val_.get_len()};
     return RC::SUCCESS;

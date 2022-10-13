@@ -5,7 +5,7 @@ RC NestedLoopJoinNode::prepare()
   RC rc;
   rc = left_child_->prepare();
   if (rc != RC::SUCCESS) {
-    return RC::SUCCESS;
+    return rc;
   }
   right_child_->prepare();
 

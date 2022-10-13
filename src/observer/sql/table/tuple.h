@@ -26,10 +26,10 @@ public:
   // constructor for table heap tuple
   explicit Tuple(Record *record);
 
-//  ~Tuple() {
-//    delete[] data_;
-//    data_ = nullptr;
-//  }
+  //  ~Tuple() {
+  //    delete[] data_;
+  //    data_ = nullptr;
+  //  }
 
   Value get_value(SchemaRef schema, size_t column_idx) const;
 

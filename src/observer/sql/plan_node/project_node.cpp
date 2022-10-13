@@ -9,14 +9,11 @@
 
 RC ProjectNode::prepare()
 {
-  RC rc = RC::SUCCESS;
-  if (left_child_) {
-    left_child_->prepare();
-    input_schema_ = left_child_->get_schema();
-    rc = prepareSchema(input_schema_);
-  } else {
-    LOG_WARN("Not implemented!");
-  }
+  RC rc;
+  assert(left_child_);
+  left_child_->prepare();
+  input_schema_ = left_child_->get_schema();
+  rc = prepare_schema(input_schema_);
   return rc;
 }
 
@@ -43,7 +40,7 @@ RC ProjectNode::current_tuple(TupleRef &tuple)
   return RC::SUCCESS;
 }
 
-RC ProjectNode::prepareSchema(SchemaRef input_schema)
+RC ProjectNode::prepare_schema(SchemaRef input_schema)
 {
   std::vector<Column> columns;
   std::vector<Column> tmp;

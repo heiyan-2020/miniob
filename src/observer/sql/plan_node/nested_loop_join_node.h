@@ -22,6 +22,7 @@ public:
   RC current_tuple(TupleRef &tuple) override;
 
 private:
+
   RC get_tuples();
 
   RC can_join(Value &out_value);

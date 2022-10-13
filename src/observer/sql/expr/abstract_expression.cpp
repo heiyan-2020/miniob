@@ -6,7 +6,7 @@
 #include "isnull_expression.h"
 #include "symbol_finder.h"
 
-std::vector<ColumnName> AbstractExpression::getAllSymbols()
+std::vector<ColumnName> AbstractExpression::get_all_symbols()
 {
   std::shared_ptr<SymbolFinder> symbol_finder = std::make_shared<SymbolFinder>();
   traverse(symbol_finder);

@@ -25,4 +25,5 @@ private:
   Db *db_;
   std::vector<AbstractExpressionRef> select_values_;
   AbstractExpressionRef where_predicate_;
+  std::vector<AbstractExpressionRef> group_by_exprs_;
 };

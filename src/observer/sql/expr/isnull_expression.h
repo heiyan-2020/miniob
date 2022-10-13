@@ -38,7 +38,7 @@ public:
     return processor->leave(sp);
   }
 
-  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const override
+  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
     return RC::UNIMPLENMENT;
   }

@@ -4,6 +4,8 @@
 #include "planner.h"
 #include "util/date.h"
 #include "binder.h"
+#include "sql/expr/aggregation_processor.h"
+#include "sql/plan_node/group_aggregate_node.h"
 
 RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -54,13 +56,13 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
 RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan)
 {
   RC rc = RC::SUCCESS;
-  // TODO(zyx): find aggregates in expr.
+  // TODO(zyx): find aggregates_ in expr.
 
   // update's where clause only have AND case.
   if (nullptr != predicate) {
     rc = add_predicate_to_plan(plan, predicate);
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Add predicate onto plan tree failed.\n");
+      LOG_ERROR("Add predicate onto plan tree failed.");
       return RC::GENERIC_ERROR;
     }
   }
@@ -70,11 +72,29 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
 RC Planner::handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
   if (!plan) {
-    LOG_ERROR("Not supported select values yet.\n");
+    LOG_ERROR("Not supported select values yet.");
     return RC::UNIMPLENMENT;
     // TODO(zyx): Support query without from tables.
   }
   plan = std::make_shared<ProjectNode>(plan, binder_.select_values_);
+  return RC::SUCCESS;
+}
+
+RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
+{
+  std::shared_ptr<AggregationProcessor> aggregation_processor = std::make_shared<AggregationProcessor>();
+  for (const auto &expr : binder_.select_values_) {
+    expr->traverse(aggregation_processor);
+  }
+  auto aggregates = aggregation_processor->get_aggregates();
+  if (aggregates.empty()) {
+    if (sel_stmt->groupBy) {
+      LOG_ERROR("Group by without aggregation.");
+      return RC::GENERIC_ERROR;
+    }
+    return RC::SUCCESS;
+  }
+  plan = std::make_shared<GroupAggregateNode>(plan, binder_.group_by_exprs_, aggregates);
   return RC::SUCCESS;
 }
 
@@ -112,6 +132,12 @@ RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr
   rc = handle_where_clause(sel_stmt->whereClause, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan 'WHERE' statement");
+    return rc;
+  }
+
+  rc = handle_grouping_and_aggregation(sel_stmt, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan grouping and aggregation");
     return rc;
   }
 

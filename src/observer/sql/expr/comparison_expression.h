@@ -34,7 +34,7 @@ public:
     return processor->leave(sp);
   }
 
-  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const override
+  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
     out_col = {ColumnName(to_string()), TypeId::BOOL, Type::get_type_size( TypeId::BOOL)};
     return RC::SUCCESS;

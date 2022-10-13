@@ -27,7 +27,7 @@ public:
   RC current_tuple(TupleRef &tuple) override;
 
 private:
-  RC prepareSchema(SchemaRef input_schema);
+  RC prepare_schema(SchemaRef input_schema);
   RC project_tuple(TupleRef original_tuple, TupleRef &out_tuple);
 
   std::vector<AbstractExpressionRef> projection_spec_;
