@@ -99,6 +99,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
   if (nullptr == root_table)
     return RC::SUCCESS;
 
+  RC rc;
   switch (root_table->type) {
     case hsql::TableRefType::kTableName: {
       const char *table_name = root_table->getName();
@@ -112,8 +113,23 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
       out_schema = std::make_shared<Schema>(tp, tp->table_meta().field_metas());
       return RC::SUCCESS;
     }
+    case hsql::TableRefType::kTableJoin:
+    case hsql::TableRefType::kTableCrossProduct: {
+      SchemaRef left_schema, right_schema;
+      rc = bind_from(root_table->join->left, left_schema);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      rc = bind_from(root_table->join->right, right_schema);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      out_schema = std::make_shared<Schema>(left_schema, right_schema);
+      return RC::SUCCESS;
+    }
     default: {
       LOG_PANIC("Unsupported from type");
+      // just for test
       return RC::UNIMPLENMENT;
     }
   }
@@ -223,7 +239,8 @@ RC Binder::bind_operator(hsql::OperatorType opt, OperatorType &out)
       {hsql::OperatorType::kOpAsterisk, OperatorType::MUL},
       {hsql::OperatorType::kOpPlus, OperatorType::PLUS},
       {hsql::OperatorType::kOpMinus, OperatorType::SUB},
-      {hsql::OperatorType::kOpUnaryMinus, OperatorType::NEG}
+      {hsql::OperatorType::kOpUnaryMinus, OperatorType::NEG},
+      {hsql::OperatorType::kOpIsNull, OperatorType::IsNull}
 
   };
   for (auto info : infos) {

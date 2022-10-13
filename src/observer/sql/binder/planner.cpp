@@ -26,7 +26,8 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
       case hsql::TableRefType::kTableSelect:
         // TODO(zyx): subquery in from clause.
         break;
-      case hsql::TableRefType::kTableJoin: {
+      case hsql::TableRefType::kTableJoin:
+      case hsql::TableRefType::kTableCrossProduct: {
         PlanNodeRef left_child, right_child;
         const hsql::JoinDefinition *join_def = table->join;
         RC rc = handle_table_name_clause(join_def->left, left_child);
@@ -37,11 +38,14 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
         if (rc != RC::SUCCESS) {
           return rc;
         }
-
-      }
-      case hsql::TableRefType::kTableCrossProduct:
-        // TODO(zyx): select multiple tables.
+        AbstractExpressionRef join_cond;
+        rc = binder_.bind_expression(join_def->condition, join_cond);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        plan = std::make_shared<NestedLoopJoinNode>(left_child, right_child, join_cond);
         break;
+      }
       default:
         break;
     }

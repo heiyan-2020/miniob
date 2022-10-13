@@ -65,7 +65,7 @@ RC GroupAggregateNode::prepare_schema(SchemaRef input_schema)
     if (!fn) {
       return RC::INTERNAL;
     }
-    
+
   }
 
   return RC::SUCCESS;

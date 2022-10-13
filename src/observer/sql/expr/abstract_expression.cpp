@@ -3,6 +3,7 @@
 #include "comparison_expression.h"
 #include "arithmetic_expression.h"
 #include "negate_expression.h"
+#include "isnull_expression.h"
 #include "symbol_finder.h"
 
 std::vector<ColumnName> AbstractExpression::get_all_symbols()
@@ -39,6 +40,10 @@ RC AbstractExpression::expression_factory(AbstractExpressionRef lhs, AbstractExp
     }
     case OperatorType::NEG: {
       out = std::make_shared<NegateExpression>(std::move(lhs));
+      return RC::SUCCESS;
+    }
+    case OperatorType::IsNull: {
+      out = std::make_shared<IsNullExpression>(std::move(lhs));
       return RC::SUCCESS;
     }
     default:

@@ -23,10 +23,14 @@ public:
   {
     env_ = std::make_shared<Environment>();
   }
-  explicit PlanNode(std::shared_ptr<PlanNode> left_child)
-  {}
-  PlanNode(std::shared_ptr<PlanNode> left_child, std::shared_ptr<PlanNode> right_child)
-  {}
+  explicit PlanNode(std::shared_ptr<PlanNode> left_child) : left_child_(left_child)
+  {
+    env_ = std::make_shared<Environment>();
+  }
+  PlanNode(std::shared_ptr<PlanNode> left_child, std::shared_ptr<PlanNode> right_child) : left_child_(left_child), right_child_(right_child)
+  {
+    env_ = std::make_shared<Environment>();
+  }
 
   virtual ~PlanNode() = default;
 

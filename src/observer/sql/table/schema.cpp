@@ -19,12 +19,14 @@ Schema::Schema(const Table *table, const std::vector<FieldMeta> *table_schema)
 
 Schema::Schema(SchemaRef left, SchemaRef right)
 {
+  std::vector<Column> cols;
   for (Column col : left->columns_) {
-    columns_.push_back(col);
+    cols.push_back(col);
   }
   for (Column col : right->columns_) {
-    columns_.push_back(col);
+    cols.push_back(col);
   }
+  set_columns(cols);
 }
 
 void Schema::set_columns(const std::vector<Column> &columns)

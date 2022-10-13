@@ -52,6 +52,9 @@ private:
 
 private:
   auto perform_comparison(const Value &lhs, const Value &rhs) const -> Value {
+    if (lhs.is_null() || rhs.is_null()) {
+      return Value{BOOL, false};
+    }
     switch (comp_type_) {
       case OperatorType::Equal:
         return lhs.compare_equals(rhs);

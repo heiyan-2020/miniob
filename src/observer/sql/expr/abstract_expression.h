@@ -5,7 +5,7 @@
 #include "sql/parser/hsql/sql/Expr.h"
 #include "expression_processor.h"
 
-enum class OperatorType { Equal, NotEqual, LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, NOT, AND, OR, PLUS, SUB, MUL, SLASH, NEG};
+enum class OperatorType { Equal, NotEqual, LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, NOT, AND, OR, PLUS, SUB, MUL, SLASH, NEG, IsNull};
 
 class AbstractExpression;
 using AbstractExpressionRef = std::shared_ptr<AbstractExpression>;
