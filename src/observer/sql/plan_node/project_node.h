@@ -19,7 +19,8 @@ public:
   RC prepare() override;
   RC initialize() override
   {
-    return RC::UNIMPLENMENT;
+    current_.reset();
+    return RC::SUCCESS;
   }
   RC next() override;
 
