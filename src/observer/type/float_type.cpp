@@ -7,6 +7,7 @@ const double epsilon = 1E-6;
 
 auto FloatType::compare_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -15,6 +16,7 @@ auto FloatType::compare_equals(const Value &left, const Value &right) const -> V
 }
 auto FloatType::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -23,6 +25,7 @@ auto FloatType::compare_not_equals(const Value &left, const Value &right) const 
 }
 auto FloatType::compare_less_than(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -31,6 +34,7 @@ auto FloatType::compare_less_than(const Value &left, const Value &right) const -
 }
 auto FloatType::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -39,6 +43,7 @@ auto FloatType::compare_less_than_equals(const Value &left, const Value &right) 
 }
 auto FloatType::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -47,6 +52,7 @@ auto FloatType::compare_greater_than(const Value &left, const Value &right) cons
 }
 auto FloatType::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   auto res = compare(left, right);
   if (res == CmpRes::UNDEFINED) {
     return Value{};
@@ -165,7 +171,7 @@ auto FloatType::cmp_float_helper(const float lhs, const float rhs) -> CmpRes
 auto FloatType::div_float_helper(const float lhs, const float rhs) -> Value
 {
   if (rhs < epsilon && rhs > -epsilon) {
-    return Value{}; // divide zero -> undefined
+    return Value{FLOAT}; // divide zero -> null
   }
   return Value{FLOAT, lhs / rhs};
 }

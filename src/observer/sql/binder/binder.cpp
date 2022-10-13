@@ -119,6 +119,10 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       out_expr = std::make_shared<ConstantValueExpression>(Value(TypeId::CHAR, expr->name, strlen(expr->name)));
       return RC::SUCCESS;
     }
+    case hsql::kExprLiteralNull: {
+      out_expr = std::make_shared<ConstantValueExpression>(Value(TypeId::UNDEFINED));
+      return RC::SUCCESS;
+    }
     case hsql::kExprColumnRef: {
       out_expr = std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
       return RC::SUCCESS;

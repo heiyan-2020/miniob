@@ -9,6 +9,14 @@ class Value;
 
 enum class CmpRes { UNDEFINED, GT, EQ, LT };
 
+// NULL 与任何数据对比都是 FALSE
+#define CHECK_NULL_CMP()                     \
+  do {                                       \
+    if (left.is_null() || right.is_null()) { \
+      return bool_to_value(false);           \
+    }                                        \
+  } while (0)                                \
+
 class Type {
 public:
   Type() : Type{UNDEFINED}

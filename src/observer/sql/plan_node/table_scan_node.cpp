@@ -35,7 +35,10 @@ RC TableScanNode::next()
 
 RC TableScanNode::current_tuple(TupleRef &tuple)
 {
-  current_ = std::make_shared<Tuple>(&current_record_);
+  RC rc = convert_record(&current_record_, current_);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
   tuple = current_;
   return RC::SUCCESS;
 }
@@ -57,4 +60,23 @@ RC TableScanNode::is_selected(TupleRef tuple, bool &result)
   }
   LOG_ERROR("Evaluation failed");
   return rc;
+}
+
+RC TableScanNode::convert_record(Record *record, TupleRef &out_tuple)
+{
+  char *data = record->data();
+  common::Bitmap null_field_bitmap{data, 32};
+  std::vector<Value> values;
+  for (size_t i = 0; i < output_schema_->get_column_count(); i++) {
+    const auto &col = output_schema_->get_column(i);
+    if (null_field_bitmap.get_bit(i)) {
+      // null field
+      values.emplace_back(col.get_type());
+    } else {
+      // non-null field
+      values.push_back(Value{col.get_type()}.deserialize_from(data + col.get_offset(), col.get_len()));
+    }
+  }
+  out_tuple = std::make_shared<Tuple>(values, output_schema_, data);
+  return RC::SUCCESS;
 }

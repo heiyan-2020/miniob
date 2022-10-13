@@ -239,6 +239,7 @@
     %type <expr>                   expr operand scalar_expr unary_expr binary_expr logic_expr exists_expr extract_expr cast_expr
     %type <expr>                   function_expr between_expr expr_alias param_expr
     %type <expr>                   column_name literal int_literal num_literal string_literal bool_literal date_literal interval_literal
+    %type <expr>                   insert_literal insert_num_literal unsigned_num_literal
     %type <expr>                   comp_expr opt_where join_condition opt_having case_expr case_list in_expr hint
     %type <expr>                   array_expr array_index null_literal
     %type <limit>                  opt_limit opt_top
@@ -926,11 +927,11 @@ list_item : '(' literal_list ')' {
   $$ = $2;
 };
 
-literal_list : literal {
+literal_list : insert_literal {
   $$ = new std::vector<Expr*>();
   $$->push_back($1);
 }
-| literal_list ',' literal {
+| literal_list ',' insert_literal {
   $1->push_back($3);
   $$ = $1;
 };
@@ -1034,6 +1035,18 @@ column_name : IDENTIFIER { $$ = Expr::makeColumnRef($1); }
 | IDENTIFIER '.' '*' { $$ = Expr::makeStar($1); };
 
 literal : string_literal | bool_literal | num_literal | null_literal | date_literal | interval_literal | param_expr;
+
+insert_literal : string_literal | bool_literal | insert_num_literal | null_literal | date_literal | interval_literal | param_expr;
+
+unsigned_num_literal: FLOATVAL { $$ = Expr::makeLiteral($1); }
+| int_literal;
+
+insert_num_literal : unsigned_num_literal
+| '-' unsigned_num_literal {
+  $2->ival = $2->ival * -1;
+  $2->fval = $2->fval * -1;
+  $$ = $2;
+};
 
 string_literal : STRING { $$ = Expr::makeLiteral($1); };
 

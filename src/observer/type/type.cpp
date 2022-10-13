@@ -18,26 +18,32 @@ Type *Type::k_types[] = {
 
 auto Type::compare_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   return Value{};
 }
 auto Type::compare_not_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   return Value{};
 }
 auto Type::compare_less_than(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   return Value{};
 }
 auto Type::compare_less_than_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   return Value{};
 }
 auto Type::compare_greater_than(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   return Value{};
 }
 auto Type::compare_greater_than_equals(const Value &left, const Value &right) const -> Value
 {
+  CHECK_NULL_CMP();
   return Value{};
 }
 

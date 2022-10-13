@@ -43,7 +43,9 @@ RC TableMeta::init_sys_fields()
 {
   sys_fields_.reserve(1);
   FieldMeta field_meta;
-  RC rc = field_meta.init(Trx::trx_field_name(), Trx::trx_field_type(), 0, Trx::trx_field_len(), false, false);
+  // start at offset 4, for null field bitmap
+  // TODO(vgalaxy): only support up to 32 fields
+  RC rc = field_meta.init(Trx::trx_field_name(), Trx::trx_field_type(), 4, Trx::trx_field_len(), false, false);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to init trx field. rc = %d:%s", rc, strrc(rc));
     return rc;
@@ -136,12 +138,12 @@ const FieldMeta *TableMeta::find_field_by_offset(int offset) const
   }
   return nullptr;
 }
-int TableMeta::field_num() const
+size_t TableMeta::field_num() const
 {
   return fields_.size();
 }
 
-int TableMeta::sys_field_num() const
+size_t TableMeta::sys_field_num()
 {
   return sys_fields_.size();
 }
@@ -276,7 +278,8 @@ int TableMeta::deserialize(std::istream &is)
 
   name_.swap(table_name);
   fields_.swap(fields);
-  record_size_ = fields_.back().offset() + fields_.back().len() - fields_.begin()->offset();
+  // plus 4, for null field bitmap
+  record_size_ = fields_.back().offset() + fields_.back().len() - fields_.begin()->offset() + 4;
 
   const Json::Value &indexes_value = table_value[FIELD_INDEXES];
   if (!indexes_value.empty()) {

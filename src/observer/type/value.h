@@ -25,7 +25,7 @@ class Value {
 public:
   Value() : Value{TypeId::UNDEFINED}
   {}
-  explicit Value(const TypeId type) : type_id_{type}
+  explicit Value(const TypeId type) : type_id_{type}, is_null_{true}
   {}
   ~Value()
   {
@@ -39,6 +39,7 @@ public:
   Value(const Value &o)
   {
     this->type_id_ = o.type_id_;
+    this->is_null_ = o.is_null_;
     if (o.type_id_ == CHAR) {
       this->len_ = o.len_;
       this->value_.char_ = (char *)calloc(o.len_, sizeof(char));
@@ -89,6 +90,10 @@ public:
     }
     return Type::get_type_size(type_id_);
   }
+  auto is_null() const -> bool
+  {
+    return is_null_;
+  }
 
   auto compare_equals(const Value &o) const -> Value;
   auto compare_not_equals(const Value &o) const -> Value;
@@ -130,7 +135,6 @@ protected:
   // for CHAR type
   size_t len_{};
 
-  // TODO(vgalaxy): support null field
   bool is_null_{};
 };
 
