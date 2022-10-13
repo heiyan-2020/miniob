@@ -38,7 +38,7 @@ public:
     // always 2 children in testcases.
     std::string left = children_[0]->to_string();
     std::string right = children_[1]->to_string();
-    return left + " " + AbstractExpression::op_to_string(ope_type_) + " " + right;
+    return left + AbstractExpression::op_to_string(ope_type_) + right;
   }
 
 private:

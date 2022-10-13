@@ -48,16 +48,11 @@ public:
     return table_name_ == other.table_name_ && column_name_ == other.column_name_;
   }
 
-  std::string to_string() const
+  std::string to_string(bool table_name_ignorable = false) const
   {
-    return table_name_ + "." + column_name_;
-  }
-
-  std::string to_string(bool table_name_ignorable) const
-  {
-    if (table_name_ignorable)
+    if (table_name_ignorable || table_name_.empty())
       return column_name_;
-    return to_string();
+    return table_name_ + "." + column_name_;
   }
 
   bool is_wild_card() const
