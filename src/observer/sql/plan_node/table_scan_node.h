@@ -18,10 +18,7 @@ public:
     record_scanner_.close_scan();
   }
   RC prepare() override;
-  RC initialize() override
-  {
-    return RC::UNIMPLENMENT;
-  }
+  RC initialize() override;
   RC next() override;
 
   RC current_tuple(TupleRef &tuple) override;

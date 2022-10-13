@@ -10,6 +10,7 @@
 #include <cassert>
 
 class TableScanNode;
+class NestedLoopJoinNode;
 class BoolExpression;
 
 class Value {
@@ -20,6 +21,7 @@ class Value {
   friend class DateType;
   friend class BoolType;
   friend class TableScanNode;
+  friend class NestedLoopJoinNode;
   friend class BoolExpression;
 
 public:

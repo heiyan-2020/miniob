@@ -76,6 +76,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
   if (nullptr == root_table)
     return RC::SUCCESS;
 
+  RC rc;
   switch (root_table->type) {
     case hsql::TableRefType::kTableName: {
       const char *table_name = root_table->getName();
@@ -89,8 +90,23 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
       out_schema = std::make_shared<Schema>(tp, tp->table_meta().field_metas());
       return RC::SUCCESS;
     }
+    case hsql::TableRefType::kTableJoin:
+    case hsql::TableRefType::kTableCrossProduct: {
+      SchemaRef left_schema, right_schema;
+      rc = bind_from(root_table->join->left, left_schema);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      rc = bind_from(root_table->join->right, right_schema);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      out_schema = std::make_shared<Schema>(left_schema, right_schema);
+      return RC::SUCCESS;
+    }
     default: {
       LOG_PANIC("Unsupported from type");
+      // just for test
       return RC::UNIMPLENMENT;
     }
   }
@@ -136,7 +152,7 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       if (expr->hasTable()) {
         col_name.set_table_name(expr->table);
       }
-      out_expr = std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
+      out_expr = std::make_shared<ColumnValueExpression>(col_name);
       return RC::SUCCESS;
     }
     case hsql::kExprColumnRef: {

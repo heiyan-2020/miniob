@@ -103,31 +103,20 @@ RC ProjectNode::project_tuple(TupleRef original_tuple, TupleRef &out_tuple)
   for (AbstractExpressionRef expr : projection_spec_) {
     std::shared_ptr<ColumnValueExpression> col_expr = std::dynamic_pointer_cast<ColumnValueExpression>(expr);
     if (col_expr) {
-      // column reference expression.
+      // column reference expression. including *, t.*, t.col
       ColumnName col_name(col_expr->get_col_name());
-      if (col_name.is_wild_card() && col_name.table_name().empty()) {
-        for (size_t idx = 0; idx < input_schema_->get_column_count(); idx++) {
-          if (input_null_field_bitmap.get_bit(idx)) {
-            out_tuple_values.emplace_back(input_schema_->get_column(idx).get_type());
-            output_null_field_bitmap.set_bit(idx);
-          } else {
-            out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
-          }
+      involved_columns = input_schema_->find_columns(col_name.table_name(), col_name.column_name());
+      for (Column &column : involved_columns) {
+        size_t idx;
+        rc = input_schema_->get_column_idx(column.get_name(), idx);
+        if (rc != RC::SUCCESS) {
+          return RC::INTERNAL;
         }
-      } else {
-        involved_columns = input_schema_->find_columns(col_name.table_name(), col_name.column_name());
-        for (Column &column : involved_columns) {
-          size_t idx;
-          rc = input_schema_->get_column_idx(column.get_name(), idx);
-          if (rc != RC::SUCCESS) {
-            return RC::INTERNAL;
-          }
-          if (input_null_field_bitmap.get_bit(idx)) {
-            out_tuple_values.emplace_back(input_schema_->get_column(idx).get_type());
-            output_null_field_bitmap.set_bit(idx);
-          } else {
-            out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
-          }
+        if (input_null_field_bitmap.get_bit(idx)) {
+          out_tuple_values.emplace_back(input_schema_->get_column(idx).get_type());
+          output_null_field_bitmap.set_bit(idx);
+        } else {
+          out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
         }
       }
     } else {
@@ -137,6 +126,7 @@ RC ProjectNode::project_tuple(TupleRef original_tuple, TupleRef &out_tuple)
       if (rc != RC::SUCCESS) {
         return rc;
       }
+      // TODO(zyx): evaluation result may be null?
       out_tuple_values.push_back(eval_result);
     }
   }
