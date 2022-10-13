@@ -6,8 +6,9 @@
 #define MINIDB_PLANNER_H
 
 #include "sql/plan_node/plan_node.h"
-#include "sql/plan_node/table_scan_node.h"
+#include "sql/plan_node/filter_node.h"
 #include "sql/plan_node/project_node.h"
+#include "sql/plan_node/table_scan_node.h"
 #include "sql/plan_node/nested_loop_join_node.h"
 #include "sql/parser/hsql/sql/SelectStatement.h"
 #include "rc.h"

@@ -21,7 +21,7 @@ FOREACH (F ${ALL_SRC})
                 sql/plan_node/group_aggregate_node.h
                 sql/plan_node/group_aggregate_node.cpp
                 sql/expr/aggregation_processor.h
-                sql/expr/function_call.h)
+                sql/expr/function_call.h sql/plan_node/filter_node.cpp)
     ENDIF ()
     MESSAGE("Use ${F}")
 ENDFOREACH (F)
