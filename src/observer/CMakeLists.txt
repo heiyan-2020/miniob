@@ -10,7 +10,18 @@ FILE(GLOB_RECURSE ALL_SRC *.cpp *.c)
 FILE(GLOB MAIN_SRC main.cpp)
 FOREACH (F ${ALL_SRC})
     IF (NOT ${F} STREQUAL ${MAIN_SRC})
-        SET(LIB_SRC ${LIB_SRC} ${F})
+        SET(LIB_SRC ${LIB_SRC} ${F}
+                sql/function/abstract_function.h
+                sql/function/scalar_function.h
+                sql/function/aggregate_function.h
+                sql/function/max_aggregate.h
+                sql/function/min_aggregate.h
+                sql/function/count_aggregate.h
+                sql/function/avg_aggregate.h
+                sql/plan_node/group_aggregate_node.h
+                sql/plan_node/group_aggregate_node.cpp
+                sql/expr/aggregation_processor.h
+                sql/expr/function_call.h)
     ENDIF ()
     MESSAGE("Use ${F}")
 ENDFOREACH (F)

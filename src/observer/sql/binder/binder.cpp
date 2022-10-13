@@ -4,6 +4,7 @@
 #include "sql/expr/symbol_finder.h"
 #include "sql/expr/bool_expression.h"
 #include "planner.h"
+#include "sql/expr/function_call.h"
 
 RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 {
@@ -39,7 +40,7 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
         LOG_PANIC("Bind select values failed");
         return rc;
       }
-      std::vector<ColumnName> symbols = bound_expr->getAllSymbols();
+      std::vector<ColumnName> symbols = bound_expr->get_all_symbols();
       for (auto const &name : symbols) {
         std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
         if (found.size() != 1) {
@@ -68,7 +69,7 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
     if (rc != RC::SUCCESS) {
       return rc;
     }
-    std::vector<ColumnName> symbols = expr->getAllSymbols();
+    std::vector<ColumnName> symbols = expr->get_all_symbols();
     for (auto const &name : symbols) {
       std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
       if (found.size() != 1) {
@@ -163,12 +164,24 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       rc = AbstractExpression::expression_factory(lhs, rhs, op, out_expr);
       return rc;
     }
+    case hsql::kExprFunctionRef: {
+      std::vector<AbstractExpressionRef> args{};
+      for (auto arg : *expr->exprList) {
+        AbstractExpressionRef tmp{};
+        RC rc = bind_expression(arg, tmp);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        args.push_back(tmp);
+      }
+      out_expr = std::make_shared<FunctionCall>(expr->name, args);
+      return RC::SUCCESS;
+    }
     default: {
       LOG_ERROR("Unsupported expression type: %d", expr->type);
       return RC::UNIMPLENMENT;
     }
   }
-  return RC::INTERNAL;
 }
 
 RC Binder::bind_operator(hsql::OperatorType opt, OperatorType &out)

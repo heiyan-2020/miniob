@@ -15,7 +15,7 @@ public:
 
   AbstractExpressionRef traverse(ProcessorRef processor) override;
 
-  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const override
+  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
     RC rc;
     Column left, right;

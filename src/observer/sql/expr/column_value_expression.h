@@ -30,7 +30,7 @@ public:
     return col_name_;
   }
 
-  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const override
+  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
     std::vector<Column> found = schema->find_columns(col_name_.table_name(), col_name_.column_name());
     if (found.size() != 1) {
