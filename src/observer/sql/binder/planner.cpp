@@ -22,8 +22,23 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
         break;
       }
       case hsql::TableRefType::kTableSelect:
-      case hsql::TableRefType::kTableJoin:
+        // TODO(zyx): subquery in from clause.
+        break;
+      case hsql::TableRefType::kTableJoin: {
+        PlanNodeRef left_child, right_child;
+        const hsql::JoinDefinition *join_def = table->join;
+        RC rc = handle_table_name_clause(join_def->left, left_child);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        rc = handle_table_name_clause(join_def->right, right_child);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+
+      }
       case hsql::TableRefType::kTableCrossProduct:
+        // TODO(zyx): select multiple tables.
         break;
       default:
         break;
