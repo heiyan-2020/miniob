@@ -2,7 +2,7 @@
 #include "common/lang/bitmap.h"
 #include <string>
 
-Tuple::Tuple(std::vector<Value> values, SchemaRef schema, const char *null_field_bitmap)
+Tuple::Tuple(std::vector<Value> values, SchemaRef schema, const char *null_field_bitmap, RID rid)
 {
   assert(values.size() == schema->get_column_count());
 
@@ -23,6 +23,9 @@ Tuple::Tuple(std::vector<Value> values, SchemaRef schema, const char *null_field
     const auto &col = schema->get_column(i);
     values[i].serialize_to(data_ + col.get_offset());
   }
+
+  // Set rid.
+  rid_ = rid;
 }
 
 Tuple::Tuple(Record *record)

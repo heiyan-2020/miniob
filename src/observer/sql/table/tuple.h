@@ -21,15 +21,15 @@ public:
   Tuple() = default;
 
   // constructor for creating a new tuple based on input value
-  Tuple(std::vector<Value> values, SchemaRef schema, const char *null_field_bitmap);
+  Tuple(std::vector<Value> values, SchemaRef schema, const char *null_field_bitmap, RID rid = {});
 
   // constructor for table heap tuple
   explicit Tuple(Record *record);
 
-//  ~Tuple() {
-//    delete[] data_;
-//    data_ = nullptr;
-//  }
+  //  ~Tuple() {
+  //    delete[] data_;
+  //    data_ = nullptr;
+  //  }
 
   Value get_value(SchemaRef schema, size_t column_idx) const;
 

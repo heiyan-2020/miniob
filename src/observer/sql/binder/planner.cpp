@@ -41,7 +41,7 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
   if (nullptr != predicate) {
     rc = add_predicate_to_plan(plan, predicate);
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Add predicate onto plan tree failed.\n");
+      LOG_ERROR("Add predicate onto plan tree failed.");
       return RC::GENERIC_ERROR;
     }
   }
@@ -51,7 +51,7 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
 RC Planner::handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
   if (!plan) {
-    LOG_ERROR("Not supported select values yet.\n");
+    LOG_ERROR("Not supported select values yet.");
     return RC::UNIMPLENMENT;
     // TODO(zyx): Support query without from tables.
   }
