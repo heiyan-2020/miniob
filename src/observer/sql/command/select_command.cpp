@@ -20,7 +20,7 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
     session_event->set_response("FAILURE\n");
     return rc;
   }
-  Planner planner(db);
+  Planner planner(db, binder);
   std::shared_ptr<PlanNode> sp;
   rc = planner.make_plan_sel(stmt_, sp);
   if (rc != RC::SUCCESS) {

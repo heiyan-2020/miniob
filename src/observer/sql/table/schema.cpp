@@ -17,6 +17,16 @@ Schema::Schema(const Table *table, const std::vector<FieldMeta> *table_schema)
   set_columns(columns);
 }
 
+Schema::Schema(SchemaRef left, SchemaRef right)
+{
+  for (Column col : left->columns_) {
+    columns_.push_back(col);
+  }
+  for (Column col : right->columns_) {
+    columns_.push_back(col);
+  }
+}
+
 void Schema::set_columns(const std::vector<Column> &columns)
 {
   // start at offset 4, for null field bitmap

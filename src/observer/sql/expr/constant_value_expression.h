@@ -21,6 +21,21 @@ public:
     return processor->leave(sp);
   }
 
+  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const override
+  {
+    out_col = {ColumnName{to_string()}, val_.get_type(), val_.get_len()};
+    return RC::SUCCESS;
+  }
+
+  std::string to_string() const override
+  {
+    if (val_.get_type() == TypeId::UNDEFINED) {
+      return "NULL";
+    } else {
+      return val_.to_string();
+    }
+  }
+
 private:
   Value val_;
 };

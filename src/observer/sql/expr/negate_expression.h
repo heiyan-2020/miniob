@@ -33,5 +33,16 @@ public:
     children_[0] = children_[0]->traverse(processor);
     return processor->leave(sp);
   }
+
+  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const override
+  {
+    return RC::UNIMPLENMENT;
+  }
+
+  std::string to_string() const override
+  {
+    return {};
+  }
+
 private:
 };

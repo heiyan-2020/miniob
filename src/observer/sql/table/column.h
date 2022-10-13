@@ -70,6 +70,11 @@ public:
     return table_name_;
   }
 
+  void set_table_name(std::string table_name)
+  {
+    table_name_ = std::move(table_name);
+  }
+
   std::string column_name() const
   {
     return column_name_;
@@ -86,6 +91,8 @@ class Column {
   friend class TableMeta;
 
 public:
+  Column() = default;
+
   Column(const ColumnName &column_name, TypeId type, size_t length, bool visible = true, bool nullable = false)
       : name_(column_name), column_type_(type), fixed_length_(length), visible_(visible), nullable_(nullable)
   {}

@@ -3,6 +3,7 @@
 #include "util/date.h"
 #include "sql/expr/symbol_finder.h"
 #include "sql/expr/bool_expression.h"
+#include "planner.h"
 
 RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 {
@@ -21,25 +22,42 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
   // Bind select values.
   for (const auto selVal : *sel_stmt->selectList) {
     if (selVal->isType(hsql::kExprStar)) {
+      ColumnName column_name;
       if (selVal->hasTable()) {
-        if (from_table_names.find(selVal->name) == from_table_names.end()) {
+        if (from_table_names.find(selVal->table) == from_table_names.end()) {
           return RC::SCHEMA_TABLE_NOT_EXIST;
         }
+        column_name.set_table_name(selVal->table);
       }
+      select_values_.push_back(std::make_shared<ColumnValueExpression>(column_name));
     } else {
       // An expression that is not a wildcard.  It could contain
       // column references that need to be resolved.
-      // TODO(zyx): support more expressions in select values.
-      std::vector<Column> cols;
-      if (selVal->table == nullptr) {
-        // TODO(zyx): carefully design ColName class in order to avoid dirty handling of empty table name.
-        cols = from_schema->find_columns({}, selVal->name);
-      } else {
-        cols = from_schema->find_columns(selVal->table, selVal->name);
+      AbstractExpressionRef bound_expr;
+      rc = bind_expression(selVal, bound_expr);
+      if (rc != RC::SUCCESS) {
+        LOG_PANIC("Bind select values failed");
+        return rc;
       }
-      if (cols.size() != 1) {
-        return RC::SCHEMA_FIELD_MISSING;
+      std::vector<ColumnName> symbols = bound_expr->getAllSymbols();
+      for (auto const &name : symbols) {
+        std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
+        if (found.size() != 1) {
+          LOG_PANIC("where expression has wrong column reference");
+          return RC::SCHEMA_FIELD_NOT_EXIST;
+        }
       }
+      select_values_.push_back(bound_expr);
+//      std::vector<Column> cols;
+//      if (selVal->table == nullptr) {
+//        // TODO(zyx): carefully design ColName class in order to avoid dirty handling of empty table name.
+//        cols = from_schema->find_columns({}, selVal->name);
+//      } else {
+//        cols = from_schema->find_columns(selVal->table, selVal->name);
+//      }
+//      if (cols.size() != 1) {
+//        return RC::SCHEMA_FIELD_MISSING;
+//      }
     }
   }
 

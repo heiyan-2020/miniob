@@ -34,6 +34,19 @@ public:
     return processor->leave(sp);
   }
 
+  auto convert_to_column(SchemaRef schema, Column &out_col) -> RC const override
+  {
+    out_col = {ColumnName(to_string()), TypeId::BOOL, Type::get_type_size( TypeId::BOOL)};
+    return RC::SUCCESS;
+  }
+
+  std::string to_string() const override
+  {
+    std::string left = children_[0]->to_string();
+    std::string right = children_[1]->to_string();
+    return left + " " + AbstractExpression::op_to_string(comp_type_) + " " + right;
+  }
+
 private:
   OperatorType comp_type_;
 

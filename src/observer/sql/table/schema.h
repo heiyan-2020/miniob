@@ -21,6 +21,9 @@ public:
 
   Schema(const Table *table, const std::vector<FieldMeta> *table_schema);
 
+  // designed for preparing join schema.
+  Schema(SchemaRef left, SchemaRef rhs);
+
   const std::vector<Column> &get_columns() const
   {
     return columns_;
