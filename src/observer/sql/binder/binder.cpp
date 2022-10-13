@@ -48,16 +48,6 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
         }
       }
       select_values_.push_back(bound_expr);
-//      std::vector<Column> cols;
-//      if (selVal->table == nullptr) {
-//        // TODO(zyx): carefully design ColName class in order to avoid dirty handling of empty table name.
-//        cols = from_schema->find_columns({}, selVal->name);
-//      } else {
-//        cols = from_schema->find_columns(selVal->table, selVal->name);
-//      }
-//      if (cols.size() != 1) {
-//        return RC::SCHEMA_FIELD_MISSING;
-//      }
     }
   }
 
@@ -139,6 +129,14 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
     }
     case hsql::kExprLiteralNull: {
       out_expr = std::make_shared<ConstantValueExpression>(Value(TypeId::UNDEFINED));
+      return RC::SUCCESS;
+    }
+    case hsql::kExprStar: {
+      ColumnName col_name;
+      if (expr->hasTable()) {
+        col_name.set_table_name(expr->table);
+      }
+      out_expr = std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
       return RC::SUCCESS;
     }
     case hsql::kExprColumnRef: {
