@@ -7,7 +7,6 @@ class NegateExpression : public AbstractExpression {
   friend SymbolFinder;
 
 public:
-public:
   NegateExpression(AbstractExpressionRef &&left)
       : AbstractExpression({std::move(left)}) {}
 

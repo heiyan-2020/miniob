@@ -99,6 +99,11 @@ public:
     return is_null_;
   }
 
+  template <class T>
+  inline auto get_as() const -> T {
+    return *reinterpret_cast<const T *>(&value_);
+  }
+
   auto compare_equals(const Value &o) const -> Value;
   auto compare_not_equals(const Value &o) const -> Value;
   auto compare_less_than(const Value &o) const -> Value;
