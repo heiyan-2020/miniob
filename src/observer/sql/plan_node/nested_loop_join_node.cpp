@@ -74,6 +74,7 @@ TupleRef NestedLoopJoinNode::join_tuples(TupleRef left, TupleRef right)
 RC NestedLoopJoinNode::can_join(Value &out_value)
 {
   if (!cond_) {
+    out_value = {TypeId::BOOL, true};
     return RC::SUCCESS;
   }
 

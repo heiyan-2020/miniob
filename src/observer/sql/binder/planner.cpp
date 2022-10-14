@@ -28,8 +28,7 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
       case hsql::TableRefType::kTableSelect:
         // TODO(zyx): subquery in from clause.
         break;
-      case hsql::TableRefType::kTableJoin:
-      case hsql::TableRefType::kTableCrossProduct: {
+      case hsql::TableRefType::kTableJoin: {
         PlanNodeRef left_child, right_child;
         const hsql::JoinDefinition *join_def = table->join;
         RC rc = handle_table_name_clause(join_def->left, left_child);
@@ -46,6 +45,28 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
           return rc;
         }
         plan = std::make_shared<NestedLoopJoinNode>(left_child, right_child, join_cond);
+        break;
+      }
+      case hsql::TableRefType::kTableCrossProduct: {
+        PlanNodeRef left, right, result;
+        RC rc = handle_table_name_clause((*table->list)[0], left);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        rc = handle_table_name_clause((*table->list)[1], right);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        result = std::make_shared<NestedLoopJoinNode>(left, right);
+        for (size_t idx = 2; idx < table->list->size(); idx ++) {
+          right.reset();
+          rc = handle_table_name_clause((*table->list)[idx], right);
+          if (rc != RC::SUCCESS) {
+            return rc;
+          }
+          result = std::make_shared<NestedLoopJoinNode>(result, right);
+        }
+        plan = result;
         break;
       }
       default:

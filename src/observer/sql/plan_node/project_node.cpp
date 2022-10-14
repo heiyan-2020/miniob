@@ -69,6 +69,7 @@ RC ProjectNode::prepare_schema(SchemaRef input_schema)
           table_name = col_name.table_name();
         tmp = input_schema->find_columns(table_name, col_name.column_name());
         if (tmp.size() != 1) {
+          LOG_PANIC("Ambiguous column name");
           return RC::INTERNAL;
         }
         columns.insert(columns.end(), tmp.begin(), tmp.end());
