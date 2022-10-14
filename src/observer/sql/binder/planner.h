@@ -5,6 +5,8 @@
 #ifndef MINIDB_PLANNER_H
 #define MINIDB_PLANNER_H
 
+#include <utility>
+
 #include "sql/plan_node/plan_node.h"
 #include "sql/plan_node/filter_node.h"
 #include "sql/plan_node/project_node.h"
@@ -24,9 +26,13 @@
 
 
 class Planner {
+  friend class Binder;
+
 public:
-  explicit Planner(Db *db) : db_(db), binder_({db})
-  {}
+  explicit Planner(Db *db, std::vector<SchemaRef> enclosing_schemas = {}) : db_(db), binder_(db, enclosing_schemas)
+  {
+    std::cerr << enclosing_schemas.size();
+  }
 
   RC make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC make_plan_upd(const hsql::UpdateStatement *upd_stmt, std::shared_ptr<PlanNode> &plan);

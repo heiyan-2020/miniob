@@ -4,6 +4,8 @@
 
 #include "filter_node.h"
 
+#include <utility>
+
 RC FilterNode::prepare()
 {
   RC rc;
@@ -47,7 +49,7 @@ RC FilterNode::is_selected(TupleRef tuple, bool &result)
   }
 
   env_->clear();
-  env_->add_tuple(output_schema_, tuple);
+  env_->add_tuple(output_schema_, std::move(tuple));
   Value val;
   RC rc = predicate_->evaluate(env_, val);
   if (rc == RC::SUCCESS) {

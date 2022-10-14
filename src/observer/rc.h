@@ -204,6 +204,7 @@ enum RC {
   NOTICE = 100,     /* Notifications from log() */
   DATEFORMAT,       /* Date format error */
   EVALUATE,         /* Evaluation error */
+  ENV,         /* Doesn't find column in current environment */
 
   /* buffer pool part */
   BUFFERPOOL_EXIST = (BUFFERPOOL | (RCBufferPool::BP_EXIST << 8)),

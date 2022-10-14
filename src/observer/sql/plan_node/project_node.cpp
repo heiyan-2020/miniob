@@ -43,7 +43,7 @@ RC ProjectNode::current_tuple(TupleRef &tuple)
   return RC::SUCCESS;
 }
 
-RC ProjectNode::prepare_schema(SchemaRef input_schema)
+RC ProjectNode::prepare_schema(const SchemaRef& input_schema)
 {
   std::vector<Column> columns;
   std::vector<Column> tmp;
@@ -87,7 +87,7 @@ RC ProjectNode::prepare_schema(SchemaRef input_schema)
   return RC::SUCCESS;
 }
 
-RC ProjectNode::project_tuple(TupleRef original_tuple, TupleRef &out_tuple)
+RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tuple)
 {
   RC rc;
 

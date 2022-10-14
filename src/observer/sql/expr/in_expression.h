@@ -17,6 +17,7 @@ public:
     //  so return failure when schema.col_count() ≠ 1
     SchemaRef subquery_schema = subquery_plan_->get_schema();
     if (subquery_schema->get_column_count() != 1) {
+      LOG_PANIC("Subquery schema doesn't match");
       return RC::MISMATCH;
     }
 

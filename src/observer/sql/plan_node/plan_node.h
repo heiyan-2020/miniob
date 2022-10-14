@@ -44,6 +44,23 @@ public:
     return output_schema_;
   }
 
+  void set_env(EnvRef env)
+  {
+    env_ = std::move(env);
+  }
+
+  void add_parent_env(EnvRef parent)
+  {
+    env_->add_parent_env(parent);
+
+    // update children's parent environments
+    if (left_child_)
+      left_child_->add_parent_env(parent);
+
+    if (right_child_)
+      right_child_->add_parent_env(parent);
+  }
+
 protected:
   PlanNodeRef left_child_;
   PlanNodeRef right_child_;

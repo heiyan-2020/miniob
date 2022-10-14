@@ -62,8 +62,27 @@ public:
       }
       return rc;
     }
-    LOG_ERROR("May be in the parent env which hasn't implemented yet.");
-    return RC::UNIMPLENMENT;
+
+    // can't find column in current env, find it in the parent if it has.
+    if (!parent_envs_.empty()) {
+      for (const auto &parent : parent_envs_) {
+        rc = parent->get_column_value(name, out_value);
+        if (rc == RC::SUCCESS) {
+          return rc;
+        }
+        if (rc == RC::ENV) {
+          continue ;
+        }
+        return rc; // unexpected situation, return failure.
+      }
+    }
+
+    return RC::ENV;
+  }
+
+  void add_parent_env(EnvRef parent)
+  {
+    parent_envs_.push_back(std::move(parent));
   }
 
 private:

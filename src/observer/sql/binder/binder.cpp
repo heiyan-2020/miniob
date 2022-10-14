@@ -12,14 +12,13 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
   RC rc;
 
   // Bind from tables.
-  SchemaRef from_schema;
   std::unordered_set<std::string> from_table_names;
-  rc = bind_from(sel_stmt->fromTable, from_schema);
+  rc = bind_from(sel_stmt->fromTable, from_schema_);
   if (rc != RC::SUCCESS) {
     LOG_WARN("Can't find table");
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
-  from_table_names = from_schema->get_involved_tables();
+  from_table_names = from_schema_->get_involved_tables();
 
   // Bind select values.
   for (const auto selVal : *sel_stmt->selectList) {
@@ -43,10 +42,9 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
       }
       std::vector<ColumnName> symbols = bound_expr->get_all_symbols();
       for (auto const &name : symbols) {
-        std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
-        if (found.size() != 1) {
-          LOG_PANIC("where expression has wrong column reference");
-          return RC::SCHEMA_FIELD_NOT_EXIST;
+        rc = find_columns(name.table_name(), name.column_name());
+        if (rc != RC::SUCCESS) {
+          return rc;
         }
       }
       select_values_.push_back(bound_expr);
@@ -62,10 +60,9 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
     }
     std::vector<ColumnName> symbols = expr->get_all_symbols();
     for (auto const &name : symbols) {
-      std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
-      if (found.size() != 1) {
-        LOG_PANIC("where expression has wrong column reference");
-        return RC::SCHEMA_FIELD_NOT_EXIST;
+      rc = find_columns(name.table_name(), name.column_name());
+      if (rc != RC::SUCCESS) {
+        return rc;
       }
     }
     where_predicate_ = expr;
@@ -81,7 +78,7 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
       }
       std::vector<ColumnName> symbols = bound_expr->get_all_symbols();
       for (auto const &name : symbols) {
-        std::vector<Column> found = from_schema->find_columns(name.table_name(), name.column_name());
+        std::vector<Column> found = from_schema_->find_columns(name.table_name(), name.column_name());
         if (found.size() != 1) {
           LOG_PANIC("group by expression has wrong column reference");
           return RC::SCHEMA_FIELD_NOT_EXIST;
@@ -278,4 +275,25 @@ RC Binder::bind_operator(hsql::OperatorType opt, OperatorType &out)
   }
   LOG_PANIC("Unsupported operator type: %d", opt);
   return RC::UNIMPLENMENT;
+}
+
+RC Binder::find_columns(const std::string& table_name, std::string column_name)
+{
+  size_t found_cnt = 0;
+  std::vector<Column> found_columns;
+  // start from current schema.
+  found_columns = from_schema_->find_columns(table_name, column_name);
+  found_cnt += found_columns.size();
+  for (const auto& parent_schema : enclosing_) {
+    found_columns = parent_schema->find_columns(table_name, column_name);
+    found_cnt += found_columns.size();
+  }
+
+  if (found_cnt == 1) {
+    // exists and unique
+    return RC::SUCCESS;
+  }
+  LOG_PANIC("can't find columns or it's ambiguous");
+  return RC::SCHEMA_FIELD_NOT_EXIST;
+
 }

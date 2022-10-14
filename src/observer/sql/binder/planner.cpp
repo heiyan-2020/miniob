@@ -79,10 +79,10 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
 RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan)
 {
   RC rc = RC::SUCCESS;
-  // TODO(zyx): find aggregates_ in expr.
 
-  // update's where clause only have AND case.
-  std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(Planner(db_));
+  // update's where clause only has AND case.
+  binder_.enclosing_.push_back(binder_.from_schema_);
+  std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(Planner(db_, binder_.enclosing_));
   if (nullptr != predicate) {
     // add predicate
     AbstractExpressionRef expr;
@@ -100,6 +100,7 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
   }
 
   if (expression_planner->has_subquery()) {
+    plan->set_env(expression_planner->get_env());
     rc = expression_planner->prepare_all();
   }
 

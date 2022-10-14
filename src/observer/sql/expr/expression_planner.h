@@ -8,7 +8,10 @@
 class ExpressionPlanner : public ExpressionProcessor {
   friend class AbstractExpression;
 public:
-  ExpressionPlanner(Planner planner) : planner_(planner) {}
+  ExpressionPlanner(Planner planner) : planner_(planner)
+  {
+    env_ = std::make_shared<Environment>();
+  }
 
   void enter(AbstractExpressionRef node) override
   {
@@ -20,6 +23,7 @@ public:
         LOG_PANIC("Plan subquery failed, need to be handled");
         assert(false);
       }
+      expr->subquery_plan_->add_parent_env(env_);
       subquery_plans_.push_back(expr->subquery_plan_);
     }
   }
@@ -45,7 +49,13 @@ public:
     return RC::SUCCESS;
   }
 
+  EnvRef get_env() const
+  {
+    return env_;
+  }
+
 private:
   std::vector<PlanNodeRef> subquery_plans_;
   Planner planner_;
+  EnvRef env_;
 };

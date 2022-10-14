@@ -5,11 +5,15 @@
 #include "sql/table/schema.h"
 #include "sql/expr/abstract_expression.h"
 
+
+class Planner;
+
 class Binder {
   friend class Planner;
 public:
 
-  Binder(Db *db): db_(db) {}
+  Binder(Db *db, std::vector<SchemaRef> enclosing) : db_(db), enclosing_(std::move(enclosing))
+  {}
 
   RC bind_select(const hsql::SelectStatement *sel_stmt);
 
@@ -25,4 +29,9 @@ private:
   std::vector<AbstractExpressionRef> select_values_;
   AbstractExpressionRef where_predicate_;
   std::vector<AbstractExpressionRef> group_by_exprs_;
+  std::vector<SchemaRef> enclosing_;
+  SchemaRef from_schema_;
+
+private:
+  RC find_columns(const std::string& table_name, std::string column_name);
 };
