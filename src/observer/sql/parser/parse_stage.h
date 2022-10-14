@@ -17,6 +17,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/seda/stage.h"
 #include "rc.h"
+#include "event/sql_event.h"
 
 class ParseStage : public common::Stage {
 public:
@@ -37,6 +38,7 @@ protected:
   RC handle_request(common::StageEvent *event);
 
 private:
+  RC parse_headers(SQLStageEvent *event, const std::string &sql);
   Stage *resolve_stage_ = nullptr;
 };
 

@@ -29,6 +29,8 @@ See the Mulan PSL v2 for more details. */
 #include "hsql/SQLParser.h"
 #include "sql/binder/planner.h"
 
+#include "util/string_utils.h"
+
 using namespace common;
 
 //! Constructor
@@ -112,6 +114,7 @@ RC ParseStage::handle_request(StageEvent *event)
   hsql::SQLParser::parse(sql, &result);
   if (result.isValid()) {
     sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
+    parse_headers(sql_event, sql);
   } else {
     // transform char -> char(4)
     // TODO(vgalaxy): consider coexistence of char and char (xxx)
@@ -121,6 +124,7 @@ RC ParseStage::handle_request(StageEvent *event)
     hsql::SQLParser::parse(sql_trans, &result);
     if (result.isValid()) {
       sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
+      parse_headers(sql_event, sql);
     } else {
       sql_event->session_event()->set_response("Failed to parse sql\n");
       result.reset();
@@ -128,5 +132,25 @@ RC ParseStage::handle_request(StageEvent *event)
     }
   }
 
+  return RC::SUCCESS;
+}
+
+RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
+{
+  std::string str{sql};
+  transform(str.begin(), str.end(), str.begin(), ::tolower);
+  auto select_size = std::string{"select"}.size();
+  auto find_select = str.find("select");
+  if (find_select == std::string::npos) {
+    return RC::GENERIC_ERROR;
+  }
+  auto find_from = str.find("from");
+  if (find_from == std::string::npos) {
+    return RC::GENERIC_ERROR;
+  }
+  str = str.substr(find_select + select_size, find_from - (find_select + select_size));
+  trim(str);
+  auto headers = split(str, ',');
+  event->set_headers(std::move(headers));
   return RC::SUCCESS;
 }

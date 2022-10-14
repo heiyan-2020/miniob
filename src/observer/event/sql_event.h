@@ -21,9 +21,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/command/command.h"
 
 class SessionEvent;
-class Stmt;
 class Command;
-struct Query;
 
 class SQLStageEvent : public common::StageEvent {
 public:
@@ -47,6 +45,10 @@ public:
   {
     return command_;
   }
+  const std::vector<std::string>& headers() const
+  {
+    return headers_;
+  }
 
   void set_sql(const char *sql)
   {
@@ -60,12 +62,17 @@ public:
   {
     command_ = std::move(command);
   }
+  void set_headers(std::vector<std::string> headers)
+  {
+    headers_ = std::move(headers);
+  }
 
 private:
   SessionEvent *session_event_ = nullptr;
   std::string sql_{};
   std::unique_ptr<hsql::SQLParserResult> result_{};
   std::unique_ptr<Command> command_{};
+  std::vector<std::string> headers_{};
 };
 
 #endif  //__OBSERVER_SQL_EVENT_SQLEVENT_H__
