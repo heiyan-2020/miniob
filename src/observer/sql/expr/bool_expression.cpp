@@ -40,10 +40,10 @@ RC BoolExpression::evaluate(EnvRef env, Value &out_value) const
       if (rc != RC::SUCCESS || child_result.get_type() != TypeId::BOOL) {
         return RC::EVALUATE;
       }
-      if (ope_type_ == OperatorType::AND && !child_result.value_.bool_) {
+      if (ope_type_ == OperatorType::AND && !child_result.get_as<bool>()) {
         inter_result = false;
         break;
-      } else if (ope_type_ == OperatorType::OR && child_result.value_.bool_) {
+      } else if (ope_type_ == OperatorType::OR && child_result.get_as<bool>()) {
         inter_result = true;
         break;
       }

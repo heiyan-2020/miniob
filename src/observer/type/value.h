@@ -9,11 +9,6 @@
 #include <cstdlib>
 #include <cassert>
 
-class TableScanNode;
-class NestedLoopJoinNode;
-class FilterNode;
-class BoolExpression;
-
 class Value {
   friend class Type;
   friend class CharType;
@@ -21,10 +16,6 @@ class Value {
   friend class FloatType;
   friend class DateType;
   friend class BoolType;
-  friend class TableScanNode;
-  friend class NestedLoopJoinNode;
-  friend class FilterNode;
-  friend class BoolExpression;
 
 public:
   Value() : Value{TypeId::UNDEFINED}

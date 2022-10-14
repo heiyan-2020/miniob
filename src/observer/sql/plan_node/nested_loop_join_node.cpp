@@ -18,7 +18,7 @@ RC NestedLoopJoinNode::next()
   Value val;
   RC rc;
   while ((rc = get_tuples()) == RC::SUCCESS) {
-    if (can_join(val) == RC::SUCCESS && val.value_.bool_) {
+    if (can_join(val) == RC::SUCCESS && val.get_as<bool>()) {
       return RC::SUCCESS;
     }
   }
