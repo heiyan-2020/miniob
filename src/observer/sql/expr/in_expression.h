@@ -40,6 +40,7 @@ public:
       Value res = left_value.compare_equals(right_value);
       if (left_value.compare_equals(right_value).get_as<bool>()) {
         out_value = {TypeId::BOOL, true};
+        return RC::SUCCESS;
       }
     }
 

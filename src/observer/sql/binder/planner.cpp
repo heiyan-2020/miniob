@@ -28,8 +28,7 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
       case hsql::TableRefType::kTableSelect:
         // TODO(zyx): subquery in from clause.
         break;
-      case hsql::TableRefType::kTableJoin:
-      case hsql::TableRefType::kTableCrossProduct: {
+      case hsql::TableRefType::kTableJoin: {
         PlanNodeRef left_child, right_child;
         const hsql::JoinDefinition *join_def = table->join;
         RC rc = handle_table_name_clause(join_def->left, left_child);
@@ -48,6 +47,28 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
         plan = std::make_shared<NestedLoopJoinNode>(left_child, right_child, join_cond);
         break;
       }
+      case hsql::TableRefType::kTableCrossProduct: {
+        PlanNodeRef left, right, result;
+        RC rc = handle_table_name_clause((*table->list)[0], left);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        rc = handle_table_name_clause((*table->list)[1], right);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        result = std::make_shared<NestedLoopJoinNode>(left, right);
+        for (size_t idx = 2; idx < table->list->size(); idx ++) {
+          right.reset();
+          rc = handle_table_name_clause((*table->list)[idx], right);
+          if (rc != RC::SUCCESS) {
+            return rc;
+          }
+          result = std::make_shared<NestedLoopJoinNode>(result, right);
+        }
+        plan = result;
+        break;
+      }
       default:
         break;
     }
@@ -61,7 +82,7 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
   // TODO(zyx): find aggregates_ in expr.
 
   // update's where clause only have AND case.
-  std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(*this);
+  std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(Planner(db_));
   if (nullptr != predicate) {
     // add predicate
     AbstractExpressionRef expr;
@@ -133,6 +154,12 @@ RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpre
 RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
   RC rc;
+
+  rc = binder_.bind_select(sel_stmt);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Bind failed");
+    return rc;
+  }
 
   // here represents 'handle_from_clause()'
   rc = handle_table_name_clause(sel_stmt->fromTable, plan);

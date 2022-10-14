@@ -20,6 +20,7 @@ public:
   RC initialize() override
   {
     current_.reset();
+    left_child_->initialize();
     return RC::SUCCESS;
   }
   RC next() override;

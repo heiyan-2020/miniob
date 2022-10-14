@@ -5,7 +5,7 @@
 
 class NestedLoopJoinNode : public PlanNode {
 public:
-  NestedLoopJoinNode(PlanNodeRef left_child, PlanNodeRef right_child, AbstractExpressionRef cond)
+  NestedLoopJoinNode(PlanNodeRef left_child, PlanNodeRef right_child, AbstractExpressionRef cond = nullptr)
       : PlanNode(std::move(left_child), std::move(right_child)), cond_(std::move(cond))
   {}
   ~NestedLoopJoinNode() override = default;

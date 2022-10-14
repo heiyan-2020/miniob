@@ -14,13 +14,8 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   SessionEvent *session_event = sql_event->session_event();
   Db *db = session_event->session()->get_current_db();
 
-  Binder binder(db);
-  RC rc = binder.bind_select(stmt_);
-  if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE\n");
-    return rc;
-  }
-  Planner planner(db, binder);
+  RC rc;
+  Planner planner(db);
   std::shared_ptr<PlanNode> sp;
   rc = planner.make_plan_sel(stmt_, sp);
   if (rc != RC::SUCCESS) {

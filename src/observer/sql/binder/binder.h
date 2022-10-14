@@ -8,7 +8,6 @@
 class Binder {
   friend class Planner;
 public:
-  Binder() = default;
 
   Binder(Db *db): db_(db) {}
 

@@ -25,10 +25,7 @@
 
 class Planner {
 public:
-  explicit Planner(Db *db) : db_(db)
-  {}
-
-  Planner(Db *db, Binder binder) : db_(db), binder_(binder)
+  explicit Planner(Db *db) : db_(db), binder_({db})
   {}
 
   RC make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);

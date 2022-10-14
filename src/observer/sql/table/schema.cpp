@@ -29,6 +29,17 @@ Schema::Schema(SchemaRef left, SchemaRef right)
   set_columns(cols);
 }
 
+Schema::Schema(std::vector<SchemaRef> schemas)
+{
+  std::vector<Column> cols;
+  for (auto &schema : schemas) {
+    for (Column &col : schema->columns_) {
+      cols.push_back(col);
+    }
+  }
+  set_columns(cols);
+}
+
 void Schema::set_columns(const std::vector<Column> &columns)
 {
   // start at offset 4, for null field bitmap
