@@ -114,8 +114,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
       out_schema = std::make_shared<Schema>(tp, tp->table_meta().field_metas());
       return RC::SUCCESS;
     }
-    case hsql::TableRefType::kTableJoin:
-    case hsql::TableRefType::kTableCrossProduct: {
+    case hsql::TableRefType::kTableJoin: {
       SchemaRef left_schema, right_schema;
       rc = bind_from(root_table->join->left, left_schema);
       if (rc != RC::SUCCESS) {
@@ -126,6 +125,20 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
         return rc;
       }
       out_schema = std::make_shared<Schema>(left_schema, right_schema);
+      return RC::SUCCESS;
+    }
+    case hsql::TableRefType::kTableCrossProduct: {
+      assert(root_table->list->size() > 1);
+      std::vector<SchemaRef> schemas;
+      for (auto table_ref : *root_table->list) {
+        SchemaRef tmp;
+        rc = bind_from(table_ref, tmp);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        schemas.push_back(std::move(tmp));
+      }
+      out_schema = std::make_shared<Schema>(schemas);
       return RC::SUCCESS;
     }
     default: {

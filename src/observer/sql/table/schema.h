@@ -24,6 +24,8 @@ public:
   // designed for preparing join schema.
   Schema(SchemaRef left, SchemaRef rhs);
 
+  Schema(std::vector<SchemaRef> schemas);
+
   const std::vector<Column> &get_columns() const
   {
     return columns_;
