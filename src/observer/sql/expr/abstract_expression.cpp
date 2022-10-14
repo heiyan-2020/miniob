@@ -6,6 +6,7 @@
 #include "isnull_expression.h"
 #include "symbol_finder.h"
 #include "in_expression.h"
+#include "scalar_expression.h"
 
 std::vector<ColumnName> AbstractExpression::get_all_symbols()
 {

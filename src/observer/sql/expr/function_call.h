@@ -18,7 +18,7 @@ public:
         name_{std::move(name)}, args_{std::move(args)}, function_{std::move(function)}
   {}
 
-  RC evaluate(EnvRef env, Value &out_value) const override
+  RC evaluate(EnvRef env, Value &out_value) override
   {
     // TODO(vgalaxy): only consider aggregate functions now
     return RC::UNIMPLENMENT;

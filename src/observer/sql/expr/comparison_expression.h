@@ -7,7 +7,7 @@ public:
   ComparisonExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType comp_type)
       : BinaryExpression(left, right), comp_type_{comp_type} {}
 
-  RC evaluate(EnvRef env, Value &out_value) const  override {
+  RC evaluate(EnvRef env, Value &out_value) override {
     Value lhs, rhs;
     RC rc = get_child_at(0)->evaluate(env, lhs);
     if (rc != RC::SUCCESS) {

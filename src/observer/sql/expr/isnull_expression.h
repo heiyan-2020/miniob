@@ -11,7 +11,7 @@ public:
   IsNullExpression(AbstractExpressionRef &&left)
       : UnaryExpression(left) {}
 
-  RC evaluate(EnvRef env, Value &out_value) const override
+  RC evaluate(EnvRef env, Value &out_value) override
   {
     Value lhs;
     RC rc = get_child_at(0)->evaluate(env, lhs);

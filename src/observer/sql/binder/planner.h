@@ -32,9 +32,7 @@ class Planner {
   friend class SelectCommand;
 public:
   explicit Planner(Db *db, std::vector<SchemaRef> enclosing_schemas = {}) : db_(db), binder_(db, enclosing_schemas)
-  {
-    std::cerr << enclosing_schemas.size();
-  }
+  {}
 
   RC make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC make_plan_upd(const hsql::UpdateStatement *upd_stmt, std::shared_ptr<PlanNode> &plan);

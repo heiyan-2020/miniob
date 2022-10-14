@@ -6,6 +6,7 @@
 #include "planner.h"
 #include "sql/expr/function_call.h"
 #include "sql/expr/in_expression.h"
+#include "sql/expr/scalar_expression.h"
 
 RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 {
@@ -42,9 +43,11 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
       }
       std::vector<ColumnName> symbols = bound_expr->get_all_symbols();
       for (auto const &name : symbols) {
-        rc = find_columns(name.table_name(), name.column_name());
-        if (rc != RC::SUCCESS) {
-          return rc;
+        std::vector<Column> cols;
+        cols = from_schema_->find_columns(name.table_name(), name.column_name());
+        if (cols.size() != 1) {
+          LOG_PANIC("select value has ambiguous value");
+          return RC::INTERNAL;
         }
       }
       select_values_.push_back(bound_expr);
@@ -238,6 +241,10 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       out_expr = std::make_shared<FunctionCall>(expr->name, args, fn);
       return RC::SUCCESS;
     }
+    case hsql::kExprSelect: {
+      out_expr = std::make_shared<ScalarExpression>(expr->select);
+      return RC::SUCCESS;
+    }
     default: {
       LOG_ERROR("Unsupported expression type: %d", expr->type);
       return RC::UNIMPLENMENT;
@@ -294,6 +301,8 @@ RC Binder::find_columns(const std::string& table_name, std::string column_name)
   if (found_cnt == 1) {
     // exists and unique
     return RC::SUCCESS;
+  } else {
+
   }
   LOG_PANIC("can't find columns or it's ambiguous");
   return RC::SCHEMA_FIELD_NOT_EXIST;

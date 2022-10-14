@@ -7,7 +7,7 @@ public:
   explicit ConstantValueExpression(Value &&val) :
         val_(val) {}
 
-  RC evaluate(EnvRef env, Value &out_value) const
+  RC evaluate(EnvRef env, Value &out_value)
   {
     out_value = val_;
     return RC::SUCCESS;

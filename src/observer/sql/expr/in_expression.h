@@ -8,13 +8,13 @@ public:
   {}
 
   // [expr] in [subquery]
-  RC evaluate(EnvRef env, Value &out_value) const override
+  RC evaluate(EnvRef env, Value &out_value) override
   {
     // By this time, subquery must be planned and prepared.
     assert(subquery_plan_);
 
-    //only support expr which is a scalar value,
-    //  so return failure when schema.col_count() ≠ 1
+    // only support expr which is a scalar value,
+    // so return failure when schema.col_count() ≠ 1
     SchemaRef subquery_schema = subquery_plan_->get_schema();
     if (subquery_schema->get_column_count() != 1) {
       LOG_PANIC("Subquery schema doesn't match");

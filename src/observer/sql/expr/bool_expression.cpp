@@ -1,6 +1,6 @@
 #include "bool_expression.h"
 
-RC BoolExpression::evaluate(EnvRef env, Value &out_value) const
+RC BoolExpression::evaluate(EnvRef env, Value &out_value)
 {
   RC rc = RC::EVALUATE;
   if (children_.empty()) {

@@ -1,6 +1,6 @@
 #include "arithmetic_expression.h"
 
-RC ArithmeticExpression::evaluate(EnvRef env, Value &out_value) const
+RC ArithmeticExpression::evaluate(EnvRef env, Value &out_value)
 {
   Value lhs, rhs;
   RC rc = get_child_at(0)->evaluate(env, lhs);
@@ -14,9 +14,9 @@ RC ArithmeticExpression::evaluate(EnvRef env, Value &out_value) const
     return rc;
   }
   out_value = perform_arithmetic(lhs, rhs);
-//  if (out_value.get_type() == TypeId::UNDEFINED) {
-//    rc = RC::EVALUATE;
-//  }
+  //  if (out_value.get_type() == TypeId::UNDEFINED) {
+  //    rc = RC::EVALUATE;
+  //  }
   return rc;
 }
 

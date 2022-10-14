@@ -20,7 +20,7 @@ public:
 
   virtual ~AbstractExpression() = default;
 
-  virtual RC evaluate(EnvRef env, Value &out_value) const = 0;
+  virtual RC evaluate(EnvRef env, Value &out_value) = 0;
 
   AbstractExpressionRef get_child_at(uint32_t child_idx) const { return children_[child_idx]; }
 

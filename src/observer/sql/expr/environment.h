@@ -38,7 +38,7 @@ public:
   RC get_column_value(ColumnName name, Value &out_value)
   {
     RC rc = RC::SUCCESS;
-    for (int i = 0; i < current_tuples_.size(); i++) {
+    for (size_t i = 0; i < current_tuples_.size(); i++) {
       TupleRef tuple = current_tuples_[i];
       SchemaRef schema = current_schemas_[i];
 

@@ -11,7 +11,7 @@ class SubqueryExpression : public virtual AbstractExpression {
 public:
   SubqueryExpression(hsql::SelectStatement *sel_clause) : subquery_(sel_clause) {}
 
-  RC evaluate(EnvRef env, Value &out_value) const = 0;
+  RC evaluate(EnvRef env, Value &out_value) = 0;
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {

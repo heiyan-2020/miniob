@@ -12,7 +12,7 @@ public:
   ArithmeticExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType type)
       : BinaryExpression(left, right), ope_type_(type) {}
 
-  RC evaluate(EnvRef env, Value &out_value) const override;
+  RC evaluate(EnvRef env, Value &out_value) override;
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {

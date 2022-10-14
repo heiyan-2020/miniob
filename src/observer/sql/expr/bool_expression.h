@@ -15,7 +15,7 @@ public:
     BoolExpression(AbstractExpressionRef &&left, OperatorType type)
         : AbstractExpression({std::move(left)}), ope_type_(type) {}
 
-    RC evaluate(EnvRef env, Value &out_value) const override;
+    RC evaluate(EnvRef env, Value &out_value) override;
 
     AbstractExpressionRef traverse(ProcessorRef processor) override;
 

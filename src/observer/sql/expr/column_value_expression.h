@@ -11,7 +11,7 @@ public:
   ColumnValueExpression(ColumnName col_name)
       : col_name_(std::move(col_name)) {}
 
-  RC evaluate(EnvRef env, Value &out_value) const override
+  RC evaluate(EnvRef env, Value &out_value) override
   {
     RC rc = env->get_column_value(col_name_, out_value);
     return rc;

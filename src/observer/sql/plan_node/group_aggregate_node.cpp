@@ -27,6 +27,7 @@ RC GroupAggregateNode::prepare()
 
 RC GroupAggregateNode::initialize()
 {
+  LOG_PANIC("Aggregate node doesn't need to be reset");
   return RC::UNIMPLENMENT;
 }
 
