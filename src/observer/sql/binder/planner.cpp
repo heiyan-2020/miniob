@@ -7,6 +7,7 @@
 #include "sql/expr/aggregation_processor.h"
 #include "sql/plan_node/group_aggregate_node.h"
 #include "sql/plan_node/project_node.h"
+#include "sql/expr/expression_planner.h"
 
 RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -60,13 +61,27 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
   // TODO(zyx): find aggregates_ in expr.
 
   // update's where clause only have AND case.
+  std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(*this);
   if (nullptr != predicate) {
-    rc = add_predicate_to_plan(plan, predicate);
+    // add predicate
+    AbstractExpressionRef expr;
+    if (binder_.bind_expression(predicate, expr) != RC::SUCCESS) {
+      return RC::INTERNAL;
+    }
+    rc = add_predicate_to_plan(plan, expr);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Add predicate onto plan tree failed.");
       return RC::GENERIC_ERROR;
     }
+
+    // find all sub queries.
+    expr->traverse(expression_planner);
   }
+
+  if (expression_planner->has_subquery()) {
+    rc = expression_planner->prepare_all();
+  }
+
   return rc;
 }
 
@@ -99,13 +114,9 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
   return RC::SUCCESS;
 }
 
-RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *predicate)
+RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef expr)
 {
   std::shared_ptr<TableScanNode> scan_node = std::dynamic_pointer_cast<TableScanNode>(plan);
-  AbstractExpressionRef expr;
-  if (binder_.bind_expression(predicate, expr) != RC::SUCCESS) {
-    return RC::INTERNAL;
-  }
   if (scan_node) {
     if (scan_node->get_predicate() != nullptr) {
       LOG_ERROR("Scan node shouldn't have predicate now.");

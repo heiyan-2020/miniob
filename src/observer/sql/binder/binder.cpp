@@ -210,7 +210,12 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
         }
         args.push_back(bound_expr);
       }
-      out_expr = std::make_shared<FunctionCall>(expr->name, args);
+      AbstractFunctionRef fn;
+      RC rc = FunctionCall::function_factory(expr->name, fn);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      out_expr = std::make_shared<FunctionCall>(expr->name, args, fn);
       return RC::SUCCESS;
     }
     default: {

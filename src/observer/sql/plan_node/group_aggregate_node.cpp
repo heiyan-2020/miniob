@@ -6,30 +6,78 @@
 
 GroupAggregateNode::GroupAggregateNode(PlanNodeRef child, std::vector<AbstractExpressionRef> group_by_exprs,
     std::map<std::string, AbstractExpressionRef> aggregates) :
-      child_{std::move(child)}, group_by_exprs_{std::move(group_by_exprs)}, aggregates_{std::move(aggregates)}
+      PlanNode(std::move(child)), group_by_exprs_{std::move(group_by_exprs)}, aggregates_{std::move(aggregates)}
 {}
 
 RC GroupAggregateNode::prepare()
 {
   RC rc;
   assert(left_child_);
-  left_child_->prepare();
+  rc = left_child_->prepare();
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
   input_schema_ = left_child_->get_schema();
-  rc = prepare_schema(input_schema_);
-  return rc;
+  rc = prepare_output_schema(input_schema_);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+  return compute_aggregates();
+}
+
+RC GroupAggregateNode::initialize()
+{
+  return RC::UNIMPLENMENT;
 }
 
 RC GroupAggregateNode::next()
 {
-  return LOCKED_SHAREDCACHE;
+  if (!computed_aggregates_.empty()) {
+    return RC::SUCCESS;
+  }
+  return RC::RECORD_EOF;
 }
 
 RC GroupAggregateNode::current_tuple(TupleRef &tuple)
 {
-  return LOCKED_SHAREDCACHE;
+  if (computed_aggregates_.empty()) {
+    return RC::RECORD_EOF;
+  }
+
+  auto curr = *computed_aggregates_.begin();
+  auto group_values = curr.first;
+  auto group_aggregates = curr.second;
+  computed_aggregates_.erase(group_values);
+
+  char *tmp = (char *)calloc(4, sizeof(char));
+  common::Bitmap output_null_field_bitmap{tmp, 32};
+
+  std::vector<Value> values;
+
+  for (const auto &value : group_values.values) {
+    values.push_back(value);
+  }
+
+  for (const auto &it : group_aggregates) {
+    AbstractExpressionRef expr = it.second;
+    std::shared_ptr<FunctionCall> fn_call = std::dynamic_pointer_cast<FunctionCall>(expr);
+    if (!fn_call) {
+      return RC::INTERNAL;
+    }
+    AbstractFunctionRef fn = fn_call->get_fn();
+    std::shared_ptr<AggregateFunction> agg_fn = std::dynamic_pointer_cast<AggregateFunction>(fn);
+    if (!fn_call) {
+      return RC::INTERNAL;
+    }
+    values.push_back(agg_fn->get_result());
+  }
+
+  tuple = std::make_shared<Tuple>(values, output_schema_, tmp);
+  free(tmp);
+  return RC::SUCCESS;
 }
 
-RC GroupAggregateNode::prepare_schema(SchemaRef input_schema)
+RC GroupAggregateNode::prepare_output_schema(SchemaRef input_schema)
 {
   std::vector<Column> columns;
   std::vector<Column> tmp;
@@ -60,13 +108,136 @@ RC GroupAggregateNode::prepare_schema(SchemaRef input_schema)
 
   // add columns for aggregate function calls
   for (const auto& it : aggregates_) {
-    auto expr = it.second;
-    std::shared_ptr<FunctionCall> fn = std::dynamic_pointer_cast<FunctionCall>(expr);
-    if (!fn) {
+    AbstractExpressionRef expr = it.second;
+    std::shared_ptr<FunctionCall> fn_call = std::dynamic_pointer_cast<FunctionCall>(expr);
+    if (!fn_call) {
       return RC::INTERNAL;
     }
-
+    AbstractFunctionRef fn = fn_call->get_fn();
+    std::shared_ptr<AggregateFunction> agg_fn = std::dynamic_pointer_cast<AggregateFunction>(fn);
+    if (!fn_call) {
+      return RC::INTERNAL;
+    }
+    auto args = fn_call->get_args();
+    if (args.size() != 1) {
+      LOG_ERROR("aggregate function should have one argument");
+      return RC::GENERIC_ERROR;
+    }
+    Value value = agg_fn->get_return_type(args, input_schema);
+    if (value.get_type() == UNDEFINED) {
+      LOG_ERROR("aggregate function return type error");
+      return RC::GENERIC_ERROR;
+    }
+    ColumnName column_name{fn_call->to_string()};
+    columns.emplace_back(column_name, value.get_type(), value.get_len());
   }
 
+  output_schema_ = std::make_shared<Schema>(std::move(columns));
   return RC::SUCCESS;
 }
+
+RC GroupAggregateNode::compute_aggregates()
+{
+  TupleRef current_tuple;
+  while (true) {
+    RC rc = left_child_->next();
+    if (rc != RC::SUCCESS) {
+      break;
+    }
+    rc = left_child_->current_tuple(current_tuple);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    HashAggregateKey group_values{};
+    rc = evaluate_group_by_exprs(current_tuple, group_values);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    std::map<std::string, AbstractExpressionRef> group_aggregates{};
+    auto find = computed_aggregates_.find(group_values);
+    if (find == computed_aggregates_.end()) {
+      for (const auto& it : aggregates_) {
+        auto expr = it.second;
+        std::shared_ptr<FunctionCall> fn_call = std::dynamic_pointer_cast<FunctionCall>(expr);
+        if (!fn_call) {
+          return RC::INTERNAL;
+        }
+        AbstractFunctionRef fn;
+        rc = FunctionCall::function_factory(fn_call->get_fn_name(), fn);  // construct new fn here
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        auto args = fn_call->get_args();
+        AbstractExpressionRef expr_copy = std::make_shared<FunctionCall>(fn_call->get_fn_name(), args, fn);
+        group_aggregates.emplace(it.first, expr_copy);
+      }
+    } else {
+      group_aggregates = find->second;
+      computed_aggregates_.erase(group_values);
+    }
+    rc = update_aggregates(group_aggregates);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    computed_aggregates_.emplace(group_values, group_aggregates);
+  }
+  return RC::SUCCESS;
+}
+
+RC GroupAggregateNode::update_aggregates(std::map<std::string, AbstractExpressionRef> group_aggregates)
+{
+  for (const auto &it : group_aggregates) {
+    auto expr = it.second;
+    std::shared_ptr<FunctionCall> fn_call = std::dynamic_pointer_cast<FunctionCall>(expr);
+    if (!fn_call) {
+      return RC::INTERNAL;
+    }
+    AbstractFunctionRef fn = fn_call->get_fn();
+    std::shared_ptr<AggregateFunction> agg_fn = std::dynamic_pointer_cast<AggregateFunction>(fn);
+    if (!fn_call) {
+      return RC::INTERNAL;
+    }
+    auto args = fn_call->get_args();
+    if (args.size() != 1) {
+      LOG_ERROR("aggregate function should have one argument");
+      return RC::GENERIC_ERROR;
+    }
+    auto arg = args[0];
+    Value eval_result;
+    std::shared_ptr<ColumnValueExpression> col_expr = std::dynamic_pointer_cast<ColumnValueExpression>(arg);
+    if (!(col_expr && col_expr->get_col_name().is_wild_card())) {
+      // eval non-star-expr
+      RC rc = arg->evaluate(env_, eval_result);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+    }
+    agg_fn->add_value(eval_result);
+  }
+  return RC::SUCCESS;
+}
+
+RC GroupAggregateNode::evaluate_group_by_exprs(TupleRef original_tuple, HashAggregateKey &out_values)
+{
+  env_->clear();
+  env_->add_tuple(input_schema_, original_tuple);
+
+  if (group_by_exprs_.empty()) {
+    return RC::SUCCESS;
+  }
+
+  std::vector<Value> group_values;
+  for (const auto& group_by_expr : group_by_exprs_) {
+    Value eval_result;
+    RC rc = group_by_expr->evaluate(env_, eval_result);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    // TODO(vgalaxy): evaluation result may be null?
+    group_values.push_back(eval_result);
+  }
+
+  out_values = HashAggregateKey{group_values};
+  return RC::SUCCESS;
+}
+

@@ -29,6 +29,22 @@ public:
     return node;
   }
 
+  bool has_subquery() const
+  {
+    return !subquery_plans_.empty();
+  }
+
+  RC prepare_all()
+  {
+    RC rc;
+    for (const auto &plan : subquery_plans_) {
+      rc = plan->prepare();
+      if (rc != RC::SUCCESS) {}
+      return rc;
+    }
+    return RC::SUCCESS;
+  }
+
 private:
   std::vector<PlanNodeRef> subquery_plans_;
   Planner planner_;

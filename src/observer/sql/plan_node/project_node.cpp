@@ -6,12 +6,16 @@
 
 #include <utility>
 #include "common/log/log.h"
+#include "sql/expr/function_call.h"
 
 RC ProjectNode::prepare()
 {
   RC rc;
   assert(left_child_);
-  left_child_->prepare();
+  rc = left_child_->prepare();
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
   input_schema_ = left_child_->get_schema();
   rc = prepare_schema(input_schema_);
   return rc;
@@ -19,11 +23,10 @@ RC ProjectNode::prepare()
 
 RC ProjectNode::next()
 {
+  assert(left_child_);
   if (left_child_) {
     return left_child_->next();
   }
-  LOG_WARN("Project node should have a child.");
-  return RC::GENERIC_ERROR;
 }
 
 RC ProjectNode::current_tuple(TupleRef &tuple)
@@ -116,16 +119,33 @@ RC ProjectNode::project_tuple(TupleRef original_tuple, TupleRef &out_tuple)
           out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
         }
       }
-    } else {
-      // complicated expression.
-      Value eval_result;
-      rc = expr->evaluate(env_, eval_result);
-      if (rc != RC::SUCCESS) {
-        return rc;
-      }
-      // TODO(zyx): evaluation result may be null?
-      out_tuple_values.push_back(eval_result);
+      continue;
     }
+
+    // TODO(vgalaxy): only consider aggregate functions now
+    std::shared_ptr<FunctionCall> fn_call = std::dynamic_pointer_cast<FunctionCall>(expr);
+    if (fn_call) {
+      Column exp_col;
+      if (expr->convert_to_column(input_schema_, exp_col) != RC::SUCCESS) {
+        return RC::SCHEMA;
+      }
+      size_t idx;
+      rc = input_schema_->get_column_idx(exp_col.get_name(), idx);
+      if (rc != RC::SUCCESS) {
+        return RC::INTERNAL;
+      }
+      out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
+      continue;
+    }
+
+    // complicated expression.
+    Value eval_result;
+    rc = expr->evaluate(env_, eval_result);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    // TODO(zyx): evaluation result may be null?
+    out_tuple_values.push_back(eval_result);
   }
 
   out_tuple = std::make_shared<Tuple>(out_tuple_values, output_schema_, tmp);

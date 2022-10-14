@@ -18,7 +18,6 @@ RC TableScanNode::initialize()
 {
   current_.reset();
   RC rc = table_->get_record_scanner(record_scanner_);
-  if (rc == RC::SUCCESS) {}
   return rc;
 }
 

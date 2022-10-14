@@ -8,6 +8,11 @@
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
+#include <functional>
+
+struct HashAggregateKey;
+template<> struct std::hash<HashAggregateKey>;
+template<> struct std::equal_to<HashAggregateKey>;
 
 class Value {
   friend class Type;
@@ -16,6 +21,9 @@ class Value {
   friend class FloatType;
   friend class DateType;
   friend class BoolType;
+
+  friend struct std::hash<HashAggregateKey>;
+  friend struct std::equal_to<HashAggregateKey>;
 
 public:
   Value() : Value{TypeId::UNDEFINED}
@@ -153,4 +161,15 @@ inline auto cmp_res_to_int(CmpRes res) -> int
     // TODO(vgalaxy): undefined
     return 0;
   }
+}
+
+namespace std {
+template <>
+struct hash<Value> {
+public:
+  size_t operator()(const Value &value) const
+  {
+    return std::hash<std::string>{}(value.to_string());
+  }
+};
 }

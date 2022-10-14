@@ -45,7 +45,7 @@ private:
   Binder binder_;
 
 private:
-  RC add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *predicate);
+  RC add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef pred);
 
 };
 
