@@ -61,7 +61,7 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
   // TODO(zyx): find aggregates_ in expr.
 
   // update's where clause only have AND case.
-  std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(*this);
+  std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(Planner(db_));
   if (nullptr != predicate) {
     // add predicate
     AbstractExpressionRef expr;
@@ -133,6 +133,12 @@ RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpre
 RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
   RC rc;
+
+  rc = binder_.bind_select(sel_stmt);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Bind failed");
+    return rc;
+  }
 
   // here represents 'handle_from_clause()'
   rc = handle_table_name_clause(sel_stmt->fromTable, plan);

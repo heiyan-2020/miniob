@@ -54,8 +54,10 @@ RC GroupAggregateNode::current_tuple(TupleRef &tuple)
 
   std::vector<Value> values;
 
+  size_t idx{};
   for (const auto &value : group_values.values) {
     values.push_back(value);
+    idx++;
   }
 
   for (const auto &it : group_aggregates) {
@@ -69,7 +71,12 @@ RC GroupAggregateNode::current_tuple(TupleRef &tuple)
     if (!fn_call) {
       return RC::INTERNAL;
     }
-    values.push_back(agg_fn->get_result());
+    Value res = agg_fn->get_result();
+    if (res.is_null()) {
+      output_null_field_bitmap.set_bit(idx);
+    }
+    values.push_back(res);
+    idx++;
   }
 
   tuple = std::make_shared<Tuple>(values, output_schema_, tmp);
@@ -211,6 +218,8 @@ RC GroupAggregateNode::update_aggregates(std::map<std::string, AbstractExpressio
       if (rc != RC::SUCCESS) {
         return rc;
       }
+    } else {
+      eval_result = Value{INT, 0};  // dummy value to avoid null
     }
     agg_fn->add_value(eval_result);
   }

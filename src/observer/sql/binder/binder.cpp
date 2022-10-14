@@ -189,6 +189,13 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       if (rc != RC::SUCCESS) {
         return rc;
       }
+
+      // special case: Constructing IN-expression needs select clause which others don't.
+      if (expr->opType == hsql::OperatorType::kOpIn) {
+        out_expr = std::make_shared<InExpression>(expr->select, lhs);
+        return RC::SUCCESS;
+      }
+
       rc = bind_expression(expr->expr2, rhs);
       if (rc != RC::SUCCESS) {
         return rc;

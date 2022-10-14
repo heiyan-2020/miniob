@@ -12,6 +12,9 @@ public:
 
   auto add_value(Value value) -> void override
   {
+    if (value.is_null()) {
+      return;
+    }
     sum_value_ = sum_value_.add(value);
     count_value_ = count_value_.add(Value{INT, 1});
   }
