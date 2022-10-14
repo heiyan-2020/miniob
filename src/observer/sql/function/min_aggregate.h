@@ -12,6 +12,9 @@ public:
 
   auto add_value(Value value) -> void override
   {
+    if (value.is_null()) {
+      return;
+    }
     if (value_.is_null()) {
       value_ = value;
     } else {

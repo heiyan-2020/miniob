@@ -50,11 +50,16 @@ public:
         LOG_ERROR("column name[%s.%s] is ambiguous", name.table_name_.c_str(), name.column_name_.c_str());
         return RC::INTERNAL;
       }
+      common::Bitmap null_field_bitmap{tuple->get_record().data(), 32};
       size_t idx;
       if (schema->get_column_idx(found[0].get_name(), idx) != RC::SUCCESS) {
         return RC::INTERNAL;
       }
-      out_value = tuple->get_value(schema, idx);
+      if (null_field_bitmap.get_bit(idx)) {
+        out_value = Value{schema->get_column(idx).get_type()};
+      } else {
+        out_value = tuple->get_value(schema, idx);
+      }
       return rc;
     }
     LOG_ERROR("May be in the parent env which hasn't implemented yet.");

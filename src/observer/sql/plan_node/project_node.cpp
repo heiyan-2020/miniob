@@ -134,7 +134,12 @@ RC ProjectNode::project_tuple(TupleRef original_tuple, TupleRef &out_tuple)
       if (rc != RC::SUCCESS) {
         return RC::INTERNAL;
       }
-      out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
+      if (input_null_field_bitmap.get_bit(idx)) {
+        out_tuple_values.emplace_back(input_schema_->get_column(idx).get_type());
+        output_null_field_bitmap.set_bit(idx);
+      } else {
+        out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
+      }
       continue;
     }
 
