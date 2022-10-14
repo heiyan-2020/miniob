@@ -34,7 +34,7 @@ public:
 
   static auto op_to_string(OperatorType op_type) -> std::string;
 
-      // create expression according to the operator type.
+  // create expression according to the operator type.
   static RC expression_factory(AbstractExpressionRef lhs, AbstractExpressionRef rhs, OperatorType ope_type, AbstractExpressionRef &out);
 
 protected:

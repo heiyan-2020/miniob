@@ -32,7 +32,14 @@ public:
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
-    return RC::UNIMPLENMENT;
+    ColumnName column_name{to_string()};
+    size_t idx;
+    RC rc = schema->get_column_idx(column_name, idx);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    out_col = schema->get_column(idx);
+    return RC::SUCCESS;
   }
 
   std::string to_string() const override
