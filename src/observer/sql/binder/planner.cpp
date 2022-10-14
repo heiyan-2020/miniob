@@ -6,6 +6,7 @@
 #include "binder.h"
 #include "sql/expr/aggregation_processor.h"
 #include "sql/plan_node/group_aggregate_node.h"
+#include "sql/plan_node/project_node.h"
 
 RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -101,21 +102,21 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
 RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, hsql::Expr *predicate)
 {
   std::shared_ptr<TableScanNode> scan_node = std::dynamic_pointer_cast<TableScanNode>(plan);
-  Binder binder(db_);
+  AbstractExpressionRef expr;
+  if (binder_.bind_expression(predicate, expr) != RC::SUCCESS) {
+    return RC::INTERNAL;
+  }
   if (scan_node) {
     if (scan_node->get_predicate() != nullptr) {
       LOG_ERROR("Scan node shouldn't have predicate now.");
       return RC::GENERIC_ERROR;
     }
-    AbstractExpressionRef expr;
-    if (binder.bind_expression(predicate, expr) != RC::SUCCESS) {
-      return RC::INTERNAL;
-    }
     scan_node->set_predicate(expr);
     return RC::SUCCESS;
+  } else {
+    plan = std::make_shared<FilterNode>(plan, expr);
+    return RC::SUCCESS;
   }
-  return RC::UNIMPLENMENT;
-  // TODO(zyx): Add filter node..
 }
 
 RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)

@@ -12,6 +12,7 @@
 
 class TableScanNode;
 class NestedLoopJoinNode;
+class FilterNode;
 
 class BoolExpression;
 
@@ -29,6 +30,7 @@ class Value {
 
   friend class TableScanNode;
   friend class NestedLoopJoinNode;
+  friend class FilterNode;
 
   friend class BoolExpression;
 
