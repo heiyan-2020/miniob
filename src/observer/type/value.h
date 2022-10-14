@@ -10,12 +10,6 @@
 #include <cassert>
 #include <functional>
 
-class TableScanNode;
-class NestedLoopJoinNode;
-class FilterNode;
-
-class BoolExpression;
-
 struct HashAggregateKey;
 template<> struct std::hash<HashAggregateKey>;
 template<> struct std::equal_to<HashAggregateKey>;
@@ -27,12 +21,6 @@ class Value {
   friend class FloatType;
   friend class DateType;
   friend class BoolType;
-
-  friend class TableScanNode;
-  friend class NestedLoopJoinNode;
-  friend class FilterNode;
-
-  friend class BoolExpression;
 
   friend struct std::hash<HashAggregateKey>;
   friend struct std::equal_to<HashAggregateKey>;
@@ -108,6 +96,11 @@ public:
   auto is_null() const -> bool
   {
     return is_null_;
+  }
+
+  template <class T>
+  inline auto get_as() const -> T {
+    return *reinterpret_cast<const T *>(&value_);
   }
 
   auto compare_equals(const Value &o) const -> Value;

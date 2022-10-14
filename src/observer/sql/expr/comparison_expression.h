@@ -1,10 +1,11 @@
 #pragma once
 #include "abstract_expression.h"
+#include "binary_expression.h"
 
-class ComparisonExpression : public AbstractExpression {
+class ComparisonExpression : public BinaryExpression {
 public:
   ComparisonExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType comp_type)
-      : AbstractExpression({std::move(left), std::move(right)}), comp_type_{comp_type} {}
+      : BinaryExpression(left, right), comp_type_{comp_type} {}
 
   RC evaluate(EnvRef env, Value &out_value) const  override {
     Value lhs, rhs;
@@ -23,15 +24,6 @@ public:
       rc = RC::EVALUATE;
     }
     return rc;
-  }
-
-  AbstractExpressionRef traverse(ProcessorRef processor) override
-  {
-    std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
-    children_[0] = children_[0]->traverse(processor);
-    children_[1] = children_[1]->traverse(processor);
-    return processor->leave(sp);
   }
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override

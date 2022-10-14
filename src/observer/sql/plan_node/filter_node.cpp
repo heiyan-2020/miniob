@@ -51,7 +51,7 @@ RC FilterNode::is_selected(TupleRef tuple, bool &result)
   Value val;
   RC rc = predicate_->evaluate(env_, val);
   if (rc == RC::SUCCESS) {
-    result = val.value_.bool_;
+    result = val.get_as<bool>();
     return rc;
   }
   LOG_ERROR("Evaluation failed");

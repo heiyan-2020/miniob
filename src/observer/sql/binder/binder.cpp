@@ -245,7 +245,8 @@ RC Binder::bind_operator(hsql::OperatorType opt, OperatorType &out)
       {hsql::OperatorType::kOpPlus, OperatorType::PLUS},
       {hsql::OperatorType::kOpMinus, OperatorType::SUB},
       {hsql::OperatorType::kOpUnaryMinus, OperatorType::NEG},
-      {hsql::OperatorType::kOpIsNull, OperatorType::IsNull}
+      {hsql::OperatorType::kOpIsNull, OperatorType::IsNull},
+      {hsql::OperatorType::kOpIn, OperatorType::IN}
 
   };
   for (auto info : infos) {

@@ -1,7 +1,8 @@
 #pragma once
 #include "abstract_expression.h"
+#include "leaf_node_expression.h"
 
-class ConstantValueExpression : public AbstractExpression {
+class ConstantValueExpression : public LeafNodeExpression {
 public:
   explicit ConstantValueExpression(Value &&val) :
         val_(val) {}
@@ -14,8 +15,6 @@ public:
 
   AbstractExpressionRef traverse(ProcessorRef processor) override
   {
-    // leaf node
-    // TODO(zyx): Avoid creating second manager object for this.
     std::shared_ptr<AbstractExpression> sp = shared_from_this();
     processor->enter(sp);
     return processor->leave(sp);

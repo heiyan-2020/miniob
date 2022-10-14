@@ -1,19 +1,18 @@
 #pragma once
 #include "abstract_expression.h"
+#include "binary_expression.h"
 
 class SymbolFinder;
 
-class ArithmeticExpression : public AbstractExpression {
+class ArithmeticExpression : public BinaryExpression {
   friend SymbolFinder;
 
 public:
 public:
   ArithmeticExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType type)
-      : AbstractExpression({std::move(left), std::move(right)}), ope_type_(type) {}
+      : BinaryExpression(left, right), ope_type_(type) {}
 
   RC evaluate(EnvRef env, Value &out_value) const override;
-
-  AbstractExpressionRef traverse(ProcessorRef processor) override;
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
