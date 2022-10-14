@@ -5,6 +5,7 @@
 #include "sql/expr/bool_expression.h"
 #include "planner.h"
 #include "sql/expr/function_call.h"
+#include "sql/expr/in_expression.h"
 
 RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 {

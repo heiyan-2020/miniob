@@ -4,7 +4,10 @@
 
 class BinaryExpression : public AbstractExpression {
 public:
-  BinaryExpression(AbstractExpressionRef left, AbstractExpressionRef right) : AbstractExpression({std::move(left), std::move(right)}) {}
+  BinaryExpression(AbstractExpressionRef left, AbstractExpressionRef right) {
+    children_.push_back(std::move(left));
+    children_.push_back(std::move(right));
+  }
 
   AbstractExpressionRef traverse(ProcessorRef processor)
   {

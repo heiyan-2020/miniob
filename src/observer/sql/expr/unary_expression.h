@@ -4,7 +4,9 @@
 
 class UnaryExpression : public virtual AbstractExpression {
 public:
-  UnaryExpression(AbstractExpressionRef child) : AbstractExpression({std::move(child)}) {}
+  UnaryExpression(AbstractExpressionRef child) {
+    children_.push_back(std::move(child));
+  }
 
   AbstractExpressionRef traverse(ProcessorRef processor)
   {
