@@ -124,6 +124,10 @@ RC GroupAggregateNode::prepare_output_schema(SchemaRef input_schema)
       return RC::GENERIC_ERROR;
     }
     Value value = agg_fn->get_return_type(args, input_schema);
+    if (value.get_type() == UNDEFINED) {
+      LOG_ERROR("aggregate function return type error");
+      return RC::GENERIC_ERROR;
+    }
     ColumnName column_name{fn_call->to_string()};
     columns.emplace_back(column_name, value.get_type(), value.get_len());
   }

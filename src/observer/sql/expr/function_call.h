@@ -4,11 +4,11 @@
 #include <utility>
 #include <vector>
 #include "abstract_expression.h"
-#include "../function/abstract_function.h"
+#include "sql/function/abstract_function.h"
 #include "sql/function/count_aggregate.h"
 
 enum class FunctionType {
-  SUM, COUNT, MAX, MIN
+  AVG, COUNT, MAX, MIN
 };
 
 class FunctionCall : public AbstractExpression {
@@ -19,8 +19,8 @@ public:
 
   RC evaluate(EnvRef env, Value &out_value) const override
   {
-    // TODO(vgalaxy)
-    assert(false);
+    // TODO(vgalaxy): only consider aggregate functions now
+    return RC::UNIMPLENMENT;
   }
 
   AbstractExpressionRef traverse(ProcessorRef processor) override

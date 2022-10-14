@@ -6,8 +6,8 @@
 
 #include "expression_processor.h"
 #include "function_call.h"
-#include "../function/aggregate_function.h"
-#include "../function/count_aggregate.h"
+#include "sql/function/aggregate_function.h"
+#include "sql/function/count_aggregate.h"
 
 class AggregationProcessor : public ExpressionProcessor {
   friend class AbstractExpression;
