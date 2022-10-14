@@ -2,6 +2,7 @@
 #define MINIDB_SCHEMA_H
 
 #include <vector>
+#include <algorithm>
 
 #include "column.h"
 #include "common/log/log.h"
@@ -58,16 +59,22 @@ public:
   }
 
   /**
-   * return true when all columns belong to same table i.e. we can ignore table_name.
-   * @return
+   * return true when:
+   * 1. all columns belong to same table
+   * 2. all columns have table name (column value expression)
    */
-  bool table_name_ignorable() const
+  bool ignore_table_name() const
   {
+    if (std::any_of(columns_.begin(), columns_.end(), [](const auto &column) {
+          return column.get_name().table_name_.empty();
+        })) {
+      return false;
+    }
     std::string table_name = columns_[0].get_name().table_name_;
-    for (const auto &column : columns_) {
-      if (column.get_name().table_name_ != table_name) {
-        return false;
-      }
+    if (std::any_of(columns_.begin(), columns_.end(), [table_name](const auto &column) {
+          return column.get_name().table_name_ != table_name;
+        })) {
+      return false;
     }
     return true;
   }

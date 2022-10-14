@@ -35,6 +35,5 @@ public:
   auto to_string(const Value &val) const -> std::string override;
 
   static auto cmp_float_helper(const float lhs, const float rhs) -> CmpRes;
-
   static auto div_float_helper(const float lhs, const float rhs) -> Value;
 };

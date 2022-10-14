@@ -14,14 +14,17 @@ RC ArithmeticExpression::evaluate(EnvRef env, Value &out_value) const
     return rc;
   }
   out_value = perform_arithmetic(lhs, rhs);
-  if (out_value.get_type() == TypeId::UNDEFINED) {
-    rc = RC::EVALUATE;
-  }
+//  if (out_value.get_type() == TypeId::UNDEFINED) {
+//    rc = RC::EVALUATE;
+//  }
   return rc;
 }
 
 auto ArithmeticExpression::perform_arithmetic(const Value &lhs, const Value &rhs) const -> Value
 {
+  if (lhs.is_null() || rhs.is_null()) {
+    return Value{};
+  }
   switch (ope_type_) {
     case OperatorType::PLUS:
       return lhs.add(rhs);
