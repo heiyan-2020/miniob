@@ -24,10 +24,12 @@
 #include "sql/parser/hsql/sql/DeleteStatement.h"
 #include "binder.h"
 
+class SelectCommand;
 
 class Planner {
   friend class Binder;
 
+  friend class SelectCommand;
 public:
   explicit Planner(Db *db, std::vector<SchemaRef> enclosing_schemas = {}) : db_(db), binder_(db, enclosing_schemas)
   {

@@ -29,7 +29,7 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   }
 
   std::stringstream ss;
-  print_header(ss, sp->get_schema());
+  print_header(ss, sp->get_schema(), sql_event->headers(), planner.binder_.has_multi_table_);
   TupleRef tuple;
   while ((rc = sp->next()) == RC::SUCCESS) {
     rc = sp->current_tuple(tuple);
@@ -47,23 +47,46 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   return RC::SUCCESS;
 }
 
-void SelectCommand::print_header(std::ostream &os, SchemaRef schema)
+void SelectCommand::print_header(
+    std::ostream &os, SchemaRef schema, const std::vector<std::string> &headers, bool has_multi_table)
 {
-  std::string header;
   bool first = true;
-  bool table_name_ignorable = schema->table_name_ignorable();
-  for (const auto &column : schema->get_columns()) {
-    if (column.is_visible()) {
-      if (!first) {
-        header += " | ";
+  const std::vector<Column> &columns = schema->get_columns();
+  bool table_name_ignorable = schema->ignore_table_name() && !has_multi_table;
+  if (table_name_ignorable) {
+    for (const auto &column : columns) {
+      if (column.is_visible()) {
+        if (!first) {
+          os << " | ";
+        }
+        os << column.get_name().to_string(table_name_ignorable);
+        first = false;
       }
-      header += column.get_name().to_string(table_name_ignorable);
-      first = false;
+    }
+  } else {
+    for (const auto &header : headers) {
+      if (header == "*") {
+        for (const auto &column : columns) {
+          if (column.is_visible()) {
+            if (!first) {
+              os << " | ";
+            }
+            os << column.get_name().to_string(table_name_ignorable);
+            first = false;
+          }
+        }
+      } else {
+        if (!first) {
+          os << " | ";
+        }
+        os << header;
+        first = false;
+      }
     }
   }
-  if (schema->get_column_count() > 0)
-    header += "\n";
-  os << header;
+  if (schema->get_column_count() > 0) {
+    os << std::endl;
+  }
 }
 
 void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema)
@@ -79,7 +102,7 @@ void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple, Schema
         row += " | ";
       }
       if (null_field_bitmap.get_bit(i)) {
-        row += "NULL";
+        row += "null";
       } else {
         row += tuple.get_value(schema, i).to_string();
       }
