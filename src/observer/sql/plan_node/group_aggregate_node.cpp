@@ -218,6 +218,8 @@ RC GroupAggregateNode::update_aggregates(std::map<std::string, AbstractExpressio
       if (rc != RC::SUCCESS) {
         return rc;
       }
+    } else {
+      eval_result = Value{INT, 0};  // dummy value to avoid null
     }
     agg_fn->add_value(eval_result);
   }
