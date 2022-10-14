@@ -18,6 +18,7 @@ public:
     if (std::dynamic_pointer_cast<SubqueryExpression>(node)) {
       std::shared_ptr<SubqueryExpression> expr = std::dynamic_pointer_cast<SubqueryExpression>(node);
       hsql::SelectStatement *sel_clause = expr->subquery_;
+      planner_.binder_.clear();
       RC rc = planner_.make_plan_sel(sel_clause, expr->subquery_plan_);
       if (rc != RC::SUCCESS) {
         LOG_PANIC("Plan subquery failed, need to be handled");
@@ -43,8 +44,9 @@ public:
     RC rc;
     for (const auto &plan : subquery_plans_) {
       rc = plan->prepare();
-      if (rc != RC::SUCCESS) {}
-      return rc;
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
     }
     return RC::SUCCESS;
   }

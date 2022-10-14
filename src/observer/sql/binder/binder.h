@@ -23,6 +23,14 @@ public:
   RC bind_from(hsql::TableRef *root_table, SchemaRef &out_schema);
   RC bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr);
 
+  void clear()
+  {
+    select_values_.clear();
+    where_predicate_.reset();
+    group_by_exprs_.clear();
+    from_schema_.reset();
+  }
+
 private:
   RC bind_operator(hsql::OperatorType opt, OperatorType &out);
 
