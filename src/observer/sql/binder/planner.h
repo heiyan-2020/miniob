@@ -22,8 +22,10 @@
 #include "sql/parser/hsql/sql/DeleteStatement.h"
 #include "binder.h"
 
+class SelectCommand;
 
 class Planner {
+  friend class SelectCommand;
 public:
   explicit Planner(Db *db) : db_(db), binder_({db})
   {}

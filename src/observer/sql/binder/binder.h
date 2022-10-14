@@ -5,16 +5,17 @@
 #include "sql/table/schema.h"
 #include "sql/expr/abstract_expression.h"
 
+class SelectCommand;
+
 class Binder {
   friend class Planner;
-public:
+  friend class SelectCommand;
 
+public:
   Binder(Db *db): db_(db) {}
 
   RC bind_select(const hsql::SelectStatement *sel_stmt);
-
   RC bind_from(hsql::TableRef *root_table, SchemaRef &out_schema);
-
   RC bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr);
 
 private:
@@ -25,4 +26,5 @@ private:
   std::vector<AbstractExpressionRef> select_values_;
   AbstractExpressionRef where_predicate_;
   std::vector<AbstractExpressionRef> group_by_exprs_;
+  bool has_multi_table_{};
 };

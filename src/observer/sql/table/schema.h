@@ -63,7 +63,7 @@ public:
    * 1. all columns belong to same table
    * 2. all columns have table name (column value expression)
    */
-  bool table_name_ignorable() const
+  bool ignore_table_name() const
   {
     if (std::any_of(columns_.begin(), columns_.end(), [](const auto &column) {
           return column.get_name().table_name_.empty();

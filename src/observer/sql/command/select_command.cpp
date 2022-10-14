@@ -29,7 +29,7 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   }
 
   std::stringstream ss;
-  print_header(ss, sp->get_schema(), sql_event->headers());
+  print_header(ss, sp->get_schema(), sql_event->headers(), planner.binder_.has_multi_table_);
   TupleRef tuple;
   while ((rc = sp->next()) == RC::SUCCESS) {
     rc = sp->current_tuple(tuple);
@@ -47,11 +47,12 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
   return RC::SUCCESS;
 }
 
-void SelectCommand::print_header(std::ostream &os, SchemaRef schema, const std::vector<std::string> &headers)
+void SelectCommand::print_header(
+    std::ostream &os, SchemaRef schema, const std::vector<std::string> &headers, bool has_multi_table)
 {
   bool first = true;
   const std::vector<Column> &columns = schema->get_columns();
-  bool table_name_ignorable = schema->table_name_ignorable();
+  bool table_name_ignorable = schema->ignore_table_name() && !has_multi_table;
   if (table_name_ignorable) {
     for (const auto &column : columns) {
       if (column.is_visible()) {

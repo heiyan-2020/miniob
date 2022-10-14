@@ -115,6 +115,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
       return RC::SUCCESS;
     }
     case hsql::TableRefType::kTableJoin: {
+      this->has_multi_table_ = true;
       SchemaRef left_schema, right_schema;
       rc = bind_from(root_table->join->left, left_schema);
       if (rc != RC::SUCCESS) {
@@ -128,6 +129,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
       return RC::SUCCESS;
     }
     case hsql::TableRefType::kTableCrossProduct: {
+      this->has_multi_table_ = true;
       assert(root_table->list->size() > 1);
       std::vector<SchemaRef> schemas;
       for (auto table_ref : *root_table->list) {
