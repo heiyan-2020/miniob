@@ -1,5 +1,6 @@
 #pragma once
 #include "abstract_expression.h"
+#include "binary_expression.h"
 
 class SymbolFinder;
 
@@ -10,6 +11,9 @@ public:
   public:
     BoolExpression(AbstractExpressionRef &&left, AbstractExpressionRef &&right, OperatorType type)
         : AbstractExpression({std::move(left), std::move(right)}), ope_type_(type) {}
+
+    BoolExpression(AbstractExpressionRef &&left, OperatorType type)
+        : AbstractExpression({std::move(left)}), ope_type_(type) {}
 
     RC evaluate(EnvRef env, Value &out_value) const override;
 

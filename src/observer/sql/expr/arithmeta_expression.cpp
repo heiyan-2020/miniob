@@ -38,15 +38,6 @@ auto ArithmeticExpression::perform_arithmetic(const Value &lhs, const Value &rhs
   }
 }
 
-AbstractExpressionRef ArithmeticExpression::traverse(ProcessorRef processor)
-{
-  std::shared_ptr<AbstractExpression> sp = shared_from_this();
-  processor->enter(sp);
-  children_[0] = children_[0]->traverse(processor);
-  children_[1] = children_[1]->traverse(processor);
-  return processor->leave(sp);
-}
-
 auto ArithmeticExpression::get_result_type(TypeId lhs, TypeId rhs, OperatorType op_type) -> TypeId
 {
   TypeId type_order[] = {

@@ -5,6 +5,7 @@
 #include "negate_expression.h"
 #include "isnull_expression.h"
 #include "symbol_finder.h"
+#include "in_expression.h"
 
 std::vector<ColumnName> AbstractExpression::get_all_symbols()
 {
@@ -17,9 +18,12 @@ RC AbstractExpression::expression_factory(AbstractExpressionRef lhs, AbstractExp
 {
   switch (ope_type) {
     case OperatorType::OR :
-    case OperatorType::AND :
-    case OperatorType::NOT : {
+    case OperatorType::AND : {
       out = std::make_shared<BoolExpression>(std::move(lhs), std::move(rhs), ope_type);
+      return RC::SUCCESS;
+    }
+    case OperatorType::NOT : {
+      out = std::make_shared<BoolExpression>(std::move(lhs), ope_type);
       return RC::SUCCESS;
     }
     case OperatorType::LessThanOrEqual:

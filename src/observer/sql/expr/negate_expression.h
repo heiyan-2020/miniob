@@ -1,14 +1,15 @@
 #pragma once
 #include "abstract_expression.h"
+#include "unary_expression.h"
 
 class SymbolFinder;
 
-class NegateExpression : public AbstractExpression {
+class NegateExpression :public UnaryExpression {
   friend SymbolFinder;
 
 public:
   NegateExpression(AbstractExpressionRef &&left)
-      : AbstractExpression({std::move(left)}) {}
+      : UnaryExpression(left) {}
 
   RC evaluate(EnvRef env, Value &out_value) const override
   {
@@ -23,14 +24,6 @@ public:
       rc = RC::EVALUATE;
     }
     return rc;
-  }
-
-  AbstractExpressionRef traverse(ProcessorRef processor) override
-  {
-    std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
-    children_[0] = children_[0]->traverse(processor);
-    return processor->leave(sp);
   }
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override

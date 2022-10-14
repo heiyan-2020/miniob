@@ -1,7 +1,8 @@
 #pragma once
 #include "abstract_expression.h"
+#include "leaf_node_expression.h"
 
-class ConstantValueExpression : public AbstractExpression {
+class ConstantValueExpression : public LeafNodeExpression {
 public:
   explicit ConstantValueExpression(Value &&val) :
         val_(val) {}

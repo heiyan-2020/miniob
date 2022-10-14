@@ -6,12 +6,13 @@
 #include "abstract_expression.h"
 #include "sql/function/abstract_function.h"
 #include "sql/function/count_aggregate.h"
+#include "leaf_node_expression.h"
 
 enum class FunctionType {
   AVG, COUNT, MAX, MIN
 };
 
-class FunctionCall : public AbstractExpression {
+class FunctionCall : public LeafNodeExpression {
 public:
   FunctionCall(std::string name, std::vector<AbstractExpressionRef> args, AbstractFunctionRef function) :
         name_{std::move(name)}, args_{std::move(args)}, function_{std::move(function)}
@@ -21,13 +22,6 @@ public:
   {
     // TODO(vgalaxy): only consider aggregate functions now
     return RC::UNIMPLENMENT;
-  }
-
-  AbstractExpressionRef traverse(ProcessorRef processor) override
-  {
-    std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
-    return processor->leave(sp);
   }
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override

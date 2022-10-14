@@ -1,9 +1,10 @@
 #pragma once
 #include "abstract_expression.h"
+#include "leaf_node_expression.h"
 
 class SymbolFinder;
 
-class ColumnValueExpression : public AbstractExpression {
+class ColumnValueExpression : public LeafNodeExpression {
   friend SymbolFinder;
 
 public:
@@ -14,15 +15,6 @@ public:
   {
     RC rc = env->get_column_value(col_name_, out_value);
     return rc;
-  }
-
-  AbstractExpressionRef traverse(ProcessorRef processor) override
-  {
-    // leaf node
-    // TODO(zyx): Avoid creating second manager object for this.
-    std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
-    return processor->leave(sp);
   }
 
   ColumnName get_col_name() const

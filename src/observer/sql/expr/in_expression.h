@@ -2,12 +2,10 @@
 
 #include "subquery_expression.h"
 
-class InExpression : public SubqueryExpression {
+class InExpression : public SubqueryExpression, public UnaryExpression {
 public:
-  InExpression(hsql::SelectStatement *sel_clause, AbstractExpressionRef left_child) : SubqueryExpression(sel_clause)
-  {
-    children_[0] = std::move(left_child);
-  }
+  InExpression(hsql::SelectStatement *sel_clause, AbstractExpressionRef left_child) : SubqueryExpression(sel_clause), UnaryExpression(std::move(left_child))
+  {}
 
   // [expr] in [subquery]
   RC evaluate(EnvRef env, Value &out_value) const override
@@ -53,14 +51,6 @@ public:
     // can't find equivalent row, the result is false.
     out_value = {TypeId::BOOL, false};
     return RC::SUCCESS;
-  }
-
-  AbstractExpressionRef traverse(ProcessorRef processor) override
-  {
-    std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
-    children_[0] = children_[0]->traverse(processor);
-    return processor->leave(sp);
   }
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
