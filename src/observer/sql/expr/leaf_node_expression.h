@@ -4,7 +4,6 @@
 
 class LeafNodeExpression : public virtual AbstractExpression {
 public:
-  LeafNodeExpression() = default;
 
   AbstractExpressionRef traverse(ProcessorRef processor)
   {

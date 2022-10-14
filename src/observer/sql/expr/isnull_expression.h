@@ -19,11 +19,11 @@ public:
       LOG_ERROR("Left hand expression evaluate failed");
       return rc;
     }
-    if (lhs.get_type() == TypeId::UNDEFINED) {
-      rc = RC::EVALUATE;
-    }
     if (lhs.is_null()) {
       out_value = Value{BOOL, true};
+    } else if (lhs.get_type() == TypeId::UNDEFINED) {
+      out_value = Value{BOOL, false};
+      return RC::EVALUATE;
     } else {
       out_value = Value{BOOL, false};
     }
