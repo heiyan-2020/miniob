@@ -36,6 +36,7 @@ public:
   RC handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan);
   RC handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
+  RC handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
 
 private:
   Db *db_;

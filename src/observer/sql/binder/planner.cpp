@@ -135,6 +135,11 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
   return RC::SUCCESS;
 }
 
+RC Planner::handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
+{
+  return LOCKED_SHAREDCACHE;
+}
+
 RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef expr)
 {
   std::shared_ptr<TableScanNode> scan_node = std::dynamic_pointer_cast<TableScanNode>(plan);
@@ -177,6 +182,12 @@ RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr
   rc = handle_grouping_and_aggregation(sel_stmt, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan grouping and aggregation");
+    return rc;
+  }
+
+  rc = handle_order_by_clause(sel_stmt, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan order by");
     return rc;
   }
 
