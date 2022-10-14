@@ -17,7 +17,7 @@ public:
 
 private:
   void tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema);
-  void print_header(std::ostream &os, SchemaRef schema);
+  void print_header(std::ostream &os, SchemaRef schema, const std::vector<std::string> &headers);
 
 private:
   const hsql::SelectStatement *stmt_;

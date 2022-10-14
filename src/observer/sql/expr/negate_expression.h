@@ -28,12 +28,22 @@ public:
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
-    return RC::UNIMPLENMENT;
+    Column col;
+    RC rc = children_[0]->convert_to_column(schema, col);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    out_col = {ColumnName(to_string()), col.get_type(), col.get_len()};
+    return RC::SUCCESS;
   }
 
   std::string to_string() const override
   {
-    return {};
+    assert(children_.size() == 1);
+    std::string child = children_[0]->to_string();
+    std::ostringstream oss;
+    oss << "-" << "(" << child << ")";
+    return oss.str();
   }
 
 private:
