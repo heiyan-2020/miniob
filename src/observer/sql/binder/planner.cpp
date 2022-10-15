@@ -13,8 +13,7 @@
 #include "util/macros.h"
 #include "ini_setting.h"
 
-
-RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
+RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
   if (table != nullptr) {
     switch (table->type) {
@@ -36,10 +35,10 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
       case hsql::TableRefType::kTableJoin: {
         PlanNodeRef left_child, right_child;
         const hsql::JoinDefinition *join_def = table->join;
-        RC rc = handle_table_name_clause(join_def->left, left_child);
+        RC rc = handle_from_clause(join_def->left, left_child);
         HANDLE_EXCEPTION(rc, "");
 
-        rc = handle_table_name_clause(join_def->right, right_child);
+        rc = handle_from_clause(join_def->right, right_child);
         HANDLE_EXCEPTION(rc, "");
 
         AbstractExpressionRef join_cond;
@@ -51,16 +50,16 @@ RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_pt
       }
       case hsql::TableRefType::kTableCrossProduct: {
         PlanNodeRef left, right, result;
-        RC rc = handle_table_name_clause((*table->list)[0], left);
+        RC rc = handle_from_clause((*table->list)[0], left);
         HANDLE_EXCEPTION(rc, "");
 
-        rc = handle_table_name_clause((*table->list)[1], right);
+        rc = handle_from_clause((*table->list)[1], right);
         HANDLE_EXCEPTION(rc, "");
 
         result = std::make_shared<NestedLoopJoinNode>(left, right);
         for (size_t idx = 2; idx < table->list->size(); idx ++) {
           right.reset();
-          rc = handle_table_name_clause((*table->list)[idx], right);
+          rc = handle_from_clause((*table->list)[idx], right);
           HANDLE_EXCEPTION(rc, "");
 
           result = std::make_shared<NestedLoopJoinNode>(result, right);
@@ -84,14 +83,20 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
   std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(Planner(db_, binder_.enclosing_));
   if (nullptr != predicate) {
     // add predicate
-    rc = add_predicate_to_plan(plan, binder_.where_predicate_);
+    AbstractExpressionRef expr;
+    // this function could be called in update/delete planner who don't call binder first,
+    // so just re-bind predicate though it may be already in binder.
+    rc = binder_.bind_expression(predicate, expr);
+    HANDLE_EXCEPTION(rc, "");
+
+    rc = add_predicate_to_plan(plan, expr);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Add predicate onto plan tree failed.");
       return RC::GENERIC_ERROR;
     }
 
     // find all sub queries.
-    binder_.where_predicate_->traverse(expression_planner);
+    expr->traverse(expression_planner);
   }
 
   if (expression_planner->has_subquery()) {
@@ -384,7 +389,7 @@ RC Planner::make_plan_upd(const hsql::UpdateStatement *upd_stmt, std::shared_ptr
   RC rc;
 
   // tableScanNode
-  rc = handle_table_name_clause(upd_stmt->table, plan);
+  rc = handle_from_clause(upd_stmt->table, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan 'FROM' statement");
     return rc;

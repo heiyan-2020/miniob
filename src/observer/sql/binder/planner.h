@@ -31,6 +31,7 @@ class Planner {
   friend class Binder;
   friend class ExpressionPlanner;
   friend class SelectCommand;
+
 public:
   explicit Planner(Db *db, std::vector<SchemaRef> enclosing_schemas = {}) : db_(db), binder_(db, enclosing_schemas)
   {}
@@ -39,12 +40,12 @@ public:
   RC make_plan_upd(const hsql::UpdateStatement *upd_stmt, std::shared_ptr<PlanNode> &plan);
   RC make_plan_del(const hsql::DeleteStatement *del_stmt, std::shared_ptr<PlanNode> &plan);
 
-  RC handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan);
+  RC handle_from_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan);
   RC handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan);
   RC handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
-  RC handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_join(const hsql::TableRef *, std::unordered_set<AbstractExpressionRef> &, PlanNodeRef &);
+  RC handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
 
 private:
   Db *db_;
@@ -54,9 +55,11 @@ private:
   RC add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef pred);
 
   // collect all leaf tables(base_table, subquery) and all predicates coming up in ON clause.
-  RC collect_details(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, std::vector<const hsql::TableRef *> &leaf_clauses);
+  RC collect_details(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts,
+      std::vector<const hsql::TableRef *> &leaf_clauses);
 
-  RC generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef>&, std::vector<PlanNodeRef> &);
+  RC generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef> &,
+      std::vector<PlanNodeRef> &);
 
   RC make_leaf_plan(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, PlanNodeRef &);
 
@@ -76,7 +79,8 @@ private:
    * @param out_plan out param.
    * @return
    */
-  RC generate_optimal_plan(std::vector<PlanNodeRef> leaves, std::unordered_set<AbstractExpressionRef> remain_conjuncts, PlanNodeRef &out_plan);
+  RC generate_optimal_plan(std::vector<PlanNodeRef> leaves, std::unordered_set<AbstractExpressionRef> remain_conjuncts,
+      PlanNodeRef &out_plan);
 };
 
 #endif  // MINIDB_PLANNER_H
