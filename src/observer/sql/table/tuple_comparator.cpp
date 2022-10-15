@@ -41,7 +41,7 @@ int TupleComparator::comp(TupleRef a, TupleRef b)
   int compare_res = 0;
   for (auto* order_description: *order_by_spec) {
     // evaluate
-    ColumnName col(order_description->expr->name);
+    ColumnName col(order_description->expr->table, order_description->expr->name);
     ColumnValueExpression expr(col);
 
     Value value_A, value_B;
