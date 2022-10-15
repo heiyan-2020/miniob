@@ -23,6 +23,8 @@ See the Mulan PSL v2 for more details. */
 #define PORT "PORT"
 #define PORT_DEFAULT 16880
 
+#define JOIN_OPTIMAL
+
 #define SOCKET_BUFFER_SIZE 8192
 
 #define SESSION_STAGE_NAME "SessionStage"
