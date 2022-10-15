@@ -36,7 +36,7 @@ int TupleComparator::comp(TupleRef a, TupleRef b)
   env_A->add_tuple(schema, std::move(a));
   EnvRef env_B = std::make_shared<Environment>();
   env_B->clear();
-  env_A->add_tuple(schema, std::move(b));
+  env_B->add_tuple(schema, std::move(b));
 
   int compare_res = 0;
   for (auto* order_description: *order_by_spec) {

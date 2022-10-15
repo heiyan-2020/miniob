@@ -16,10 +16,12 @@ RC SortNode::prepare()
   }
 
   output_schema_ = left_child_->get_schema();
-  rc = prepare_comparator();
-  if (rc != RC::SUCCESS) {
-    LOG_ERROR("Failed to prepare order by comparator!: %s", strrc(rc));
-    return rc;
+  if (order_by_spec_ != nullptr) {
+    rc = prepare_comparator();
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to prepare order by comparator!: %s", strrc(rc));
+      return rc;
+    }
   }
 
   return rc;
@@ -28,6 +30,10 @@ RC SortNode::prepare()
 RC SortNode::next()
 {
   assert(left_child_);
+  if (order_by_spec_ == nullptr) {
+    return left_child_->next();
+  }
+
   if (sorted_res_.empty()) {
     // here call the left_child_'s next()
     prepare_sorted_res();
@@ -43,6 +49,9 @@ RC SortNode::next()
 
 RC SortNode::current_tuple(TupleRef &tuple)
 {
+  if (order_by_spec_ == nullptr) {
+    return left_child_->current_tuple(tuple);
+  }
   // doesn't pass this func through left_child_
   // just return current tuple in sorted_res in this layer
   if (current_tuple_index < sorted_res_.size()) {
