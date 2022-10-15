@@ -8,6 +8,7 @@
 #include "sql/plan_node/group_aggregate_node.h"
 #include "sql/plan_node/project_node.h"
 #include "sql/expr/expression_planner.h"
+#include "sql/plan_node/sort_node.h"
 
 RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -137,7 +138,10 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
 
 RC Planner::handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
-  return LOCKED_SHAREDCACHE;
+  // TODO(pjz): check whether orderBy clause contains aggregates or subqueries!
+  // temporarily just construct te sort node
+  plan = std::make_shared<SortNode>(plan, sel_stmt->order);
+  return RC::SUCCESS;
 }
 
 RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef expr)

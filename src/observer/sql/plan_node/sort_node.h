@@ -9,8 +9,8 @@
 
 class SortNode : public PlanNode {
 public:
-  SortNode(std::shared_ptr<PlanNode> left_child, std::vector<AbstractExpressionRef> order_by_spec_)
-      : PlanNode(left_child), order_by_spec_(std::move(order_by_spec_))
+  SortNode(std::shared_ptr<PlanNode> left_child, std::vector<hsql::OrderDescription*>* order_by_spec_)
+      : PlanNode(std::move(left_child)), order_by_spec_(order_by_spec_)
   {}
   ~SortNode() override = default;
   
@@ -27,11 +27,13 @@ public:
 
 private:
   RC prepare_comparator();
+  RC prepare_sorted_res();
 
   TupleComparatorRef comparator;
-  std::vector<AbstractExpressionRef> order_by_spec_;
+  std::vector<hsql::OrderDescription*>* order_by_spec_;
   std::vector<TupleRef> sorted_res_;
   TupleRef current_;
+  int current_tuple_index;
 
 };
 
