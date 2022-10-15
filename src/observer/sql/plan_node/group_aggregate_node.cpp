@@ -22,7 +22,7 @@ RC GroupAggregateNode::prepare()
   if (rc != RC::SUCCESS) {
     return rc;
   }
-  return compute_aggregates();
+  return RC::SUCCESS;
 }
 
 RC GroupAggregateNode::initialize()
@@ -33,6 +33,13 @@ RC GroupAggregateNode::initialize()
 
 RC GroupAggregateNode::next()
 {
+  if (!initialized_) {
+    RC rc = compute_aggregates();
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+    initialized_ = true;
+  }
   if (!computed_aggregates_.empty()) {
     return RC::SUCCESS;
   }

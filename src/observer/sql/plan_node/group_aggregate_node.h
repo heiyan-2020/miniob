@@ -65,4 +65,5 @@ private:
   std::map<std::string, AbstractExpressionRef> aggregates_;
   SchemaRef input_schema_;
   std::unordered_map<HashAggregateKey, std::map<std::string, AbstractExpressionRef>> computed_aggregates_;
+  bool initialized_{};
 };
