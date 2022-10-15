@@ -27,8 +27,9 @@ RC GroupAggregateNode::prepare()
 
 RC GroupAggregateNode::initialize()
 {
-  LOG_PANIC("Aggregate node doesn't need to be reset");
-  return RC::UNIMPLENMENT;
+  initialized_ = false;
+  computed_aggregates_.clear();
+  return RC::SUCCESS;
 }
 
 RC GroupAggregateNode::next()
@@ -163,11 +164,16 @@ RC GroupAggregateNode::compute_aggregates()
     if (rc != RC::SUCCESS) {
       return rc;
     }
+
+    env_->clear();
+    env_->add_tuple(input_schema_, current_tuple);
+
     HashAggregateKey group_values{};
     rc = evaluate_group_by_exprs(current_tuple, group_values);
     if (rc != RC::SUCCESS) {
       return rc;
     }
+
     std::map<std::string, AbstractExpressionRef> group_aggregates{};
     auto find = computed_aggregates_.find(group_values);
     if (find == computed_aggregates_.end()) {
@@ -236,9 +242,6 @@ RC GroupAggregateNode::update_aggregates(std::map<std::string, AbstractExpressio
 
 RC GroupAggregateNode::evaluate_group_by_exprs(TupleRef original_tuple, HashAggregateKey &out_values)
 {
-  env_->clear();
-  env_->add_tuple(input_schema_, original_tuple);
-
   if (group_by_exprs_.empty()) {
     return RC::SUCCESS;
   }
