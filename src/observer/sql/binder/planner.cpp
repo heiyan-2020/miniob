@@ -205,6 +205,7 @@ RC Planner::collect_details(const hsql::TableRef *from, std::unordered_set<Abstr
       for (const auto &table : *from->list) {
         leaf_clauses.push_back(table);
       }
+      rc = RC::SUCCESS;
       break;
     }
     default: {
