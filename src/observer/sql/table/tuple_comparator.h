@@ -18,9 +18,12 @@ public:
       : order_by_spec(order_by_spec), schema(sche)
   {}
 
-  RC sort_tuples(std::vector<TupleRef> sorted_res_);
+  RC sort_tuples(std::vector<TupleRef>& sorted_res_);
 
 private:
+//  RC deserialize_tuples(const std::vector<TupleRef>& sorted_res_, std::vector<std::map<TupleRef, Value>>* &deserialized_res);
+  int comp(TupleRef a, TupleRef b);
+  bool is_ascending(hsql::OrderDescription* order_desc);
 
   std::vector<hsql::OrderDescription*>* order_by_spec;
   std::shared_ptr<Schema>& schema;
