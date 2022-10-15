@@ -6,12 +6,8 @@
 
 RC TableScanNode::prepare()
 {
-  RC rc = table_->get_record_scanner(record_scanner_);
-  if (rc != RC::SUCCESS) {
-    return rc;
-  }
   output_schema_ = std::make_shared<Schema>(table_, table_->table_meta().field_metas());
-  return rc;
+  return RC::SUCCESS;
 }
 
 RC TableScanNode::initialize()

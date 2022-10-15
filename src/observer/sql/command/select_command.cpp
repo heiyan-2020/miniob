@@ -27,6 +27,11 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
     session_event->set_response("FAILURE\n");
     return rc;
   }
+  rc = sp->initialize();
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE\n");
+    return rc;
+  }
 
   std::stringstream ss;
   print_header(ss, sp->get_schema(), sql_event->headers(), planner.binder_.has_multi_table_);
