@@ -15,6 +15,8 @@ public:
   {
     current_.reset();
     marked_left_.reset();
+    left_child_->initialize();
+    right_child_->initialize();
     return RC::SUCCESS;
   }
   RC next() override;
