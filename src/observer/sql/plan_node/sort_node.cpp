@@ -57,8 +57,7 @@ RC SortNode::current_tuple(TupleRef &tuple)
 RC SortNode::prepare_comparator()
 {
   RC rc = RC::SUCCESS;
-  // We can prepare the tuple-comparator here too, since we know what the
-  // subplan's schema will be.
+
   comparator = std::make_shared<TupleComparator>(output_schema_, order_by_spec_);
   if (comparator == nullptr) {
     rc = RC::INTERNAL;

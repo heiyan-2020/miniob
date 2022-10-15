@@ -33,7 +33,7 @@ private:
   std::vector<hsql::OrderDescription*>* order_by_spec_;
   std::vector<TupleRef> sorted_res_;
   TupleRef current_;
-  int current_tuple_index;
+  int current_tuple_index{};
 
 };
 
