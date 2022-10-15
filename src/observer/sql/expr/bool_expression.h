@@ -15,6 +15,15 @@ public:
     BoolExpression(AbstractExpressionRef &&left, OperatorType type)
         : AbstractExpression({std::move(left)}), ope_type_(type) {}
 
+    BoolExpression(std::unordered_set<AbstractExpressionRef> terms, OperatorType type)
+        : ope_type_(type)
+    {
+      for (auto &term : terms) {
+        children_.push_back(term);
+      }
+    }
+
+
     RC evaluate(EnvRef env, Value &out_value) override;
 
     AbstractExpressionRef traverse(ProcessorRef processor) override;

@@ -43,7 +43,7 @@ public:
   RC handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan);
   RC handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
-  RC handle_join(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &extra_conjuncts);
+  RC handle_join(const hsql::TableRef *, std::unordered_set<AbstractExpressionRef> &, PlanNodeRef &);
 
 private:
   Db *db_;
@@ -55,11 +55,27 @@ private:
   // collect all leaf tables(base_table, subquery) and all predicates coming up in ON clause.
   RC collect_details(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, std::vector<const hsql::TableRef *> &leaf_clauses);
 
-  RC generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef>);
+  RC generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef>, std::vector<PlanNodeRef> &);
 
-  RC make_leaf_plan(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts);
+  RC make_leaf_plan(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, PlanNodeRef &);
 
-  RC push_conjunct_down(PlanNodeRef plan, std::unordered_set<AbstractExpressionRef> &conjuncts);
+  /**
+   * Extract all predicates in conjuncts which can be evaluated only against 'plan', And add them onto 'plan'.
+   * @param plan
+   * @param conjuncts
+   * @return
+   */
+  RC push_conjunct_down(PlanNodeRef &plan, std::unordered_set<AbstractExpressionRef> &conjuncts);
+
+  /**
+   * Building whole join plan tree based on leaves.
+   * The tree is simply left-deep style for lacking of statistic information.
+   * @param leaves involved leaf plan nodes.
+   * @param remain_conjuncts predicates haven't handled before.
+   * @param out_plan out param.
+   * @return
+   */
+  RC generate_optimal_plan(std::vector<PlanNodeRef> leaves, std::unordered_set<AbstractExpressionRef> remain_conjuncts, PlanNodeRef &out_plan);
 };
 
 #endif  // MINIDB_PLANNER_H

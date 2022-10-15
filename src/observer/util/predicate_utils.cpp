@@ -32,8 +32,50 @@ void PredicateUtils::collect_conjuncts(AbstractExpressionRef expr, std::unordere
 }
 
 void PredicateUtils::find_expr_using_schemas(std::unordered_set<AbstractExpressionRef> src_expr,
-    std::unordered_set<AbstractExpressionRef> &dst_expr
-    , std::vector<SchemaRef> schemas)
+    std::unordered_set<AbstractExpressionRef> &dst_expr,
+    const std::vector<SchemaRef>& schemas)
 {
+  std::vector<ColumnName> symbols;
+  for (auto it = src_expr.begin(); it != src_expr.end();) {
+    const auto& expr = *it;
+    symbols.clear();
+    symbols = expr->get_all_symbols();
 
+    // all_ref indicates whether all symbols of this expression reference at least one schema.
+    bool all_ref = true;
+    for (const auto &symbol : symbols) {
+      // ref indicates whether this symbol references at least one schema.
+      bool ref = false;
+      for (const auto &schema : schemas) {
+        if (!schema->find_columns(symbol.table_name(), symbol.column_name()).empty()) {
+          ref = true;
+          break;
+        }
+      }
+
+      if (!ref) {
+        all_ref = false;
+        break;
+      }
+    }
+
+    if (all_ref) {
+      dst_expr.insert(expr);
+      src_expr.erase(it++);
+    } else {
+      ++it;
+    }
+  }
+}
+
+AbstractExpressionRef PredicateUtils::make_predicate(std::unordered_set<AbstractExpressionRef> conjuncts)
+{
+  AbstractExpressionRef expression;
+  if (conjuncts.size() == 1)
+    expression = *conjuncts.begin();
+  else if (conjuncts.size() > 1) {
+    expression = std::make_shared<BoolExpression>(conjuncts, OperatorType::AND);
+  }
+  // if conjuncts are empty, just return nullptr.
+  return expression;
 }
