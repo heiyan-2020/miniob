@@ -44,6 +44,7 @@ public:
   RC handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_join(const hsql::TableRef *, std::unordered_set<AbstractExpressionRef> &, PlanNodeRef &);
+  RC handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
 
 private:
   Db *db_;

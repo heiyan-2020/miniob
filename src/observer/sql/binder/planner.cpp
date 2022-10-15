@@ -11,6 +11,7 @@
 #include "util/predicate_utils.h"
 #include "util/macros.h"
 #include "ini_setting.h"
+#include "sql/plan_node/sort_node.h"
 
 RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -126,6 +127,14 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
     return RC::SUCCESS;
   }
   plan = std::make_shared<GroupAggregateNode>(plan, binder_.group_by_exprs_, aggregates);
+  return RC::SUCCESS;
+}
+
+RC Planner::handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
+{
+  // TODO(pjz): check whether orderBy clause contains aggregates or subqueries!
+  // temporarily just construct te sort node
+  plan = std::make_shared<SortNode>(plan, sel_stmt->order);
   return RC::SUCCESS;
 }
 
@@ -351,6 +360,12 @@ RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr
   rc = handle_grouping_and_aggregation(sel_stmt, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan grouping and aggregation");
+    return rc;
+  }
+
+  rc = handle_order_by_clause(sel_stmt, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan order by");
     return rc;
   }
 
