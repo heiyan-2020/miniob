@@ -54,9 +54,9 @@ int TupleComparator::comp(TupleRef a, TupleRef b)
       return -2;
     }
 
-    // is_null_, true: not null; false: is null
-    if (!value_A.is_null()) {
-      if (value_B.is_null()) {
+    // is_null_, true: null; false: not null
+    if (value_A.is_null()) {
+      if (!value_B.is_null()) {
         compare_res = -1;
       }
       else {
@@ -64,9 +64,11 @@ int TupleComparator::comp(TupleRef a, TupleRef b)
       }
     }
 
-    else if (!value_B.is_null()) {
+    else if (value_B.is_null()) {
       compare_res = 1;
-    } else {
+    }
+
+    else {
       CmpRes cmp_res = value_A.compare(value_B);
       switch (cmp_res) {
         case CmpRes::EQ: {
