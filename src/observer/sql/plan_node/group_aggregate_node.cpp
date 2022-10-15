@@ -29,6 +29,7 @@ RC GroupAggregateNode::initialize()
 {
   initialized_ = false;
   computed_aggregates_.clear();
+  left_child_->initialize();
   return RC::SUCCESS;
 }
 

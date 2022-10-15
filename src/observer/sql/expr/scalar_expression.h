@@ -13,7 +13,6 @@ public:
   {
     // By this time, subquery must be planned and prepared.
     assert(subquery_plan_);
-    if (!computed_) {
       SchemaRef subquery_schema = subquery_plan_->get_schema();
       if (subquery_schema->get_column_count() != 1) {
         LOG_PANIC("Subquery schema doesn't match");
@@ -42,13 +41,7 @@ public:
         // terminate abnormally.
         return RC::SCALAR;
       }
-      scalar_value_ = out_value;
-      computed_ = true;
       return RC::SUCCESS;
-    } else {
-      out_value = scalar_value_;
-      return RC::SUCCESS;
-    }
   }
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
@@ -62,6 +55,5 @@ public:
   }
 
 private:
-  bool computed_{false};
   Value scalar_value_;
 };
