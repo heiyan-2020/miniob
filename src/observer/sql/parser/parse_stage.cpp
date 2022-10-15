@@ -137,6 +137,7 @@ RC ParseStage::handle_request(StageEvent *event)
 
 RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
 {
+  // TODO(vgalaxy): consider delim occur in select values
   std::string str{sql};
   transform(str.begin(), str.end(), str.begin(), ::tolower);
   auto select_size = std::string{"select"}.size();
