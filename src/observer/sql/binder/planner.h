@@ -55,7 +55,7 @@ private:
   // collect all leaf tables(base_table, subquery) and all predicates coming up in ON clause.
   RC collect_details(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, std::vector<const hsql::TableRef *> &leaf_clauses);
 
-  RC generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef>, std::vector<PlanNodeRef> &);
+  RC generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef>&, std::vector<PlanNodeRef> &);
 
   RC make_leaf_plan(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, PlanNodeRef &);
 

@@ -31,7 +31,7 @@ void PredicateUtils::collect_conjuncts(AbstractExpressionRef expr, std::unordere
 
 }
 
-void PredicateUtils::find_expr_using_schemas(std::unordered_set<AbstractExpressionRef> src_expr,
+void PredicateUtils::find_expr_using_schemas(std::unordered_set<AbstractExpressionRef> &src_expr,
     std::unordered_set<AbstractExpressionRef> &dst_expr,
     const std::vector<SchemaRef>& schemas)
 {

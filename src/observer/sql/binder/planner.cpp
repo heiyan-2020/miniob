@@ -134,6 +134,9 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
 
 RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef expr)
 {
+  if (!expr) {
+    return RC::SUCCESS;
+  }
   std::shared_ptr<TableScanNode> scan_node = std::dynamic_pointer_cast<TableScanNode>(plan);
   if (scan_node) {
     if (scan_node->get_predicate() != nullptr) {
@@ -241,7 +244,7 @@ RC Planner::make_leaf_plan(const hsql::TableRef *from, std::unordered_set<Abstra
   }
 }
 
-RC Planner::generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef> conjuncts, std::vector<PlanNodeRef> &out_plans)
+RC Planner::generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef> &conjuncts, std::vector<PlanNodeRef> &out_plans)
 {
   RC rc;
   std::vector<PlanNodeRef> leaf_plans;
@@ -327,11 +330,11 @@ RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr
   rc = handle_join(sel_stmt->fromTable, extra_conjuncts, plan);
   HANDLE_EXCEPTION(rc, "failed to handle join");
 
-  rc = handle_where_clause(sel_stmt->whereClause, plan);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("failed to plan 'WHERE' statement");
-    return rc;
-  }
+//  rc = handle_where_clause(sel_stmt->whereClause, plan);
+//  if (rc != RC::SUCCESS) {
+//    LOG_WARN("failed to plan 'WHERE' statement");
+//    return rc;
+//  }
 
   rc = handle_grouping_and_aggregation(sel_stmt, plan);
   if (rc != RC::SUCCESS) {

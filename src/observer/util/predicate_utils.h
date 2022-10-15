@@ -17,7 +17,7 @@ public:
    * @param dst_expr
    * @param schemas
    */
-  static void find_expr_using_schemas(std::unordered_set<AbstractExpressionRef> src_expr,
+  static void find_expr_using_schemas(std::unordered_set<AbstractExpressionRef> &src_expr,
       std::unordered_set<AbstractExpressionRef> &dst_expr,
       const std::vector<SchemaRef>& schemas);
 
