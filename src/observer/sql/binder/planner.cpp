@@ -8,6 +8,8 @@
 #include "sql/plan_node/group_aggregate_node.h"
 #include "sql/plan_node/project_node.h"
 #include "sql/expr/expression_planner.h"
+#include "util/predicate_utils.h"
+#include "util/macros.h"
 
 RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -150,6 +152,75 @@ RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpre
     plan = std::make_shared<FilterNode>(plan, expr);
     return RC::SUCCESS;
   }
+}
+
+RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &extra_conjuncts)
+{
+  RC rc;
+  std::unordered_set<AbstractExpressionRef> conjuncts;
+  std::vector<const hsql::TableRef *> leaf_forms;
+
+  rc = collect_details(from, conjuncts, leaf_forms);
+  HANDLE_EXCEPTION(rc, "Collect details error");
+
+  if (!extra_conjuncts.empty())
+    conjuncts.insert(extra_conjuncts.begin(), extra_conjuncts.end());
+
+
+
+
+}
+
+RC Planner::collect_details(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, std::vector<const hsql::TableRef *> &leaf_clauses)
+{
+  RC rc;
+  switch (from->type) {
+    case hsql::TableRefType::kTableName:
+    case hsql::kTableSelect: {
+      leaf_clauses.push_back(from);
+      rc = RC::SUCCESS;
+      break;
+    }
+    case hsql::kTableJoin: {
+      if (from->join->type != hsql::JoinType::kJoinInner) {
+        LOG_PANIC("Doesn't support outer join yet.");
+        return RC::UNIMPLENMENT;
+      }
+      rc = collect_details(from->join->left, conjuncts, leaf_clauses);
+      HANDLE_EXCEPTION(rc, "Collect details failed");
+
+      rc = collect_details(from->join->right, conjuncts, leaf_clauses);
+      HANDLE_EXCEPTION(rc, "Collect details failed");
+
+      AbstractExpressionRef join_cond;
+      rc = binder_.bind_expression(from->join->condition, join_cond);
+      HANDLE_EXCEPTION(rc, "Collect details failed");
+
+      PredicateUtils::collect_conjuncts(join_cond, conjuncts);
+      break;
+    }
+    case hsql::kTableCrossProduct: {
+      for (const auto &table : *from->list) {
+        leaf_clauses.push_back(table);
+      }
+      break;
+    }
+    default: {
+      LOG_PANIC("Unsupported from type");
+      return RC::UNIMPLENMENT;
+    }
+  }
+  return rc;
+}
+
+RC Planner::make_leaf_plan(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts)
+{
+
+}
+
+RC Planner::generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef>)
+{
+
 }
 
 RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)

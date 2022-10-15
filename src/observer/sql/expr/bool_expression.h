@@ -35,6 +35,16 @@ public:
       return left + " " + AbstractExpression::op_to_string(ope_type_) + " " + right;
     }
 
+    auto get_ope_type() const -> OperatorType
+    {
+      return ope_type_;
+    }
+
+    auto get_terms() -> std::vector<AbstractExpressionRef> &
+    {
+      return children_;
+    }
+
 private:
   OperatorType ope_type_;
 };

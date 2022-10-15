@@ -43,6 +43,7 @@ public:
   RC handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode> &plan);
   RC handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
   RC handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan);
+  RC handle_join(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &extra_conjuncts);
 
 private:
   Db *db_;
@@ -51,6 +52,14 @@ private:
 private:
   RC add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef pred);
 
+  // collect all leaf tables(base_table, subquery) and all predicates coming up in ON clause.
+  RC collect_details(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, std::vector<const hsql::TableRef *> &leaf_clauses);
+
+  RC generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef>);
+
+  RC make_leaf_plan(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts);
+
+  RC push_conjunct_down(PlanNodeRef plan, std::unordered_set<AbstractExpressionRef> &conjuncts);
 };
 
 #endif  // MINIDB_PLANNER_H
