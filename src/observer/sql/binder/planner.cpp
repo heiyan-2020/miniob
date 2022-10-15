@@ -82,18 +82,14 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
   std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(Planner(db_, binder_.enclosing_));
   if (nullptr != predicate) {
     // add predicate
-    AbstractExpressionRef expr;
-    if (binder_.bind_expression(predicate, expr) != RC::SUCCESS) {
-      return RC::INTERNAL;
-    }
-    rc = add_predicate_to_plan(plan, expr);
+    rc = add_predicate_to_plan(plan, binder_.where_predicate_);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Add predicate onto plan tree failed.");
       return RC::GENERIC_ERROR;
     }
 
     // find all sub queries.
-    expr->traverse(expression_planner);
+    binder_.where_predicate_->traverse(expression_planner);
   }
 
   if (expression_planner->has_subquery()) {
@@ -159,11 +155,19 @@ RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractE
   std::vector<const hsql::TableRef *> leaf_forms;
   std::vector<PlanNodeRef> leaf_plans;
 
+  binder_.enclosing_.push_back(binder_.from_schema_);
+  std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(Planner(db_, binder_.enclosing_));
+
+
   rc = collect_details(from, conjuncts, leaf_forms);
   HANDLE_EXCEPTION(rc, "Collect details error");
 
   if (!extra_conjuncts.empty())
     conjuncts.insert(extra_conjuncts.begin(), extra_conjuncts.end());
+
+  for (const auto &expr : conjuncts) {
+    expr->traverse(expression_planner);
+  }
 
   rc = generate_leaf_plans(leaf_forms, conjuncts, leaf_plans);
   HANDLE_EXCEPTION(rc, "Generate leaf plans error");
@@ -171,6 +175,11 @@ RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractE
   rc = generate_optimal_plan(leaf_plans, conjuncts, out_plan);
   HANDLE_EXCEPTION(rc, "Generate leaf plans error");
 
+  if (expression_planner->has_subquery()) {
+    out_plan->set_env(expression_planner->get_env());
+    rc = expression_planner->prepare_all();
+  }
+  
   return RC::SUCCESS;
 }
 
@@ -338,7 +347,7 @@ RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr
     return rc;
   }
 #endif
-  
+
   rc = handle_grouping_and_aggregation(sel_stmt, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan grouping and aggregation");
