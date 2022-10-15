@@ -41,6 +41,7 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
     return rc;
   }
   sp->prepare();
+  sp->initialize();
 
   rc = sp->next();
   while (RC::SUCCESS == rc) {

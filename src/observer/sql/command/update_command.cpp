@@ -43,6 +43,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
     return rc;
   }
   sp->prepare();
+  sp->initialize();
 
   const TableMeta &table_meta = table->table_meta();
   const std::vector<FieldMeta> *field_metas = table_meta.field_metas();
