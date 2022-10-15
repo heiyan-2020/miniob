@@ -17,6 +17,7 @@ public:
   TupleComparator(std::shared_ptr<Schema>& sche, std::vector<hsql::OrderDescription*>* order_by_spec)
       : order_by_spec(order_by_spec), schema(sche)
   {}
+  ~TupleComparator() = default;
 
   RC sort_tuples(std::vector<TupleRef>& sorted_res_);
 
