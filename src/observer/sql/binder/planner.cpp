@@ -10,6 +10,7 @@
 #include "sql/expr/expression_planner.h"
 #include "util/predicate_utils.h"
 #include "util/macros.h"
+#include "ini_setting.h"
 
 RC Planner::handle_table_name_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
@@ -318,25 +319,26 @@ RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr
     LOG_WARN("Bind failed");
     return rc;
   }
-
+#ifdef JOIN_OPTIMAL
   std::unordered_set<AbstractExpressionRef> extra_conjuncts;
   PredicateUtils::collect_conjuncts(binder_.where_predicate_, extra_conjuncts);
 
-  // here represents 'handle_from_clause()'
-//  rc = handle_table_name_clause(sel_stmt->fromTable, plan);
-//  if (rc != RC::SUCCESS) {
-//    LOG_WARN("failed to plan 'FROM' statement");
-//    return rc;
-//  }
   rc = handle_join(sel_stmt->fromTable, extra_conjuncts, plan);
   HANDLE_EXCEPTION(rc, "failed to handle join");
+#else
+  rc = handle_table_name_clause(sel_stmt->fromTable, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan 'FROM' statement");
+    return rc;
+  }
 
-//  rc = handle_where_clause(sel_stmt->whereClause, plan);
-//  if (rc != RC::SUCCESS) {
-//    LOG_WARN("failed to plan 'WHERE' statement");
-//    return rc;
-//  }
-
+  rc = handle_where_clause(sel_stmt->whereClause, plan);
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("failed to plan 'WHERE' statement");
+    return rc;
+  }
+#endif
+  
   rc = handle_grouping_and_aggregation(sel_stmt, plan);
   if (rc != RC::SUCCESS) {
     LOG_WARN("failed to plan grouping and aggregation");
