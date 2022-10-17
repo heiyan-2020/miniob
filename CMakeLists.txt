@@ -32,13 +32,15 @@ endif()
 # generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_compile_options(-fsanitize=address -Wall)
-add_link_options(-fsanitize=address)
+#add_compile_options(-fsanitize=address -Wall)
+#add_link_options(-fsanitize=address)
 
 MESSAGE("CMAKE_CXX_FLAGS - ${CMAKE_CXX_FLAGS}")
 MESSAGE("CMAKE_INSTALL_PREFIX - ${CMAKE_INSTALL_PREFIX}")
 
 ADD_SUBDIRECTORY(deps)
 ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(test/perf)
+ADD_SUBDIRECTORY(unitest)
 
 INSTALL(DIRECTORY etc DESTINATION . FILE_PERMISSIONS OWNER_WRITE OWNER_READ GROUP_READ WORLD_READ)
