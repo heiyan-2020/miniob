@@ -1,6 +1,7 @@
 #include "int_type.h"
 #include "float_type.h"
 #include "value.h"
+#include "util/type_converter.h"
 
 auto IntType::compare_equals(const Value &left, const Value &right) const -> Value
 {
@@ -69,7 +70,9 @@ auto IntType::compare(const Value &left, const Value &right) const -> CmpRes
         return CmpRes::EQ;
       }
     case TypeId::FLOAT:
-      return FloatType::cmp_float_helper((float) left.value_.int_, right.value_.float_);
+      return TypeConverter::get_from_int(FLOAT, left.value_.int_).compare(right);
+    case TypeId::CHAR:
+      return left.compare(TypeConverter::get_from_char(INT, right.value_.char_, right.len_));
     default:
       return CmpRes::UNDEFINED;
   }

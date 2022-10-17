@@ -4,10 +4,22 @@
 #include "type/value.h"
 #include "storage/common/table.h"
 #include "util/date.h"
+#include "util/type_converter.h"
+
+static inline bool convertible(TypeId lhs, TypeId rhs)
+{
+  if (lhs != INT && lhs != FLOAT && lhs != CHAR) {
+    return false;
+  }
+  if (rhs != INT && rhs != FLOAT && rhs != CHAR) {
+    return false;
+  }
+  return true;
+}
 
 #define CHECK_FIELD_TYPE(TYPE)                                                      \
  do {                                                                               \
-    if (field_meta.type() != TYPE) {                                                \
+    if (field_meta.type() != TYPE && !convertible(field_meta.type(), TYPE)) {                                                \
       LOG_ERROR("Invalid value type, table name = %s, fields name = %s, type = %d", \
         table_meta.name().c_str(),                                                  \
         field_meta.name().c_str(),                                                  \
@@ -67,12 +79,14 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
       switch (expr->type) {
         case hsql::ExprType::kExprLiteralInt: {
           CHECK_FIELD_TYPE(INT);
-          insert_values.emplace_back(INT, static_cast<int32_t>(expr->ival));
+//          insert_values.emplace_back(INT, static_cast<int32_t>(expr->ival));
+          insert_values.push_back(TypeConverter::get_from_int(field_meta.type(), static_cast<int32_t>(expr->ival)));
           break;
         }
         case hsql::ExprType::kExprLiteralFloat: {
           CHECK_FIELD_TYPE(FLOAT);
-          insert_values.emplace_back(FLOAT, static_cast<float>(expr->fval));
+//          insert_values.emplace_back(FLOAT, static_cast<float>(expr->fval));
+          insert_values.push_back(TypeConverter::get_from_float(field_meta.type(), static_cast<float>(expr->fval)));
           break;
         }
         case hsql::ExprType::kExprLiteralString: {
@@ -90,7 +104,8 @@ RC InsertCommand::do_insert_values(const SQLStageEvent *sql_event)
             }
           } else {
             CHECK_FIELD_TYPE(CHAR);
-            insert_values.emplace_back(CHAR, expr->name, field_meta.len());
+//            insert_values.emplace_back(CHAR, expr->name, field_meta.len());
+            insert_values.push_back(TypeConverter::get_from_char(field_meta.type(), expr->name, field_meta.len()));
           }
           break;
         }
