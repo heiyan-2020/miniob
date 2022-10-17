@@ -92,10 +92,10 @@ void ShowCommand::index_info_prefix(const char *table_name, std::ostream &os, co
   os << table_name << " | ";
   // 唯一索引输出0？非唯一输出1？
   if (index_meta.is_unique()) {
-    os << "1 | ";
+    os << "0 | ";
   }
   else {
-    os << "0 | ";
+    os << "1 | ";
   }
   os << index_meta.name() << " | ";
 }
