@@ -72,7 +72,7 @@ auto IntType::compare(const Value &left, const Value &right) const -> CmpRes
     case TypeId::FLOAT:
       return TypeConverter::get_from_int(FLOAT, left.value_.int_).compare(right);
     case TypeId::CHAR:
-      return left.compare(TypeConverter::get_from_char(INT, right.value_.char_, right.len_));
+      return TypeConverter::get_from_int(FLOAT, left.value_.int_).compare(TypeConverter::get_from_char(FLOAT, right.value_.char_, right.len_));
     default:
       return CmpRes::UNDEFINED;
   }
