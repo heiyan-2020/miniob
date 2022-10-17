@@ -767,6 +767,9 @@ RC Table::drop(const char *table_name)
 {
   LOG_INFO("Begin to drop table %s", table_name);
 
+  // TODO(vgalaxy): check
+  this->data_buffer_pool_->flush_all_pages();  // ignore rc
+
   int res;
   BufferPoolManager &bpm = BufferPoolManager::instance();
   // before removing file, trying to close file by bpm
