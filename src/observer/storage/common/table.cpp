@@ -808,7 +808,7 @@ RC Table::drop(const char *table_name)
   return RC::SUCCESS;
 }
 
-std::vector<Index *> Table::get_indexex() const
+std::vector<Index *> Table::get_indexes() const
 {
   return indexes_;
 }

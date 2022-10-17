@@ -64,7 +64,7 @@ RC ShowCommand::do_show_index(const SQLStageEvent *sql_event)
   std::stringstream ss;
 
   if (table != nullptr) {
-    std::vector<Index *> indexes = table->get_indexex();
+    std::vector<Index *> indexes = table->get_indexes();
     ss << "TABLE | NON_UNIQUE | KEY_NAME | SEQ_IN_INDEX | COLUMN_NAME" << std::endl;
     for (auto* index: indexes) {
       index_2_string(table_name, ss, index);
