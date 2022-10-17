@@ -111,20 +111,22 @@ RC ParseStage::handle_request(StageEvent *event)
 
   // hyrise parser
   hsql::SQLParserResult result;
-  hsql::SQLParser::parse(sql, &result);
+  std::string str{sql};
+  transform(str.begin(), str.end(), str.begin(), ::tolower);
+  hsql::SQLParser::parse(str, &result);
   if (result.isValid()) {
     sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
-    parse_headers(sql_event, sql);
+    parse_headers(sql_event, str);
   } else {
     // transform char -> char(4)
     // TODO(vgalaxy): consider coexistence of char and char (xxx)
-    std::string sql_trans = std::regex_replace(sql, std::regex{"char"}, "char(4)");
+    std::string str_trans = std::regex_replace(str, std::regex{"char"}, "char(4)");
     // parse again
     result.reset();
-    hsql::SQLParser::parse(sql_trans, &result);
+    hsql::SQLParser::parse(str_trans, &result);
     if (result.isValid()) {
       sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
-      parse_headers(sql_event, sql);
+      parse_headers(sql_event, str);
     } else {
       sql_event->session_event()->set_response("Failed to parse sql\n");
       result.reset();
@@ -139,7 +141,6 @@ RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
 {
   // TODO(vgalaxy): consider delim occur in select values
   std::string str{sql};
-  transform(str.begin(), str.end(), str.begin(), ::tolower);
   auto select_size = std::string{"select"}.size();
   auto find_select = str.find("select");
   if (find_select == std::string::npos) {
