@@ -30,6 +30,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/index.h"
 #include "storage/default/default_handler.h"
 #include "storage/trx/trx.h"
+#include "storage/clog/clog.h"
 #include "storage/index/bplus_tree.h"
 
 using namespace common;
@@ -100,51 +101,3 @@ void ExecuteStage::handle_request(common::StageEvent *event)
   auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   sql_event->command()->execute(sql_event);
 }
-
-//RC ExecuteStage::do_delete(SQLStageEvent *sql_event)
-//{
-//  Stmt *stmt = sql_event->stmt();
-//  SessionEvent *session_event = sql_event->session_event();
-//
-//  if (stmt == nullptr) {
-//    LOG_WARN("cannot find statement");
-//    return RC::GENERIC_ERROR;
-//  }
-//
-//  auto *delete_stmt = (DeleteStmt *)stmt;
-//  TableScanOperator scan_oper(delete_stmt->table());
-//  DeleteOperator delete_oper(delete_stmt);
-//  delete_oper.add_child(&scan_oper);
-//
-//  RC rc = delete_oper.open();
-//  if (rc != RC::SUCCESS) {
-//    session_event->set_response("FAILURE");
-//  } else {
-//    session_event->set_response("SUCCESS");
-//  }
-//  return rc;
-//}
-//
-//RC ExecuteStage::do_update(SQLStageEvent *sql_event)
-//{
-//  Stmt *stmt = sql_event->stmt();
-//  SessionEvent *session_event = sql_event->session_event();
-//
-//  if (stmt == nullptr) {
-//    LOG_WARN("cannot find statement");
-//    return RC::GENERIC_ERROR;
-//  }
-//
-//  auto *update_stmt = (UpdateStmt *)stmt;
-//  TableScanOperator scan_oper(update_stmt->table());
-//  UpdateOperator update_oper(update_stmt);
-//  update_oper.add_child(&scan_oper);
-//
-//  RC rc = update_oper.open();
-//  if (rc != RC::SUCCESS) {
-//    session_event->set_response("FAILURE");
-//  } else {
-//    session_event->set_response("SUCCESS");
-//  }
-//  return rc;
-//}

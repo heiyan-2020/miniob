@@ -36,14 +36,7 @@ protected:
   void cleanup() override;
   void handle_event(common::StageEvent *event) override;
   void callback_event(common::StageEvent *event, common::CallbackContext *context) override;
-
   void handle_request(common::StageEvent *event);
-
-  RC do_help(SQLStageEvent *session_event);
-  RC do_select(SQLStageEvent *sql_event);
-  RC do_insert(SQLStageEvent *sql_event);
-  RC do_delete(SQLStageEvent *sql_event);
-  RC do_update(SQLStageEvent *sql_event);
 
 protected:
 private:

@@ -26,24 +26,28 @@ class RecordFileScanner;
 class Index;
 class IndexScanner;
 class Trx;
+class CLogManager;
 
 class Table {
 public:
   Table() = default;
   ~Table();
 
-  RC create(const char *path, const char *name, const char *base_dir, const Schema& schema);
-  RC open(const char *meta_file, const char *base_dir);
+  RC create(const char *path, const char *name, const char *base_dir, const Schema& schema, CLogManager *clog_manager);
+  RC open(const char *meta_file, const char *base_dir, CLogManager *clog_manager);
   RC drop(const char *table_name);
 
   RC insert_record(Trx *trx, const std::vector<Value>& values);
   RC update_record(Trx *trx, Record *old_record, Record *new_record);
   RC delete_record(Trx *trx, Record *record);
-  RC scan_record(Trx *trx, int limit, void *context, void (*record_reader)(const char *, void *));
-
-  RC create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique);
 
   RC get_record_scanner(RecordFileScanner &scanner);
+  RC scan_record(Trx *trx, int limit, void *context, void (*record_reader)(const char *, void *));
+
+  RC recover_insert_record(Record *record);
+  RC recover_delete_record(Record *record);
+
+  RC create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique);
 
   RecordFileHandler *record_handler() const
   {
@@ -79,6 +83,7 @@ public:
 
 private:
   std::string base_dir_;
+  CLogManager *clog_manager_;
   TableMeta table_meta_;
   DiskBufferPool *data_buffer_pool_ = nullptr;   // 数据文件关联的 buffer pool
   RecordFileHandler *record_handler_ = nullptr;  // 记录操作

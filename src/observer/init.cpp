@@ -34,9 +34,9 @@ See the Mulan PSL v2 for more details. */
 #include "sql/binder/resolve_stage.h"
 #include "sql/plan_cache/plan_cache_stage.h"
 #include "sql/query_cache/query_cache_stage.h"
-#include "storage/default/default_storage_stage.h"
 #include "storage/default/disk_buffer_pool.h"
 #include "storage/default/default_handler.h"
+#include "storage/default/default_storage_stage.h"
 
 using namespace common;
 

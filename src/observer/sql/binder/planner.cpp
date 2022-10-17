@@ -8,10 +8,10 @@
 #include "sql/plan_node/group_aggregate_node.h"
 #include "sql/plan_node/project_node.h"
 #include "sql/expr/expression_planner.h"
+#include "sql/plan_node/sort_node.h"
 #include "util/predicate_utils.h"
 #include "util/macros.h"
 #include "ini_setting.h"
-#include "sql/plan_node/sort_node.h"
 
 RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
