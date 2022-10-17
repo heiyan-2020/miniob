@@ -13,12 +13,12 @@ See the Mulan PSL v2 for more details. */
 //
 
 #include <arpa/inet.h>
-#include <cerrno>
+#include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -29,42 +29,47 @@ See the Mulan PSL v2 for more details. */
 #include "common/defs.h"
 #include "common/lang/string.h"
 
+#ifdef USE_READLINE
 #include "readline/readline.h"
+#endif
 
 #define MAX_MEM_BUFFER_SIZE 8192
 #define PORT_DEFAULT 6789
 
 using namespace common;
 
+#ifdef USE_READLINE
 char *my_readline(const char *prompt)
 {
   return readline(prompt);
 }
-
-//char *my_readline(const char *prompt)
-//{
-//  char *buffer = (char *)malloc(MAX_MEM_BUFFER_SIZE);
-//  if (nullptr == buffer) {
-//    fprintf(stderr, "failed to alloc line buffer");
-//    return nullptr;
-//  }
-//  fprintf(stdout, prompt);
-//  char *s = fgets(buffer, MAX_MEM_BUFFER_SIZE, stdin);
-//  if (nullptr == s) {
-//    fprintf(stderr, "failed to read message from console");
-//    free(buffer);
-//    return nullptr;
-//  }
-//  return buffer;
-//}
+#else // USE_READLINE
+char *my_readline(const char *prompt)
+{
+  char *buffer = (char *)malloc(MAX_MEM_BUFFER_SIZE);
+  if (nullptr == buffer) {
+    fprintf(stderr, "failed to alloc line buffer");
+    return nullptr;
+  }
+  fprintf(stdout, prompt);
+  char *s = fgets(buffer, MAX_MEM_BUFFER_SIZE, stdin);
+  if (nullptr == s) {
+    fprintf(stderr, "failed to read message from console");
+    free(buffer);
+    return nullptr;
+  }
+  return buffer;
+}
+#endif // USE_READLINE
 
 /* this function config a exit-cmd list, strncasecmp func truncate the command from terminal according to the number,
    'strncasecmp("exit", cmd, 4)' means that obclient read command string from terminal, truncate it to 4 chars from
    the beginning, then compare the result with 'exit', if they match, exit the obclient.
 */
-bool is_exit_command(const char *cmd)
-{
-  return 0 == strncasecmp("exit", cmd, 4) || 0 == strncasecmp("bye", cmd, 3) || 0 == strncasecmp("\\q", cmd, 2);
+bool is_exit_command(const char *cmd) {
+  return 0 == strncasecmp("exit", cmd, 4) ||
+         0 == strncasecmp("bye", cmd, 3) ||
+         0 == strncasecmp("\\q", cmd, 2) ;
 }
 
 int init_unix_sock(const char *unix_sock_path)
@@ -165,7 +170,7 @@ int main(int argc, char *argv[])
       break;
     }
 
-    if ((send_bytes = write(sockfd, input_command, strlen(input_command) + 1)) == -1) {  // TODO: writen
+    if ((send_bytes = write(sockfd, input_command, strlen(input_command) + 1)) == -1) { // TODO writen
       fprintf(stderr, "send error: %d:%s \n", errno, strerror(errno));
       exit(1);
     }
