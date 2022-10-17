@@ -4,6 +4,7 @@
 #include <string>
 
 #include "type/value.h"
+#include "type/float_type.h"
 
 class TypeConverter {
 public:
@@ -32,7 +33,8 @@ public:
       case FLOAT:
         return {FLOAT, raw};
       case CHAR: {
-        std::string converted = std::to_string(raw);
+        Value tmp = {FLOAT, raw};
+        std::string converted = tmp.to_string();
         return {CHAR, converted.c_str(), converted.size()};
       }
       default:
