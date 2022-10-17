@@ -6,7 +6,7 @@
 // Note: Implementations of constructors and destructors can be found in statements.cpp.
 namespace hsql {
 
-enum ShowType { kShowColumns, kShowTables };
+enum ShowType { kShowColumns, kShowTables, kShowIndex };
 
 // Represents SQL SHOW statements.
 // Example "SHOW TABLES;"

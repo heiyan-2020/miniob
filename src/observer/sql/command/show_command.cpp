@@ -15,6 +15,8 @@ RC ShowCommand::execute(const SQLStageEvent *sql_event)
       return do_show_tables(sql_event);
     case hsql::kShowColumns:
       return do_desc_table(sql_event);
+    case hsql::kShowIndex:
+      return do_show_index(sql_event);
     default:
       return RC::UNIMPLENMENT;
   }
@@ -51,4 +53,9 @@ RC ShowCommand::do_desc_table(const SQLStageEvent *sql_event)
   }
   sql_event->session_event()->set_response(ss.str());
   return RC::SUCCESS;
+}
+
+RC ShowCommand::do_show_index(const SQLStageEvent *sqlStageEvent)
+{
+  return ENV;
 }

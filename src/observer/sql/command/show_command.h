@@ -16,6 +16,7 @@ public:
 private:
   RC do_show_tables(const SQLStageEvent *sql_event);
   RC do_desc_table(const SQLStageEvent *sql_event);
+  RC do_show_index(const SQLStageEvent *sqlStageEvent);
 
 private:
   const hsql::ShowStatement *stmt_;
