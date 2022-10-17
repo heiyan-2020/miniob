@@ -1,5 +1,6 @@
 #include "char_type.h"
 #include "value.h"
+#include "util/type_converter.h"
 
 auto CharType::compare_equals(const Value &left, const Value &right) const -> Value
 {
@@ -75,6 +76,13 @@ auto CharType::compare(const Value &left, const Value &right) const -> CmpRes
           return CmpRes::EQ;
         }
       }
+    }
+    case TypeId::INT: {
+      // 字符串和整数比较, 先将字符串转换为整数
+      return TypeConverter::get_from_char(INT, left.value_.char_, left.len_).compare(right);
+    }
+    case TypeId::FLOAT: {
+      return TypeConverter::get_from_char(FLOAT, left.value_.char_, left.len_).compare(right);
     }
     default:
       return CmpRes::UNDEFINED;
