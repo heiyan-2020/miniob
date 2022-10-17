@@ -27,9 +27,9 @@ See the Mulan PSL v2 for more details. */
 #include "storage/persist/persist.h"
 #include "rc.h"
 
-//固定文件大小 TODO: 循环文件组
-#define CLOG_FILE_SIZE 48 * 1024 * 1024
-#define CLOG_BUFFER_SIZE 4 * 1024 * 1024
+// 固定文件大小 TODO: 循环文件组
+#define CLOG_FILE_SIZE (48 * 1024 * 1024)
+#define CLOG_BUFFER_SIZE (4 * 1024 * 1024)
 #define TABLE_NAME_MAX_LEN 20  // TODO: 表名不要超过20字节
 
 class CLogManager;
@@ -102,10 +102,10 @@ class CLogRecord {
   friend class Db;
 
 public:
-  // TODO: lsn当前在内部分配
+  // TODO: lsn 当前在内部分配
   // 对齐在内部处理
   CLogRecord(CLogType flag, int32_t trx_id, const char *table_name = nullptr, int data_len = 0, Record *rec = nullptr);
-  // 从外存恢复log record
+  // 从外存恢复 log record
   CLogRecord(char *data);
   ~CLogRecord();
 
@@ -147,7 +147,7 @@ public:
   ~CLogBuffer();
 
   RC append_log_record(CLogRecord *log_rec, int &start_off);
-  // 将buffer中的数据下刷到log_file
+  // 将 buffer 中的数据下刷到 log_file
   RC flush_buffer(CLogFile *log_file);
   void set_current_block_no(const int32_t block_no)
   {
@@ -177,7 +177,7 @@ protected:
 #define CLOG_BLOCK_SIZE (1 << 9)
 #define CLOG_BLOCK_DATA_SIZE (CLOG_BLOCK_SIZE - sizeof(CLogBlockHeader))
 #define CLOG_BLOCK_HDR_SIZE (sizeof(CLogBlockHeader))
-#define CLOG_REDO_BUFFER_SIZE 8 * CLOG_BLOCK_SIZE
+#define CLOG_REDO_BUFFER_SIZE (8 * CLOG_BLOCK_SIZE)
 
 struct CLogRecordBuf {
   int32_t write_offset_;
@@ -197,7 +197,7 @@ struct CLogFHDBlock {
 };
 
 struct CLogBlockHeader {
-  int32_t log_block_no;  // 在文件中的offset no=n*CLOG_BLOCK_SIZE
+  int32_t log_block_no;  // 在文件中的 offset no = n * CLOG_BLOCK_SIZE
   int16_t log_data_len_;
   int16_t first_rec_offset_;
 };
@@ -223,7 +223,7 @@ protected:
   PersistHandler *log_file_;
 };
 
-// TODO: 当前简单管理mtr
+// TODO: 当前简单管理 mtr
 struct CLogMTRManager {
   std::list<CLogRecord *> log_redo_list;
   std::unordered_map<int32_t, bool> trx_commited;  // <trx_id, commited>
@@ -241,7 +241,7 @@ public:
 
   RC clog_gen_record(CLogType flag, int32_t trx_id, CLogRecord *&log_rec, const char *table_name = nullptr,
       int data_len = 0, Record *rec = nullptr);
-  //追加写到log_buffer
+  // 追加写到 log_buffer
   RC clog_append_record(CLogRecord *log_rec);
   // 通常不需要在外部调用
   RC clog_sync();
@@ -252,7 +252,7 @@ public:
 
   static int32_t get_next_lsn(int32_t rec_len);
 
-  static std::atomic<int32_t> gloabl_lsn_;
+  static std::atomic<int32_t> global_lsn_;
 
 protected:
   CLogBuffer *log_buffer_;

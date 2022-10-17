@@ -176,7 +176,7 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
   }
   RC rc = RC::SUCCESS;
   int32_t logrec_left_len = log_rec->get_logrec_len() - start_off;
-  CLogBlock *log_block = (CLogBlock *)&buffer_[write_block_offset_];
+  auto *log_block = (CLogBlock *)&buffer_[write_block_offset_];
 
   if (write_offset_ == 0 && write_block_offset_ == 0) {
     memset(log_block, 0, CLOG_BLOCK_SIZE);
@@ -184,8 +184,8 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
     log_block->log_block_hdr_.log_block_no = current_block_no_;
     write_offset_ += CLOG_BLOCK_HDR_SIZE;
   }
-  if (log_block->log_block_hdr_.log_data_len_ == CLOG_BLOCK_DATA_SIZE) {  // 当前block已写满
-    // 新分配一个block
+  if (log_block->log_block_hdr_.log_data_len_ == CLOG_BLOCK_DATA_SIZE) {  // 当前 block 已写满
+    // 新分配一个 block
     write_block_offset_ += CLOG_BLOCK_SIZE;
     current_block_no_ += CLOG_BLOCK_SIZE;
     log_block = (CLogBlock *)&buffer_[write_block_offset_];
@@ -194,8 +194,8 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
     write_offset_ += CLOG_BLOCK_HDR_SIZE;
     return append_log_record(log_rec, start_off);
   } else {
-    if (logrec_left_len <= (CLOG_BLOCK_DATA_SIZE - log_block->log_block_hdr_.log_data_len_)) {  //不需要再跨block存放
-      if (log_block->log_block_hdr_.log_data_len_ == 0) {                                       //当前为新block
+    if (logrec_left_len <= (CLOG_BLOCK_DATA_SIZE - log_block->log_block_hdr_.log_data_len_)) {  // 不需要再跨 block 存放
+      if (log_block->log_block_hdr_.log_data_len_ == 0) {                                       // 当前为新 block
         if (start_off == 0) {
           log_block->log_block_hdr_.first_rec_offset_ = CLOG_BLOCK_HDR_SIZE;
         } else {
@@ -206,8 +206,8 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
       write_offset_ += logrec_left_len;
       log_block->log_block_hdr_.log_data_len_ += logrec_left_len;
       start_off += logrec_left_len;
-    } else {                                               //需要跨block
-      if (log_block->log_block_hdr_.log_data_len_ == 0) {  //当前为新block
+    } else {                                               // 需要跨 block
+      if (log_block->log_block_hdr_.log_data_len_ == 0) {  // 当前为新 block
         log_block->log_block_hdr_.first_rec_offset_ = CLOG_BLOCK_SIZE;
       }
       int32_t block_left_len = CLOG_BLOCK_DATA_SIZE - log_block->log_block_hdr_.log_data_len_;
@@ -223,7 +223,7 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
 
 RC CLogBuffer::flush_buffer(CLogFile *log_file)
 {
-  if (write_offset_ == CLOG_BUFFER_SIZE) {  //如果是buffer满触发的下刷
+  if (write_offset_ == CLOG_BUFFER_SIZE) {  // 如果是 buffer 满触发的下刷
     CLogBlock *log_block = (CLogBlock *)buffer_;
     log_file->write(log_block->log_block_hdr_.log_block_no, CLOG_BUFFER_SIZE, buffer_);
     write_block_offset_ = 0;
@@ -233,12 +233,12 @@ RC CLogBuffer::flush_buffer(CLogFile *log_file)
     CLogBlock *log_block = (CLogBlock *)buffer_;
     log_file->write(log_block->log_block_hdr_.log_block_no, write_block_offset_ + CLOG_BLOCK_SIZE, buffer_);
     log_block = (CLogBlock *)&buffer_[write_block_offset_];
-    if (log_block->log_block_hdr_.log_data_len_ == CLOG_BLOCK_DATA_SIZE) {  // 最后一个block已写满
+    if (log_block->log_block_hdr_.log_data_len_ == CLOG_BLOCK_DATA_SIZE) {  // 最后一个 block 已写满
       write_block_offset_ = 0;
       write_offset_ = 0;
       memset(buffer_, 0, CLOG_BUFFER_SIZE);
     } else if (write_block_offset_ != 0) {
-      // 将最后一个未写满的block迁移到buffer起始位置
+      // 将最后一个未写满的 block 迁移到 buffer 起始位置
       write_offset_ = log_block->log_block_hdr_.log_data_len_ + CLOG_BLOCK_HDR_SIZE;
       memcpy(buffer_, &buffer_[write_block_offset_], CLOG_BLOCK_SIZE);
       write_block_offset_ = 0;
@@ -318,13 +318,13 @@ RC CLogFile::recover(CLogMTRManager *mtr_mgr, CLogBuffer *log_buffer)
       while (rec_offset < CLOG_BLOCK_HDR_SIZE + log_block->log_block_hdr_.log_data_len_) {
         block_recover(log_block, rec_offset, &logrec_buf, log_rec);
         if (log_rec != nullptr) {
-          CLogManager::gloabl_lsn_ = log_rec->get_lsn() + log_rec->get_logrec_len();
+          CLogManager::global_lsn_ = log_rec->get_lsn() + log_rec->get_logrec_len();
           mtr_mgr->log_record_manage(log_rec);
           log_rec = nullptr;
         }
       }
 
-      if (log_block->log_block_hdr_.log_data_len_ < CLOG_BLOCK_DATA_SIZE) {  //最后一个block
+      if (log_block->log_block_hdr_.log_data_len_ < CLOG_BLOCK_DATA_SIZE) {  // 最后一个block
         log_buffer->block_copy(0, log_block);
         log_buffer->set_write_block_offset(0);
         log_buffer->set_write_offset(log_block->log_block_hdr_.log_data_len_ + CLOG_BLOCK_HDR_SIZE);
@@ -347,7 +347,7 @@ done:
 RC CLogFile::block_recover(CLogBlock *block, int16_t &offset, CLogRecordBuf *logrec_buf, CLogRecord *&log_rec)
 {
   if (offset == CLOG_BLOCK_HDR_SIZE &&
-      block->log_block_hdr_.first_rec_offset_ != CLOG_BLOCK_HDR_SIZE) {  //跨block中的某部分（非第一部分）
+      block->log_block_hdr_.first_rec_offset_ != CLOG_BLOCK_HDR_SIZE) {  // 跨block中的某部分（非第一部分）
     // 追加到logrec_buf
     memcpy(&logrec_buf->buffer_[logrec_buf->write_offset_],
         (char *)block + (int)offset,
@@ -370,7 +370,7 @@ RC CLogFile::block_recover(CLogBlock *block, int16_t &offset, CLogRecordBuf *log
         if (logrec_hdr->logrec_len_ <= CLOG_BLOCK_SIZE - offset) {
           log_rec = new CLogRecord((char *)block + (int)offset);
           offset += logrec_hdr->logrec_len_;
-        } else {  //此时为跨block的第一部分
+        } else {  // 此时为跨block的第一部分
           // 开始写入logrec_buf
           memcpy(
               &logrec_buf->buffer_[logrec_buf->write_offset_], (char *)block + (int)offset, CLOG_BLOCK_SIZE - offset);
@@ -397,7 +397,7 @@ void CLogMTRManager::log_record_manage(CLogRecord *log_rec)
 }
 
 ////////////////////
-std::atomic<int32_t> CLogManager::gloabl_lsn_(0);
+std::atomic<int32_t> CLogManager::global_lsn_(0);
 CLogManager::CLogManager(const char *path)
 {
   log_buffer_ = new CLogBuffer();
@@ -413,9 +413,9 @@ CLogManager::~CLogManager()
 }
 
 RC CLogManager::clog_gen_record(CLogType flag, int32_t trx_id, CLogRecord *&log_rec,
-    const char *table_name /* = nullptr */, int data_len /* = 0 */, Record *rec /* = nullptr*/)
+    const char *table_name, int data_len, Record *rec)
 {
-  CLogRecord *log_record = new CLogRecord(flag, trx_id, table_name, data_len, rec);
+  auto *log_record = new CLogRecord(flag, trx_id, table_name, data_len, rec);
   if (log_record) {
     log_rec = log_record;
   } else {
@@ -460,7 +460,7 @@ CLogMTRManager *CLogManager::get_mtr_manager()
 
 int32_t CLogManager::get_next_lsn(int32_t rec_len)
 {
-  int32_t res_lsn = CLogManager::gloabl_lsn_;
-  CLogManager::gloabl_lsn_ += rec_len;  // 当前不考虑溢出
+  int32_t res_lsn = CLogManager::global_lsn_;
+  CLogManager::global_lsn_ += rec_len;  // 当前不考虑溢出
   return res_lsn;
 }

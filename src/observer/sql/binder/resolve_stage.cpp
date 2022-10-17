@@ -35,6 +35,7 @@ See the Mulan PSL v2 for more details. */
 #include "sql/command/delete_command.h"
 #include "planner.h"
 #include "sql/command/other_command.h"
+#include "sql/command/transaction_command.h"
 
 using namespace common;
 
@@ -121,6 +122,9 @@ void ResolveStage::handle_event(StageEvent *event)
       break;
     case hsql::kStmtOther:
       sql_event->set_command(std::make_unique<OtherCommand>(dynamic_cast<const hsql::OtherStatement *>(stmt)));
+      break;
+    case hsql::kStmtTransaction:
+      sql_event->set_command(std::make_unique<TransactionCommand>(dynamic_cast<const hsql::TransactionStatement *>(stmt)));
       break;
     default:
       session_event->set_response("Unsupported\n");
