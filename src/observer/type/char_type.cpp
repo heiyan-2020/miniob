@@ -78,8 +78,7 @@ auto CharType::compare(const Value &left, const Value &right) const -> CmpRes
       }
     }
     case TypeId::INT: {
-      // 字符串和整数比较, 先将字符串转换为整数
-      return TypeConverter::get_from_char(INT, left.value_.char_, left.len_).compare(right);
+      return TypeConverter::get_from_char(FLOAT, left.value_.char_, left.len_).compare(TypeConverter::get_from_int(FLOAT, right.value_.int_));
     }
     case TypeId::FLOAT: {
       return TypeConverter::get_from_char(FLOAT, left.value_.char_, left.len_).compare(right);
