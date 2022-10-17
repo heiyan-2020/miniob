@@ -62,15 +62,17 @@ RC ShowCommand::do_show_index(const SQLStageEvent *sql_event)
   const char *table_name = stmt_->name;
   Table *table = db->find_table(table_name);
   std::stringstream ss;
-  std::vector<Index *> indexes = table->get_indexex();
+
   if (table != nullptr) {
-    // todo
+    std::vector<Index *> indexes = table->get_indexex();
+    ss << "TABLE | NON_UNIQUE | KEY_NAME | SEQ_IN_INDEX | COLUMN_NAME" << std::endl;
     for (auto* index: indexes) {
       index_2_string(table_name, ss, index);
     }
   } else {
     ss << "No such table: " << table_name << std::endl;
   }
+
   sql_event->session_event()->set_response(ss.str());
   return RC::SUCCESS;
 }
@@ -84,6 +86,7 @@ void ShowCommand::index_2_string(const char* table_name, std::ostream &os, const
     count++;
   }
 }
+
 void ShowCommand::index_info_prefix(const char *table_name, std::ostream &os, const IndexMeta &index_meta)
 {
   os << table_name << " | ";
