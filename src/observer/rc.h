@@ -127,6 +127,26 @@ enum RCCantOpen {
   SYMLINK,
 };
 
+enum RCFILE {
+  F_EXIST = 1,
+  F_NOT_EXIST,
+  F_NAME,
+  F_BOUND,
+  F_CREATE,
+  F_OPEN,
+  F_NOT_OPENED,
+  F_CLOSE,
+  F_REMOVE,
+  F_SEEK,
+  F_READ,
+  F_WRITE,
+};
+
+enum RCLOGBUF {
+  LB_FULL = 1,
+  LB_EMPTY,
+};
+
 enum RCCorrupt { CORRUPT_VIRT = 1, CORRUPT_SEQUENCE, CORRUPT_INDEX };
 
 enum RCReadonly {
@@ -166,33 +186,13 @@ enum RCAuth {
   USER = 1,
 };
 
-enum RCFILE {
-  F_EXIST = 1,
-  F_NOT_EXIST,
-  F_NAME,
-  F_BOUND,
-  F_CREATE,
-  F_OPEN,
-  F_NOT_OPENED,
-  F_CLOSE,
-  F_REMOVE,
-  F_SEEK,
-  F_READ,
-  F_WRITE,
-};
-
-enum RCLOGBUF {
-  LB_FULL = 1,
-  LB_EMPTY,
-};
-
 enum RC {
 
   SUCCESS = 0, /* Successful result */
   /* beginning-of-error-codes */
   GENERIC_ERROR,    /* Generic error */
   INVALID_ARGUMENT, /* Invalid argument */
-  UNIMPLENMENT,     /* not implenment yet */
+  UNIMPLENMENT,     /* not implement yet */
   SQL_SYNTAX,       /* SQL Syntax error */
   BUFFERPOOL,       /* Buffer pool error*/
   RECORD,           /* Record error */
@@ -224,6 +224,10 @@ enum RC {
   FILE_ERROR,       /* File error */
   LOGBUF,           /* clog buffer error */
   NOTICE = 100,     /* Notifications from log() */
+  DATEFORMAT,       /* Date format error */
+  EVALUATE,         /* Evaluation error */
+  ENV,              /* Doesn't find column in current environment */
+  SCALAR,           /* scalar sub-query return multiple rows */
 
   /* buffer pool part */
   BUFFERPOOL_EXIST = (BUFFERPOOL | (RCBufferPool::BP_EXIST << 8)),
@@ -274,7 +278,7 @@ enum RC {
   SCHEMA_INDEX_NOT_EXIST = (SCHEMA | (RCSchema::INDEX_NOT_EXIST << 8)),
   SCHEMA_INDEX_NAME_ILLEGAL = (SCHEMA | (RCSchema::INDEX_NAME_ILLEGAL << 8)),
 
-  /*ioerror part*/
+  /* io error part */
   IOERR_READ = (IOERR | (RCIOError::READ << 8)),
   IOERR_SHORT_READ = (IOERR | (RCIOError::SHORT_READ << 8)),
   IOERR_WRITE = (IOERR | (RCIOError::WRITE << 8)),
@@ -305,7 +309,7 @@ enum RC {
   IOERR_CORRUPTFS = (IOERR | (RCIOError::CORRUPTFS << 8)),
   IOERR_OPEN_TOO_MANY_FILES = (IOERR | RCIOError::OPEN_TOO_MANY_FILES << 8),
 
-  /* Lock part*/
+  /* Lock part */
   LOCKED_LOCK = (LOCKED | (RCLock::LOCK << 8)),
   LOCKED_UNLOCK = (LOCKED | (RCLock::UNLOCK << 8)),
   LOCKED_SHAREDCACHE = (LOCKED | (RCLock::SHAREDCACHE << 8)),
@@ -331,7 +335,7 @@ enum RC {
   // CORRUPT_SEQUENCE = (CORRUPT | (RCCorrupt::CORRUPT_SEQUENCE << 8)),
   // CORRUPT_INDEX = (CORRUPT | (RCCorrupt::CORRUPT_INDEX << 8)),
 
-  /*readonly part*/
+  /* readonly part */
   READONLY_RECOVERY = (READONLY | (RCReadonly::RO_RECOVERY << 8)),
   READONLY_CANTLOCK = (READONLY | (RCReadonly::CANTLOCK << 8)),
   READONLY_ROLLBACK = (READONLY | (RCReadonly::RO_ROLLBACK << 8)),
@@ -354,7 +358,7 @@ enum RC {
   CONSTRAINT_ROWID = (CONSTRAINT | (RCContraint::ROWID << 8)),
   CONSTRAINT_PINNED = (CONSTRAINT | (RCContraint::PINNED << 8)),
 
-  /* notic part */
+  /* notice part */
   NOTICE_RECOVER_WAL = (NOTICE | (RCNotice::RECOVER_WAL << 8)),
   NOTICE_RECOVER_ROLLBACK = (NOTICE | (RCNotice::RECOVER_ROLLBACK << 8)),
   NOTICE_AUTOINDEX = (NOTICE | (RCNotice::AUTOINDEX << 8)),

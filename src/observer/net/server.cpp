@@ -113,7 +113,6 @@ void Server::close_connection(ConnectionContext *client_context)
 void Server::recv(int fd, short ev, void *arg)
 {
   ConnectionContext *client = (ConnectionContext *)arg;
-  // Server::send(sev->getClient(), sev->getRequestBuf(), strlen(sev->getRequestBuf()));
 
   int data_len = 0;
   int read_len = 0;
@@ -122,7 +121,8 @@ void Server::recv(int fd, short ev, void *arg)
 
   TimerStat timer_stat(*read_socket_metric_);
   MUTEX_LOCK(&client->mutex);
-  // 持续接收消息，直到遇到'\0'。将'\0'遇到的后续数据直接丢弃没有处理，因为目前仅支持一收一发的模式
+  // 持续接收消息，直到遇到 '\0'
+  // 将 '\0' 遇到的后续数据直接丢弃没有处理
   while (true) {
     read_len = ::read(client->fd, client->buf + data_len, buf_size - data_len);
     if (read_len < 0) {
@@ -160,16 +160,16 @@ void Server::recv(int fd, short ev, void *arg)
   timer_stat.end();
 
   if (data_len > buf_size) {
-    LOG_WARN("The length of sql exceeds the limitation %d\n", buf_size);
+    LOG_WARN("The length of sql exceeds the limitation %d", buf_size);
     close_connection(client);
     return;
   }
   if (read_len == 0) {
-    LOG_INFO("The peer has been closed %s\n", client->addr);
+    LOG_INFO("The peer has been closed %s", client->addr);
     close_connection(client);
     return;
   } else if (read_len < 0) {
-    LOG_ERROR("Failed to read socket of %s, %s\n", client->addr, strerror(errno));
+    LOG_ERROR("Failed to read socket of %s, %s", client->addr, strerror(errno));
     close_connection(client);
     return;
   }
@@ -234,11 +234,11 @@ void Server::accept(int fd, short ev, void *arg)
   }
 
   if (!instance->server_param_.use_unix_socket) {
-    // unix socket不支持设置NODELAY
+    // unix socket 不支持设置 NODELAY
     int yes = 1;
     ret = setsockopt(client_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
     if (ret < 0) {
-      LOG_ERROR("Failed to set socket of %s option as : TCP_NODELAY %s\n", addr_str.c_str(), strerror(errno));
+      LOG_ERROR("Failed to set socket of %s option as : TCP_NODELAY %s", addr_str.c_str(), strerror(errno));
       ::close(client_fd);
       return;
     }
@@ -270,7 +270,7 @@ void Server::accept(int fd, short ev, void *arg)
   }
 
   client_context->session = new Session(Session::default_session());
-  LOG_INFO("Accepted connection from %s\n", client_context->addr);
+  LOG_INFO("Accepted connection from %s", client_context->addr);
 }
 
 int Server::start()

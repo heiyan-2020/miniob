@@ -17,27 +17,28 @@ See the Mulan PSL v2 for more details. */
 
 #include "common/seda/stage.h"
 #include "rc.h"
+#include "event/sql_event.h"
 
 class ParseStage : public common::Stage {
 public:
-  ~ParseStage();
+  ~ParseStage() override = default;
   static Stage *make_stage(const std::string &tag);
 
 protected:
   // common function
-  ParseStage(const char *tag);
-  bool set_properties();
+  explicit ParseStage(const char *tag);
+  bool set_properties() override;
 
-  bool initialize();
-  void cleanup();
-  void handle_event(common::StageEvent *event);
-  void callback_event(common::StageEvent *event, common::CallbackContext *context);
+  bool initialize() override;
+  void cleanup() override;
+  void handle_event(common::StageEvent *event) override;
+  void callback_event(common::StageEvent *event, common::CallbackContext *context) override;
 
 protected:
   RC handle_request(common::StageEvent *event);
 
 private:
-  Stage *optimize_stage_ = nullptr;
+  RC parse_headers(SQLStageEvent *event, const std::string &sql);
   Stage *resolve_stage_ = nullptr;
 };
 

@@ -20,8 +20,8 @@ See the Mulan PSL v2 for more details. */
 #include <unordered_map>
 
 #include "rc.h"
-#include "sql/parser/parse_defs.h"
 
+class Schema;
 class Table;
 class CLogManager;
 
@@ -32,14 +32,12 @@ public:
 
   RC init(const char *name, const char *dbpath);
 
-  RC create_table(const char *table_name, int attribute_count, const AttrInfo *attributes);
-
+  RC create_table(const char *table_name, Schema schema);
+  RC drop_table(const char *table_name);
   Table *find_table(const char *table_name) const;
-
-  const char *name() const;
-
   void all_tables(std::vector<std::string> &table_names) const;
 
+  std::string name() const;
   RC sync();
 
   RC recover();

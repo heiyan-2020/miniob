@@ -14,7 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "session_stage.h"
 
-#include <string.h>
+#include <cstring>
 #include <string>
 
 #include "common/conf/ini.h"
@@ -37,14 +37,10 @@ const std::string SessionStage::SQL_METRIC_TAG = "SessionStage.sql";
 SessionStage::SessionStage(const char *tag) : Stage(tag), plan_cache_stage_(nullptr), sql_metric_(nullptr)
 {}
 
-// Destructor
-SessionStage::~SessionStage()
-{}
-
 // Parse properties, instantiate a stage object
 Stage *SessionStage::make_stage(const std::string &tag)
 {
-  SessionStage *stage = new (std::nothrow) SessionStage(tag.c_str());
+  auto *stage = new (std::nothrow) SessionStage(tag.c_str());
   if (stage == nullptr) {
     LOG_ERROR("new ExecutorStage failed");
     return nullptr;
@@ -56,14 +52,6 @@ Stage *SessionStage::make_stage(const std::string &tag)
 // Set properties for this object set in stage specific properties
 bool SessionStage::set_properties()
 {
-  //  std::string stageNameStr(stage_name_);
-  //  std::map<std::string, std::string> section = g_properties()->get(
-  //    stageNameStr);
-  //
-  //  std::map<std::string, std::string>::iterator it;
-  //
-  //  std::string key;
-
   return true;
 }
 
@@ -72,12 +60,13 @@ bool SessionStage::initialize()
 {
   LOG_TRACE("Enter");
 
-  std::list<Stage *>::iterator stgp = next_stage_list_.begin();
+  auto stgp = next_stage_list_.begin();
   plan_cache_stage_ = *(stgp++);
 
   MetricsRegistry &metricsRegistry = get_metrics_registry();
   sql_metric_ = new SimpleTimer();
   metricsRegistry.register_metric(SQL_METRIC_TAG, sql_metric_);
+
   LOG_TRACE("Exit");
   return true;
 }
@@ -99,46 +88,43 @@ void SessionStage::cleanup()
 
 void SessionStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
   // right now, we just support only one event.
   handle_request(event);
 
-  LOG_TRACE("Exit\n");
-  return;
+  LOG_TRACE("Exit");
 }
 
 void SessionStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
+  LOG_TRACE("Enter");
 
-  SessionEvent *sev = dynamic_cast<SessionEvent *>(event);
+  auto *sev = dynamic_cast<SessionEvent *>(event);
   if (nullptr == sev) {
-    LOG_ERROR("Cannot cat event to sessionEvent");
+    LOG_ERROR("Cannot cast event to sessionEvent");
     return;
   }
 
-  const char *response = sev->get_response();
-  int len = sev->get_response_len();
-  if (len <= 0 || response == nullptr) {
+  std::string response = sev->get_response();
+  int len = static_cast<int>(response.size());
+  if (response.empty()) {
     response = "No data\n";
-    len = strlen(response) + 1;
+    len = static_cast<int>(response.length()) + 1;
   }
-  Server::send(sev->get_client(), response, len);
+  Server::send(sev->get_client(), response.c_str(), len);
   if ('\0' != response[len - 1]) {
     // 这里强制性的给发送一个消息终结符，如果需要发送多条消息，需要调整
     char end = 0;
     Server::send(sev->get_client(), &end, 1);
   }
 
-  // sev->done();
-  LOG_TRACE("Exit\n");
-  return;
+  LOG_TRACE("Exit");
 }
 
 void SessionStage::handle_request(StageEvent *event)
 {
-  SessionEvent *sev = dynamic_cast<SessionEvent *>(event);
+  auto *sev = dynamic_cast<SessionEvent *>(event);
   if (nullptr == sev) {
     LOG_ERROR("Cannot cat event to sessionEvent");
     return;
@@ -157,16 +143,15 @@ void SessionStage::handle_request(StageEvent *event)
     return;
   }
 
-  CompletionCallback *cb = new (std::nothrow) CompletionCallback(this, nullptr);
+  auto *cb = new (std::nothrow) CompletionCallback(this, nullptr);
   if (cb == nullptr) {
     LOG_ERROR("Failed to new callback for SessionEvent");
-
     sev->done_immediate();
     return;
   }
 
   sev->push_callback(cb);
 
-  SQLStageEvent *sql_event = new SQLStageEvent(sev, sql);
+  auto *sql_event = new SQLStageEvent(sev, sql);
   plan_cache_stage_->handle_event(sql_event);
 }

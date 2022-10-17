@@ -19,6 +19,7 @@ See the Mulan PSL v2 for more details. */
 #include "json/json.h"
 #include "common/log/log.h"
 #include "storage/trx/trx.h"
+#include "sql/table/schema.h"
 
 static const Json::StaticString FIELD_TABLE_NAME("table_name");
 static const Json::StaticString FIELD_FIELDS("fields");
@@ -42,7 +43,9 @@ RC TableMeta::init_sys_fields()
 {
   sys_fields_.reserve(1);
   FieldMeta field_meta;
-  RC rc = field_meta.init(Trx::trx_field_name(), Trx::trx_field_type(), 0, Trx::trx_field_len(), false);
+  // start at offset 4, for null field bitmap
+  // TODO(vgalaxy): only support up to 32 fields
+  RC rc = field_meta.init(Trx::trx_field_name(), Trx::trx_field_type(), 4, Trx::trx_field_len(), false, false);
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to init trx field. rc = %d:%s", rc, strrc(rc));
     return rc;
@@ -51,50 +54,48 @@ RC TableMeta::init_sys_fields()
   sys_fields_.push_back(field_meta);
   return rc;
 }
-RC TableMeta::init(const char *name, int field_num, const AttrInfo attributes[])
+
+RC TableMeta::init(const char *name, const Schema& schema)
 {
   if (common::is_blank(name)) {
-    LOG_ERROR("Name cannot be empty");
     return RC::INVALID_ARGUMENT;
   }
 
-  if (field_num <= 0 || nullptr == attributes) {
-    LOG_ERROR("Invalid argument. name=%s, field_num=%d, attributes=%p", name, field_num, attributes);
-    return RC::INVALID_ARGUMENT;
-  }
-
-  RC rc = RC::SUCCESS;
+  RC rc;
   if (sys_fields_.empty()) {
     rc = init_sys_fields();
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to init_sys_fields, name:%s ", name);
+      LOG_ERROR("Failed to init_sys_fields, name %s", name);
       return rc;
     }
   }
 
-  fields_.resize(field_num + sys_fields_.size());
+  const std::vector<Column> &cols = schema.get_columns();
+
+  fields_.resize(cols.size() + sys_fields_.size());
   for (size_t i = 0; i < sys_fields_.size(); i++) {
     fields_[i] = sys_fields_[i];
   }
 
-  // 当前实现下，所有类型都是4字节对齐的，所以不再考虑字节对齐问题
+  // 当前实现下，所有类型都是 4 字节对齐的，所以不再考虑字节对齐问题
   int field_offset = sys_fields_.back().offset() + sys_fields_.back().len();
 
-  for (int i = 0; i < field_num; i++) {
-    const AttrInfo &attr_info = attributes[i];
-    rc = fields_[i + sys_fields_.size()].init(attr_info.name, attr_info.type, field_offset, attr_info.length, true);
+  for (int i = 0; i < cols.size(); i++) {
+    const Column &col = cols[i];
+    rc = fields_[i + sys_fields_.size()].init(
+        col.name_.column_name_.c_str(), col.column_type_, field_offset, col.fixed_length_, true, col.nullable_);
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, attr_info.name);
+      LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, col.name_.column_name_.c_str());
       return rc;
     }
 
-    field_offset += attr_info.length;
+    field_offset += col.fixed_length_;
   }
 
   record_size_ = field_offset;
 
   name_ = name;
-  LOG_INFO("Sussessfully initialized table meta. table name=%s", name);
+  LOG_INFO("Successfully initialized table meta. table name=%s", name);
   return RC::SUCCESS;
 }
 
@@ -104,9 +105,9 @@ RC TableMeta::add_index(const IndexMeta &index)
   return RC::SUCCESS;
 }
 
-const char *TableMeta::name() const
+std::string TableMeta::name() const
 {
-  return name_.c_str();
+  return name_;
 }
 
 const FieldMeta *TableMeta::trx_field() const
@@ -118,13 +119,10 @@ const FieldMeta *TableMeta::field(int index) const
 {
   return &fields_[index];
 }
-const FieldMeta *TableMeta::field(const char *name) const
+const FieldMeta *TableMeta::field(const std::string &field_name) const
 {
-  if (nullptr == name) {
-    return nullptr;
-  }
   for (const FieldMeta &field : fields_) {
-    if (0 == strcmp(field.name(), name)) {
+    if (field.name() == field_name) {
       return &field;
     }
   }
@@ -140,30 +138,42 @@ const FieldMeta *TableMeta::find_field_by_offset(int offset) const
   }
   return nullptr;
 }
-int TableMeta::field_num() const
+size_t TableMeta::field_num() const
 {
   return fields_.size();
 }
 
-int TableMeta::sys_field_num() const
+size_t TableMeta::sys_field_num()
 {
   return sys_fields_.size();
 }
 
-const IndexMeta *TableMeta::index(const char *name) const
+const IndexMeta *TableMeta::index(const std::string &index_name) const
 {
   for (const IndexMeta &index : indexes_) {
-    if (0 == strcmp(index.name(), name)) {
+    if (index.name() == index_name) {
       return &index;
     }
   }
   return nullptr;
 }
 
-const IndexMeta *TableMeta::find_index_by_field(const char *field) const
+const IndexMeta *TableMeta::find_index_by_field(const std::string &field_name) const
 {
   for (const IndexMeta &index : indexes_) {
-    if (0 == strcmp(index.field(), field)) {
+    // 只有多列索引的第一个字段出现在查询条件中，该索引才可能被使用
+    // 目前只考虑单列索引
+    if (index.fields().size() == 1 && index.fields().at(0) == field_name) {
+      return &index;
+    }
+  }
+  return nullptr;
+}
+
+const IndexMeta *TableMeta::find_index_by_fields(const std::vector<std::string> &field_names) const
+{
+  for (const IndexMeta &index : indexes_) {
+    if (index.fields() == field_names) {
       return &index;
     }
   }
@@ -244,7 +254,7 @@ int TableMeta::deserialize(std::istream &is)
   std::string table_name = table_name_value.asString();
 
   const Json::Value &fields_value = table_value[FIELD_FIELDS];
-  if (!fields_value.isArray() || fields_value.size() <= 0) {
+  if (!fields_value.isArray() || fields_value.empty()) {
     LOG_ERROR("Invalid table meta. fields is not array, json value=%s", fields_value.toStyledString().c_str());
     return -1;
   }
@@ -258,7 +268,7 @@ int TableMeta::deserialize(std::istream &is)
     const Json::Value &field_value = fields_value[i];
     rc = FieldMeta::from_json(field_value, field);
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to deserialize table meta. table name =%s", table_name.c_str());
+      LOG_ERROR("Failed to deserialize table meta. table name=%s", table_name.c_str());
       return -1;
     }
   }
@@ -268,7 +278,8 @@ int TableMeta::deserialize(std::istream &is)
 
   name_.swap(table_name);
   fields_.swap(fields);
-  record_size_ = fields_.back().offset() + fields_.back().len() - fields_.begin()->offset();
+  // plus 4, for null field bitmap
+  record_size_ = fields_.back().offset() + fields_.back().len() - fields_.begin()->offset() + 4;
 
   const Json::Value &indexes_value = table_value[FIELD_INDEXES];
   if (!indexes_value.empty()) {

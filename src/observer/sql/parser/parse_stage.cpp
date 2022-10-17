@@ -12,8 +12,9 @@ See the Mulan PSL v2 for more details. */
 // Created by Longda on 2021/4/13.
 //
 
-#include <string.h>
+#include <cstring>
 #include <string>
+#include <regex>
 
 #include "parse_stage.h"
 
@@ -24,7 +25,11 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/timer_stage.h"
 #include "event/session_event.h"
 #include "event/sql_event.h"
-#include "sql/parser/parse.h"
+
+#include "hsql/SQLParser.h"
+#include "sql/binder/planner.h"
+
+#include "util/string_utils.h"
 
 using namespace common;
 
@@ -32,14 +37,10 @@ using namespace common;
 ParseStage::ParseStage(const char *tag) : Stage(tag)
 {}
 
-//! Destructor
-ParseStage::~ParseStage()
-{}
-
 //! Parse properties, instantiate a stage object
 Stage *ParseStage::make_stage(const std::string &tag)
 {
-  ParseStage *stage = new (std::nothrow) ParseStage(tag.c_str());
+  auto *stage = new (std::nothrow) ParseStage(tag.c_str());
   if (stage == nullptr) {
     LOG_ERROR("new ParseStage failed");
     return nullptr;
@@ -51,14 +52,6 @@ Stage *ParseStage::make_stage(const std::string &tag)
 //! Set properties for this object set in stage specific properties
 bool ParseStage::set_properties()
 {
-  //  std::string stageNameStr(stageName);
-  //  std::map<std::string, std::string> section = theGlobalProperties()->get(
-  //    stageNameStr);
-  //
-  //  std::map<std::string, std::string>::iterator it;
-  //
-  //  std::string key;
-
   return true;
 }
 
@@ -66,11 +59,8 @@ bool ParseStage::set_properties()
 bool ParseStage::initialize()
 {
   LOG_TRACE("Enter");
-
-  std::list<Stage *>::iterator stgp = next_stage_list_.begin();
-  // optimize_stage_ = *(stgp++);
+  auto stgp = next_stage_list_.begin();
   resolve_stage_ = *(stgp++);
-
   LOG_TRACE("Exit");
   return true;
 }
@@ -79,21 +69,19 @@ bool ParseStage::initialize()
 void ParseStage::cleanup()
 {
   LOG_TRACE("Enter");
-
   LOG_TRACE("Exit");
 }
 
 void ParseStage::handle_event(StageEvent *event)
 {
-  LOG_TRACE("Enter\n");
-
+  LOG_TRACE("Enter");
   RC rc = handle_request(event);
   if (RC::SUCCESS != rc) {
     callback_event(event, nullptr);
     return;
   }
 
-  CompletionCallback *cb = new (std::nothrow) CompletionCallback(this, nullptr);
+  auto *cb = new (std::nothrow) CompletionCallback(this, nullptr);
   if (cb == nullptr) {
     LOG_ERROR("Failed to new callback for SQLStageEvent");
     callback_event(event, nullptr);
@@ -104,39 +92,66 @@ void ParseStage::handle_event(StageEvent *event)
   resolve_stage_->handle_event(event);
   event->done_immediate();
 
-  LOG_TRACE("Exit\n");
-  return;
+  LOG_TRACE("Exit");
 }
 
 void ParseStage::callback_event(StageEvent *event, CallbackContext *context)
 {
-  LOG_TRACE("Enter\n");
-  SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
+  LOG_TRACE("Enter");
+  auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   sql_event->session_event()->done_immediate();
-  sql_event->done_immediate();
-  LOG_TRACE("Exit\n");
-  return;
+  //  sql_event->done_immediate();
+  LOG_TRACE("Exit");
 }
 
 RC ParseStage::handle_request(StageEvent *event)
 {
-  SQLStageEvent *sql_event = static_cast<SQLStageEvent *>(event);
+  auto *sql_event = dynamic_cast<SQLStageEvent *>(event);
   const std::string &sql = sql_event->sql();
 
-  Query *query_result = query_create();
-  if (nullptr == query_result) {
-    LOG_ERROR("Failed to create query.");
-    return RC::INTERNAL;
+  // hyrise parser
+  hsql::SQLParserResult result;
+  hsql::SQLParser::parse(sql, &result);
+  if (result.isValid()) {
+    sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
+    parse_headers(sql_event, sql);
+  } else {
+    // transform char -> char(4)
+    // TODO(vgalaxy): consider coexistence of char and char (xxx)
+    std::string sql_trans = std::regex_replace(sql, std::regex{"char"}, "char(4)");
+    // parse again
+    result.reset();
+    hsql::SQLParser::parse(sql_trans, &result);
+    if (result.isValid()) {
+      sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
+      parse_headers(sql_event, sql);
+    } else {
+      sql_event->session_event()->set_response("Failed to parse sql\n");
+      result.reset();
+      return RC::INTERNAL;
+    }
   }
 
-  RC ret = parse(sql.c_str(), query_result);
-  if (ret != RC::SUCCESS) {
-    // set error information to event
-    sql_event->session_event()->set_response("Failed to parse sql\n");
-    query_destroy(query_result);
-    return RC::INTERNAL;
-  }
+  return RC::SUCCESS;
+}
 
-  sql_event->set_query(query_result);
+RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
+{
+  // TODO(vgalaxy): consider delim occur in select values
+  std::string str{sql};
+  transform(str.begin(), str.end(), str.begin(), ::tolower);
+  auto select_size = std::string{"select"}.size();
+  auto find_select = str.find("select");
+  if (find_select == std::string::npos) {
+    return RC::GENERIC_ERROR;
+  }
+  auto find_from = str.find("from");
+  if (find_from == std::string::npos) {
+    return RC::GENERIC_ERROR;
+  }
+  str = str.substr(find_select + select_size, find_from - (find_select + select_size));
+  trim(str);
+  auto headers = split(str, ',');
+  event->set_headers(std::move(headers));
   return RC::SUCCESS;
 }

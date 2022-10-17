@@ -18,7 +18,7 @@ See the Mulan PSL v2 for more details. */
 #include <string>
 
 #include "rc.h"
-#include "sql/parser/parse_defs.h"
+#include "type/type_id.h"
 
 namespace Json {
 class Value;
@@ -30,14 +30,15 @@ public:
   FieldMeta();
   ~FieldMeta() = default;
 
-  RC init(const char *name, AttrType attr_type, int attr_offset, int attr_len, bool visible);
+  RC init(const char *name, TypeId attr_type, int attr_offset, int attr_len, bool visible, bool nullable);
 
 public:
-  const char *name() const;
-  AttrType type() const;
+  std::string name() const;
+  TypeId type() const;
   int offset() const;
   int len() const;
   bool visible() const;
+  bool nullable() const;
 
 public:
   void desc(std::ostream &os) const;
@@ -48,9 +49,10 @@ public:
 
 protected:
   std::string name_;
-  AttrType attr_type_;
+  TypeId attr_type_;
   int attr_offset_;
   int attr_len_;
   bool visible_;
+  bool nullable_;
 };
 #endif  // __OBSERVER_STORAGE_COMMON_FIELD_META_H__

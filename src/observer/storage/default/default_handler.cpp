@@ -22,7 +22,6 @@ See the Mulan PSL v2 for more details. */
 #include "storage/record/record_manager.h"
 #include "storage/index/bplus_tree.h"
 #include "storage/common/table.h"
-#include "storage/common/condition_filter.h"
 
 static DefaultHandler *default_handler = nullptr;
 
@@ -39,9 +38,6 @@ DefaultHandler &DefaultHandler::get_default()
 {
   return *default_handler;
 }
-
-DefaultHandler::DefaultHandler()
-{}
 
 DefaultHandler::~DefaultHandler() noexcept
 {
@@ -126,7 +122,6 @@ RC DefaultHandler::open_db(const char *dbname)
   if ((ret = db->recover()) != RC::SUCCESS) {
     LOG_ERROR("Failed to recover db: %s. error=%d", dbname, ret);
   }
-
   opened_dbs_[dbname] = db;
   return RC::SUCCESS;
 }
@@ -136,82 +131,9 @@ RC DefaultHandler::close_db(const char *dbname)
   return RC::GENERIC_ERROR;
 }
 
-RC DefaultHandler::execute(const char *sql)
-{
-  return RC::GENERIC_ERROR;
-}
-
-RC DefaultHandler::create_table(
-    const char *dbname, const char *relation_name, int attribute_count, const AttrInfo *attributes)
-{
-  Db *db = find_db(dbname);
-  if (db == nullptr) {
-    return RC::SCHEMA_DB_NOT_OPENED;
-  }
-  return db->create_table(relation_name, attribute_count, attributes);
-}
-
-RC DefaultHandler::drop_table(const char *dbname, const char *relation_name)
-{
-  return RC::GENERIC_ERROR;
-}
-
-RC DefaultHandler::create_index(
-    Trx *trx, const char *dbname, const char *relation_name, const char *index_name, const char *attribute_name)
-{
-  Table *table = find_table(dbname, relation_name);
-  if (nullptr == table) {
-    return RC::SCHEMA_TABLE_NOT_EXIST;
-  }
-  return table->create_index(trx, index_name, attribute_name);
-}
-
-RC DefaultHandler::drop_index(Trx *trx, const char *dbname, const char *relation_name, const char *index_name)
-{
-
-  return RC::GENERIC_ERROR;
-}
-
-RC DefaultHandler::insert_record(
-    Trx *trx, const char *dbname, const char *relation_name, int value_num, const Value *values)
-{
-  Table *table = find_table(dbname, relation_name);
-  if (nullptr == table) {
-    return RC::SCHEMA_TABLE_NOT_EXIST;
-  }
-
-  return table->insert_record(trx, value_num, values);
-}
-RC DefaultHandler::delete_record(Trx *trx, const char *dbname, const char *relation_name, int condition_num,
-    const Condition *conditions, int *deleted_count)
-{
-  Table *table = find_table(dbname, relation_name);
-  if (nullptr == table) {
-    return RC::SCHEMA_TABLE_NOT_EXIST;
-  }
-
-  CompositeConditionFilter condition_filter;
-  RC rc = condition_filter.init(*table, conditions, condition_num);
-  if (rc != RC::SUCCESS) {
-    return rc;
-  }
-  return table->delete_record(trx, &condition_filter, deleted_count);
-}
-
-RC DefaultHandler::update_record(Trx *trx, const char *dbname, const char *relation_name, const char *attribute_name,
-    const Value *value, int condition_num, const Condition *conditions, int *updated_count)
-{
-  Table *table = find_table(dbname, relation_name);
-  if (nullptr == table) {
-    return RC::SCHEMA_TABLE_NOT_EXIST;
-  }
-
-  return table->update_record(trx, attribute_name, value, condition_num, conditions, updated_count);
-}
-
 Db *DefaultHandler::find_db(const char *dbname) const
 {
-  std::map<std::string, Db *>::const_iterator iter = opened_dbs_.find(dbname);
+  auto iter = opened_dbs_.find(dbname);
   if (iter == opened_dbs_.end()) {
     return nullptr;
   }
@@ -239,7 +161,7 @@ RC DefaultHandler::sync()
     Db *db = db_pair.second;
     rc = db->sync();
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to sync db. name=%s, rc=%d:%s", db->name(), rc, strrc(rc));
+      LOG_ERROR("Failed to sync db. name=%s, rc=%d:%s", db->name().c_str(), rc, strrc(rc));
       return rc;
     }
   }

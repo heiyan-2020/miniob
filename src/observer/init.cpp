@@ -31,13 +31,12 @@ See the Mulan PSL v2 for more details. */
 #include "sql/executor/execute_stage.h"
 #include "sql/optimizer/optimize_stage.h"
 #include "sql/parser/parse_stage.h"
-#include "sql/parser/resolve_stage.h"
+#include "sql/binder/resolve_stage.h"
 #include "sql/plan_cache/plan_cache_stage.h"
 #include "sql/query_cache/query_cache_stage.h"
-#include "storage/default/default_storage_stage.h"
-#include "storage/mem/mem_storage_stage.h"
 #include "storage/default/disk_buffer_pool.h"
 #include "storage/default/default_handler.h"
+#include "storage/default/default_storage_stage.h"
 
 using namespace common;
 
@@ -56,17 +55,6 @@ bool get_init()
 void set_init(bool value)
 {
   *_get_init() = value;
-  return;
-}
-
-void sig_handler(int sig)
-{
-  // Signal handler will be add in the next step.
-  //  Add action to shutdown
-
-  LOG_INFO("Receive one signal of %d.", sig);
-
-  return;
 }
 
 int init_log(ProcessParam *process_cfg, Ini &properties)
@@ -85,7 +73,7 @@ int init_log(ProcessParam *process_cfg, Ini &properties)
 
     // get log file name
     std::string key = "LOG_FILE_NAME";
-    std::map<std::string, std::string>::iterator it = log_section.find(key);
+    auto it = log_section.find(key);
     if (it == log_section.end()) {
       log_file_name = proc_name + ".log";
       std::cout << "Not set log file name, use default " << log_file_name << std::endl;
@@ -130,21 +118,17 @@ int init_log(ProcessParam *process_cfg, Ini &properties)
     std::cerr << "Failed to init log for " << proc_name << SYS_OUTPUT_FILE_POS << SYS_OUTPUT_ERROR << std::endl;
     return errno;
   }
-
-  return 0;
 }
 
 void cleanup_log()
 {
-
   if (g_log) {
     delete g_log;
     g_log = nullptr;
   }
-  return;
 }
 
-int prepare_init_seda()
+void prepare_init_seda()
 {
   static StageFactory session_stage_factory("SessionStage", &SessionStage::make_stage);
   static StageFactory resolve_stage_factory("ResolveStage", &ResolveStage::make_stage);
@@ -154,22 +138,18 @@ int prepare_init_seda()
   static StageFactory optimize_factory("OptimizeStage", &OptimizeStage::make_stage);
   static StageFactory execute_factory("ExecuteStage", &ExecuteStage::make_stage);
   static StageFactory default_storage_factory("DefaultStorageStage", &DefaultStorageStage::make_stage);
-  static StageFactory mem_storage_factory("MemStorageStage", &MemStorageStage::make_stage);
-  return 0;
 }
 
-int init_global_objects()
+void init_global_objects()
 {
-  BufferPoolManager *bpm = new BufferPoolManager();
+  auto *bpm = new BufferPoolManager();
   BufferPoolManager::set_instance(bpm);
 
-  DefaultHandler *handler = new DefaultHandler();
+  auto *handler = new DefaultHandler();
   DefaultHandler::set_default(handler);
-
-  return 0;
 }
 
-int uninit_global_objects()
+void uninit_global_objects()
 {
   DefaultHandler *default_handler = &DefaultHandler::get_default();
   if (default_handler != nullptr) {
@@ -182,21 +162,18 @@ int uninit_global_objects()
     BufferPoolManager::set_instance(nullptr);
     delete bpm;
   }
-  return 0;
 }
 
 int init(ProcessParam *process_param)
 {
-
   if (get_init()) {
-
-    return 0;
+    return STATUS_SUCCESS;
   }
 
   set_init(true);
 
-  // Run as daemon if daemonization requested
-  int rc = STATUS_SUCCESS;
+  // Run as daemon if demonetization requested
+  int rc;
   if (process_param->is_demon()) {
     rc = daemonize_service(process_param->get_std_out().c_str(), process_param->get_std_err().c_str());
     if (rc != 0) {
@@ -227,13 +204,9 @@ int init(ProcessParam *process_param)
 
   std::string conf_data;
   get_properties()->to_string(conf_data);
-  LOG_INFO("Output configuration \n%s", conf_data.c_str());
+  LOG_INFO("Output configuration:\n%s", conf_data.c_str());
 
-  rc = init_global_objects();
-  if (rc != 0) {
-    LOG_ERROR("failed to init global objects");
-    return rc;
-  }
+  init_global_objects();
 
   // seda is used for backend async event handler
   // the latency of seda is slow, it isn't used for critical latency
@@ -250,13 +223,6 @@ int init(ProcessParam *process_param)
 
   metrics_registry.add_reporter(log_reporter);
 
-  // Block interrupt signals before creating child threads.
-  // setSignalHandler(sig_handler);
-  // sigset_t newSigset, oset;
-  // blockDefaultSignals(&newSigset, &oset);
-  //  wait interrupt signals
-  // startWaitForSignals(&newSigset);
-
   LOG_INFO("Successfully init utility");
 
   return STATUS_SUCCESS;
@@ -265,7 +231,7 @@ int init(ProcessParam *process_param)
 void cleanup_util()
 {
   uninit_global_objects();
-  
+
   if (nullptr != get_properties()) {
     delete get_properties();
     get_properties() = nullptr;
@@ -277,7 +243,6 @@ void cleanup_util()
   cleanup_log();
 
   set_init(false);
-  return;
 }
 
 void cleanup()

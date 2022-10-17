@@ -20,7 +20,6 @@ See the Mulan PSL v2 for more details. */
 #include <unordered_set>
 #include <mutex>
 
-#include "sql/parser/parse.h"
 #include "storage/record/record_manager.h"
 #include "rc.h"
 
@@ -86,7 +85,7 @@ public:
   static void set_trx_id(int32_t id);
 
   static const char *trx_field_name();
-  static AttrType trx_field_type();
+  static TypeId trx_field_type();
   static int trx_field_len();
 
 public:

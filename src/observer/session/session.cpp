@@ -32,7 +32,7 @@ Session::~Session()
   trx_ = nullptr;
 }
 
-const char *Session::get_current_db_name() const
+std::string Session::get_current_db_name() const
 {
   if (db_ != nullptr)
     return db_->name();

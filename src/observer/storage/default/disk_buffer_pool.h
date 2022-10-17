@@ -16,10 +16,10 @@ See the Mulan PSL v2 for more details. */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <ctime>
 #include <string>
 #include <mutex>
 #include <unordered_map>
@@ -33,7 +33,6 @@ See the Mulan PSL v2 for more details. */
 class BufferPoolManager;
 class DiskBufferPool;
 
-//
 #define BP_INVALID_PAGE_NUM (-1)
 #define BP_PAGE_SIZE (1 << 14)
 #define BP_PAGE_DATA_SIZE (BP_PAGE_SIZE - sizeof(PageNum))
@@ -46,25 +45,20 @@ struct Page {
 // sizeof(Page) should be equal to BP_PAGE_SIZE
 
 /**
- * BufferPool的文件第一个页面，存放一些元数据信息，包括了后面每页的分配信息。
- * TODO 1. 当前的做法，只能分配比较少的页面，你可以扩展一下，支持更多的页面或无限多的页面吗？
- *         可以参考Linux ext(n)和Windows NTFS等文件系统
- *      2. 当前使用bitmap存放页面分配情况，但是这种方法在页面非常多的时候，查找空闲页面的
- *         效率非常低，你有办法优化吗？
+ * BufferPool 的文件第一个页面，存放一些元数据信息，包括了后面每页的分配信息。
  */
 struct BPFileHeader {
-  int32_t page_count;        //! 当前文件一共有多少个页面
-  int32_t allocated_pages;   //! 已经分配了多少个页面
-  char    bitmap[0];         //! 页面分配位图, 第0个页面(就是当前页面)，总是1
+  int32_t page_count;       //! 当前文件一共有多少个页面
+  int32_t allocated_pages;  //! 已经分配了多少个页面
+  char bitmap[0];           //! 页面分配位图
 
   /**
-   * 能够分配的最大的页面个数，即bitmap的字节数 乘以8
+   * 能够分配的最大的页面个数，即 bitmap 的字节数乘以 8
    */
   static const int MAX_PAGE_NUM = (BP_PAGE_DATA_SIZE - sizeof(page_count) - sizeof(allocated_pages)) * 8;
 };
 
-class Frame
-{
+class Frame {
 public:
   void clear_page()
   {
@@ -82,14 +76,16 @@ public:
   }
 
   /**
-   * 标记指定页面为“脏”页。如果修改了页面的内容，则应调用此函数，
+   * 标记指定页面为脏页。如果修改了页面的内容，则应调用此函数
    * 以便该页面被淘汰出缓冲区时系统将新的页面数据写入磁盘文件
    */
-  void mark_dirty() {
+  void mark_dirty()
+  {
     dirty_ = true;
   }
 
-  char *data() {
+  char *data()
+  {
     return page_.data;
   }
 
@@ -102,25 +98,25 @@ public:
   {
     file_desc_ = fd;
   }
-  bool can_purge()
+
+  bool can_purge() const
   {
     return pin_count_ <= 0;
   }
+
 private:
   friend class DiskBufferPool;
 
-  bool          dirty_     = false;
-  unsigned int  pin_count_ = 0;
-  unsigned long acc_time_  = 0;
-  int           file_desc_ = -1;
-  Page          page_;
+  bool dirty_ = false;
+  unsigned int pin_count_ = 0;
+  unsigned long acc_time_ = 0;
+  int file_desc_ = -1;
+  Page page_;
 };
 
-class BPFrameId
-{
-public: 
-  BPFrameId(int file_desc, PageNum page_num) :
-    file_desc_(file_desc), page_num_(page_num)
+class BPFrameId {
+public:
+  BPFrameId(int file_desc, PageNum page_num) : file_desc_(file_desc), page_num_(page_num)
   {}
 
   bool equal_to(const BPFrameId &other) const
@@ -128,7 +124,7 @@ public:
     return file_desc_ == other.file_desc_ && page_num_ == other.page_num_;
   }
 
-  bool operator== (const BPFrameId &other) const
+  bool operator==(const BPFrameId &other) const
   {
     return this->equal_to(other);
   }
@@ -138,16 +134,21 @@ public:
     return static_cast<size_t>(file_desc_) << 32L | page_num_;
   }
 
-  int file_desc() const { return file_desc_; }
-  PageNum page_num() const { return page_num_; }
+  int file_desc() const
+  {
+    return file_desc_;
+  }
+  PageNum page_num() const
+  {
+    return page_num_;
+  }
 
 private:
   int file_desc_;
   PageNum page_num_;
 };
 
-class BPFrameManager
-{
+class BPFrameManager {
 public:
   BPFrameManager(const char *tag);
 
@@ -161,28 +162,35 @@ public:
   Frame *alloc(int file_desc, PageNum page_num);
 
   /**
-   * 尽管frame中已经包含了file_desc和page_num，但是依然要求
-   * 传入，因为frame可能忘记初始化或者没有初始化
+   * 尽管 frame 中已经包含了 file_desc 和 page_num，但是依然要求
+   * 传入，因为 frame 可能忘记初始化或者没有初始化
    */
   RC free(int file_desc, PageNum page_num, Frame *frame);
 
   /**
    * 如果不能从空闲链表中分配新的页面，就使用这个接口，
-   * 尝试从pin count=0的页面中淘汰一个
+   * 尝试从 pin count == 0 的页面中淘汰一个
    */
   Frame *begin_purge();
 
-  size_t frame_num() const { return frames_.count(); }
+  size_t frame_num() const
+  {
+    return frames_.count();
+  }
 
   /**
    * 测试使用。返回已经从内存申请的个数
    */
-  size_t total_frame_num() const { return allocator_.get_size(); }
+  size_t total_frame_num() const
+  {
+    return allocator_.get_size();
+  }
 
 private:
   class BPFrameIdHasher {
   public:
-    size_t operator() (const BPFrameId &frame_id) const {
+    size_t operator()(const BPFrameId &frame_id) const
+    {
       return frame_id.hash();
     }
   };
@@ -194,8 +202,7 @@ private:
   FrameAllocator allocator_;
 };
 
-class BufferPoolIterator
-{
+class BufferPoolIterator {
 public:
   BufferPoolIterator();
   ~BufferPoolIterator();
@@ -204,13 +211,13 @@ public:
   bool has_next();
   PageNum next();
   RC reset();
+
 private:
-  common::Bitmap   bitmap_;
-  PageNum  current_page_num_ = -1;
+  common::Bitmap bitmap_;
+  PageNum current_page_num_ = -1;
 };
 
-class DiskBufferPool
-{
+class DiskBufferPool {
 public:
   DiskBufferPool(BufferPoolManager &bp_manager, BPFrameManager &frame_manager);
   ~DiskBufferPool();
@@ -231,7 +238,7 @@ public:
   RC close_file();
 
   /**
-   * 根据文件ID和页号获取指定页面到缓冲区，返回页面句柄指针。
+   * 根据文件 ID 和页号获取指定页面到缓冲区，返回页面句柄指针。
    */
   RC get_this_page(PageNum page_num, Frame **frame);
 
@@ -243,19 +250,19 @@ public:
   RC allocate_page(Frame **frame);
 
   /**
-   * 比purge_page多一个动作， 在磁盘上将对应的页数据删掉。
+   * 比 purge_page 多一个动作，在磁盘上将对应的页数据删掉。
    */
   RC dispose_page(PageNum page_num);
 
   /**
-   * 释放指定文件关联的页的内存， 如果已经脏， 则刷到磁盘，除了pinned page
+   * 释放指定文件关联的页的内存，如果已经脏，则刷到磁盘，除了 pinned page
    */
   RC purge_page(PageNum page_num);
   RC purge_all_pages();
 
   /**
-   * 此函数用于解除pageHandle对应页面的驻留缓冲区限制。
-   * 在调用GetThisPage或AllocatePage函数将一个页面读入缓冲区后，
+   * 此函数用于解除 pageHandle 对应页面的驻留缓冲区限制。
+   * 在调用 GetThisPage 或 AllocatePage 函数将一个页面读入缓冲区后，
    * 该页面被设置为驻留缓冲区状态，以防止其在处理过程中被置换出去，
    * 因此在该页面使用完之后应调用此函数解除该限制，使得该页面此后可以正常地被淘汰出缓冲区
    */
@@ -267,7 +274,7 @@ public:
   RC get_page_count(int *page_count);
 
   /**
-   * 检查是否所有页面都是pin count == 0状态(除了第1个页面)
+   * 检查是否所有页面都是 pin count == 0 状态 (除了第 1 个页面)
    * 调试使用
    */
   RC check_all_pages_unpinned();
@@ -280,7 +287,7 @@ public:
   RC flush_page(Frame &frame);
 
   /**
-   * 刷新所有页面到磁盘，即使pin count不是0
+   * 刷新所有页面到磁盘，即使 pin count != 0
    */
   RC flush_all_pages();
 
@@ -288,12 +295,12 @@ public:
    * 回放日志时处理page0中已被认定为不存在的page
    */
   RC recover_page(PageNum page_num);
-protected:
+
 protected:
   RC allocate_frame(PageNum page_num, Frame **buf);
 
   /**
-   * 刷新指定页面到磁盘(flush)，并且释放关联的Frame
+   * 刷新指定页面到磁盘，并且释放关联的 Frame
    */
   RC purge_frame(PageNum page_num, Frame *used_frame);
   RC check_page_num(PageNum page_num);
@@ -305,19 +312,18 @@ protected:
 
 private:
   BufferPoolManager &bp_manager_;
-  BPFrameManager &   frame_manager_;
-  std::string        file_name_;
-  int                file_desc_ = -1;
-  Frame *            hdr_frame_ = nullptr;
-  BPFileHeader *     file_header_ = nullptr;
-  std::set<PageNum>  disposed_pages;
+  BPFrameManager &frame_manager_;
+  std::string file_name_;
+  int file_desc_ = -1;
+  Frame *hdr_frame_ = nullptr;
+  BPFileHeader *file_header_ = nullptr;
+  std::set<PageNum> disposed_pages;
 
 private:
   friend class BufferPoolIterator;
 };
 
-class BufferPoolManager
-{
+class BufferPoolManager {
 public:
   BufferPoolManager();
   ~BufferPoolManager();
@@ -331,7 +337,7 @@ public:
 public:
   static void set_instance(BufferPoolManager *bpm);
   static BufferPoolManager &instance();
-  
+
 private:
   BPFrameManager frame_manager_{"BufPool"};
   std::unordered_map<std::string, DiskBufferPool *> buffer_pools_;

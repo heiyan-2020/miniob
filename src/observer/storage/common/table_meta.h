@@ -22,6 +22,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/common/field_meta.h"
 #include "storage/common/index_meta.h"
 #include "common/lang/serializable.h"
+#include "sql/table/schema.h"
 
 class TableMeta : public common::Serializable {
 public:
@@ -32,22 +33,26 @@ public:
 
   void swap(TableMeta &other) noexcept;
 
-  RC init(const char *name, int field_num, const AttrInfo attributes[]);
+  RC init(const char *name, const Schema& schema);
 
   RC add_index(const IndexMeta &index);
 
 public:
-  const char *name() const;
+  std::string name() const;
   const FieldMeta *trx_field() const;
   const FieldMeta *field(int index) const;
-  const FieldMeta *field(const char *name) const;
+  const FieldMeta *field(const std::string &field_name) const;
   const FieldMeta *find_field_by_offset(int offset) const;
-  const std::vector<FieldMeta> *field_metas() const { return &fields_; }
-  int field_num() const; // sys field included
-  int sys_field_num() const;
+  const std::vector<FieldMeta> *field_metas() const
+  {
+    return &fields_;
+  }
+  size_t field_num() const;  // sys field included
+  static size_t sys_field_num() ;
 
-  const IndexMeta *index(const char *name) const;
-  const IndexMeta *find_index_by_field(const char *field) const;
+  const IndexMeta *index(const std::string &index_name) const;
+  const IndexMeta *find_index_by_field(const std::string &field_name) const;
+  const IndexMeta *find_index_by_fields(const std::vector<std::string> &field_names) const;
   const IndexMeta *index(int i) const;
   int index_num() const;
 
@@ -65,12 +70,12 @@ protected:
 
 protected:
   std::string name_;
-  std::vector<FieldMeta> fields_;  // 包含sys_fields
+  std::vector<FieldMeta> fields_;  // 包含 sys_fields
   std::vector<IndexMeta> indexes_;
 
   int record_size_ = 0;
 
-  //@@@ TODO why used static variable?
+  // TODO: why used static variable?
   static std::vector<FieldMeta> sys_fields_;
 };
 

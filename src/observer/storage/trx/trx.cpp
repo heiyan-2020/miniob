@@ -55,9 +55,9 @@ const char *Trx::trx_field_name()
   return "__trx";
 }
 
-AttrType Trx::trx_field_type()
+TypeId Trx::trx_field_type()
 {
-  return INTS;
+  return TypeId::INT;
 }
 
 int Trx::trx_field_len()
