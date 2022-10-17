@@ -747,7 +747,6 @@ RC Table::sync()
 //    return rc;
 //  }
   RC rc = RC::SUCCESS;
-
   for (Index *index : indexes_) {
     rc = index->sync();
     if (rc != RC::SUCCESS) {

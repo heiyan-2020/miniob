@@ -93,14 +93,3 @@ RC TransactionCommand::do_rollback(const SQLStageEvent *sql_event)
   }
   return rc;
 }
-
-void end_trx_if_need(Session *session, Trx *trx, bool all_right)
-{
-  if (!session->is_trx_multi_operation_mode()) {
-    if (all_right) {
-      trx->commit();
-    } else {
-      trx->rollback();
-    }
-  }
-}
