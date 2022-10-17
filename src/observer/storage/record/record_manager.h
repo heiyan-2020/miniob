@@ -56,10 +56,12 @@ public:
   ~RecordPageHandler();
 
   RC init(DiskBufferPool &buffer_pool, PageNum page_num);
+  RC recover_init(DiskBufferPool &buffer_pool, PageNum page_num);
   RC init_empty_page(DiskBufferPool &buffer_pool, PageNum page_num, int record_size);
   RC cleanup();
 
   RC insert_record(const char *data, RID *rid);
+  RC recover_insert_record(const char *data, RID *rid);
   RC update_record(const Record *rec);
   RC delete_record(const RID *rid);
   RC get_record(const RID *rid, Record *rec);
@@ -93,6 +95,7 @@ public:
   RC update_record(const Record *rec);
   RC delete_record(const RID *rid);
   RC insert_record(const char *data, int record_size, RID *rid);
+  RC recover_insert_record(const char *data, int record_size, RID *rid);
   RC get_record(const RID *rid, Record *rec);
 
 private:

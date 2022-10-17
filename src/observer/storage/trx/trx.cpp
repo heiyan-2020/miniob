@@ -22,6 +22,7 @@ See the Mulan PSL v2 for more details. */
 
 static const uint32_t DELETED_FLAG_BIT_MASK = 0x80000000;
 static const uint32_t TRX_ID_BIT_MASK = 0x7FFFFFFF;
+std::atomic<int32_t> Trx::trx_id(0);
 
 int32_t Trx::default_trx_id()
 {
@@ -30,8 +31,23 @@ int32_t Trx::default_trx_id()
 
 int32_t Trx::next_trx_id()
 {
-  static std::atomic<int32_t> trx_id;
   return ++trx_id;
+}
+
+void Trx::set_trx_id(int32_t id)
+{
+  trx_id = id;
+}
+
+void Trx::next_current_id()
+{
+  Trx::next_trx_id();
+  trx_id_ = trx_id;
+}
+
+int32_t Trx::get_current_id()
+{
+  return trx_id_;
 }
 
 const char *Trx::trx_field_name()
@@ -49,20 +65,30 @@ int Trx::trx_field_len()
   return sizeof(int32_t);
 }
 
+Trx::Trx()
+{
+  start_if_not_started();
+}
+
+Trx::~Trx()
+{}
+
 RC Trx::insert_record(Table *table, Record *record)
 {
   RC rc = RC::SUCCESS;
-  // 先校验是否以前是否存在过
+  // 先校验是否以前是否存在过(应该不会存在)
   Operation *old_oper = find_operation(table, record->rid());
   if (old_oper != nullptr) {
-    return RC::GENERIC_ERROR;  // error code
+    if (old_oper->type() == Operation::Type::DELETE) {
+      delete_operation(table, record->rid());
+    } else {
+      return RC::GENERIC_ERROR;
+    }
   }
 
-  start_if_not_started();
-
-  // 设置 record 中 trx_field 为当前的事务号
-  set_record_trx_id(table, *record, trx_id_, false);
-  // 记录到 operations 中
+  // start_if_not_started();
+  
+  // 记录到operations中
   insert_operation(table, Operation::Type::INSERT, record->rid());
   return rc;
 }
@@ -105,14 +131,14 @@ void Trx::get_record_trx_id(Table *table, const Record &record, int32_t &trx_id,
 
 Operation *Trx::find_operation(Table *table, const RID &rid)
 {
-  auto table_operations_iter = operations_.find(table);
+  std::unordered_map<Table *, OperationSet>::iterator table_operations_iter = operations_.find(table);
   if (table_operations_iter == operations_.end()) {
     return nullptr;
   }
 
   OperationSet &table_operations = table_operations_iter->second;
   Operation tmp(Operation::Type::UNDEFINED, rid);
-  auto operation_iter = table_operations.find(tmp);
+  OperationSet::iterator operation_iter = table_operations.find(tmp);
   if (operation_iter == table_operations.end()) {
     return nullptr;
   }
@@ -127,7 +153,8 @@ void Trx::insert_operation(Table *table, Operation::Type type, const RID &rid)
 
 void Trx::delete_operation(Table *table, const RID &rid)
 {
-  auto table_operations_iter = operations_.find(table);
+
+  std::unordered_map<Table *, OperationSet>::iterator table_operations_iter = operations_.find(table);
   if (table_operations_iter == operations_.end()) {
     return;
   }
@@ -230,7 +257,7 @@ RC Trx::rollback_delete(Table *table, Record &record)
   return RC::SUCCESS;
 }
 
-bool Trx::is_visible(Table *table, const Record *record) const
+bool Trx::is_visible(Table *table, const Record *record)
 {
   int32_t record_trx_id;
   bool record_deleted;

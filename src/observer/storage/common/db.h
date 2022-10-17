@@ -23,6 +23,7 @@ See the Mulan PSL v2 for more details. */
 
 class Schema;
 class Table;
+class CLogManager;
 
 class Db {
 public:
@@ -39,6 +40,10 @@ public:
   std::string name() const;
   RC sync();
 
+  RC recover();
+
+  CLogManager *get_clog_manager();
+
 private:
   RC open_all_tables();
 
@@ -46,6 +51,7 @@ private:
   std::string name_;
   std::string path_;
   std::unordered_map<std::string, Table *> opened_tables_;
+  CLogManager *clog_manager_ = nullptr;
 };
 
 #endif  // __OBSERVER_STORAGE_COMMON_DB_H__

@@ -119,6 +119,9 @@ RC DefaultHandler::open_db(const char *dbname)
   if ((ret = db->init(dbname, dbpath.c_str())) != RC::SUCCESS) {
     LOG_ERROR("Failed to open db: %s. error=%d", dbname, ret);
   }
+  if ((ret = db->recover()) != RC::SUCCESS) {
+    LOG_ERROR("Failed to recover db: %s. error=%d", dbname, ret);
+  }
   opened_dbs_[dbname] = db;
   return RC::SUCCESS;
 }

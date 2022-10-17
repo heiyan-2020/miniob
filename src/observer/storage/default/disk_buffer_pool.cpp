@@ -499,6 +499,21 @@ RC DiskBufferPool::flush_all_pages()
   return RC::SUCCESS;
 }
 
+RC DiskBufferPool::recover_page(PageNum page_num)
+{
+  int byte = 0, bit = 0;
+  byte = page_num / 8;
+  bit = page_num % 8;
+
+  if (!(file_header_->bitmap[byte] & (1 << bit))) {
+    file_header_->bitmap[byte] |= (1 << bit);
+    file_header_->allocated_pages++;
+    file_header_->page_count++;
+    hdr_frame_->mark_dirty();
+  }
+  return RC::SUCCESS;
+}
+
 RC DiskBufferPool::allocate_frame(PageNum page_num, Frame **buffer)
 {
   while (true) {

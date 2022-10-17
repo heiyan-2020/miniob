@@ -15,7 +15,7 @@ See the Mulan PSL v2 for more details. */
 #ifndef __OBSERVER_STORAGE_TRX_TRX_H_
 #define __OBSERVER_STORAGE_TRX_TRX_H_
 
-#include <cstddef>
+#include <stddef.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <mutex>
@@ -73,20 +73,24 @@ public:
 };
 
 /**
- * 这里是一个简单的事务实现，可以支持提交 / 回滚，但是没有对并发访问做控制
+ * 这里是一个简单的事务实现，可以支持提交/回滚。但是没有对并发访问做控制
  * 可以在这个基础上做备份恢复，当然也可以重写
  */
 class Trx {
 public:
+  static std::atomic<int32_t> trx_id;
+
   static int32_t default_trx_id();
   static int32_t next_trx_id();
+  static void set_trx_id(int32_t id);
+
   static const char *trx_field_name();
   static TypeId trx_field_type();
   static int trx_field_len();
 
 public:
-  Trx() = default;
-  ~Trx() = default;
+  Trx();
+  ~Trx();
 
 public:
   RC insert_record(Table *table, Record *record);
@@ -98,9 +102,13 @@ public:
   RC commit_insert(Table *table, Record &record);
   RC rollback_delete(Table *table, Record &record);
 
-  bool is_visible(Table *table, const Record *record) const;
+  bool is_visible(Table *table, const Record *record);
 
   void init_trx_info(Table *table, Record &record);
+
+  void next_current_id();
+
+  int32_t get_current_id();
 
 private:
   void set_record_trx_id(Table *table, Record &record, int32_t trx_id, bool deleted) const;
