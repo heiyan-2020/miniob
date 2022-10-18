@@ -8,6 +8,8 @@
 #include "sql/expr/in_expression.h"
 #include "sql/expr/scalar_expression.h"
 #include "sql/expr/like_expression.h"
+#include "sql/expr/in_value_expression.h"
+#include "sql/expr/exists_expression.h"
 
 RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 {
@@ -208,7 +210,29 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
 
       // special case: Constructing IN-expression needs select clause which others don't.
       if (expr->opType == hsql::OperatorType::kOpIn) {
-        out_expr = std::make_shared<InExpression>(expr->select, lhs);
+        if (expr->select != nullptr) {
+          // in (subquery)
+          out_expr = std::make_shared<InExpression>(expr->select, lhs);
+          return RC::SUCCESS;
+        } else {
+          // in (value1, value2, ...)
+          assert(expr->exprList != nullptr);
+          std::vector<AbstractExpressionRef> value_list;
+          for (const auto& value_expr : *expr->exprList) {
+            AbstractExpressionRef value;
+            rc = bind_expression(value_expr, value);
+            HANDLE_EXCEPTION(rc, "Bind expression of IN operator failed.");
+
+            value_list.push_back(value);
+          }
+          out_expr = std::make_shared<InValueExpression>(std::move(lhs), value_list);
+          return RC::SUCCESS;
+
+        }
+      }
+
+      if (expr->opType == hsql::OperatorType::kOpExists) {
+        out_expr = std::make_shared<ExistsExpression>(expr->select);
         return RC::SUCCESS;
       }
 
