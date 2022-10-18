@@ -30,7 +30,7 @@ See the Mulan PSL v2 for more details. */
 // 固定文件大小 TODO: 循环文件组
 #define CLOG_FILE_SIZE (48 * 1024 * 1024)
 #define CLOG_BUFFER_SIZE (4 * 1024 * 1024)
-#define TABLE_NAME_MAX_LEN 20  // TODO: 表名不要超过20字节
+#define TABLE_NAME_MAX_LEN 32  // TODO: 表名不要超过 32 字节
 
 class CLogManager;
 class CLogBuffer;

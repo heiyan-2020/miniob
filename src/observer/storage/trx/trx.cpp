@@ -45,7 +45,7 @@ void Trx::next_current_id()
   trx_id_ = trx_id;
 }
 
-int32_t Trx::get_current_id()
+int32_t Trx::get_current_id() const
 {
   return trx_id_;
 }
@@ -76,7 +76,7 @@ Trx::~Trx()
 RC Trx::insert_record(Table *table, Record *record)
 {
   RC rc = RC::SUCCESS;
-  // 先校验是否以前是否存在过(应该不会存在)
+  // 先校验是否以前是否存在过 (应该不会存在)
   Operation *old_oper = find_operation(table, record->rid());
   if (old_oper != nullptr) {
     if (old_oper->type() == Operation::Type::DELETE) {
@@ -88,7 +88,7 @@ RC Trx::insert_record(Table *table, Record *record)
 
   // start_if_not_started();
   
-  // 记录到operations中
+  // 记录到 operations 中
   insert_operation(table, Operation::Type::INSERT, record->rid());
   return rc;
 }

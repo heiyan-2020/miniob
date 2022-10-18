@@ -197,7 +197,7 @@ RC Db::recover()
         LOG_ERROR("CLog record without commit message! "); // unexpected error
         delete clog_record;
         return RC::GENERIC_ERROR;
-      } else if (find_iter->second == false ) {
+      } else if (!find_iter->second) {
         delete clog_record;
         continue;
       }
