@@ -32,6 +32,11 @@ public:
     }
 
     out_value = {BOOL, false};
+    // indicate that out_value is unknown.
+    // TODO(zyx): replace this trick by three-valued logic.
+    if (lhs.is_null()) {
+      out_value.is_null_ = true;
+    }
     return RC::SUCCESS;
   }
 
