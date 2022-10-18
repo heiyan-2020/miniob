@@ -64,7 +64,7 @@ RC ShowCommand::do_show_index(const SQLStageEvent *sql_event)
   std::stringstream ss;
 
   if (table != nullptr) {
-    std::vector<Index *> indexes = table->get_indexex();
+    std::vector<Index *> indexes = table->get_indexes();
     ss << "TABLE | NON_UNIQUE | KEY_NAME | SEQ_IN_INDEX | COLUMN_NAME" << std::endl;
     for (auto* index: indexes) {
       index_2_string(table_name, ss, index);
@@ -92,10 +92,10 @@ void ShowCommand::index_info_prefix(const char *table_name, std::ostream &os, co
   os << table_name << " | ";
   // 唯一索引输出0？非唯一输出1？
   if (index_meta.is_unique()) {
-    os << "1 | ";
+    os << "0 | ";
   }
   else {
-    os << "0 | ";
+    os << "1 | ";
   }
   os << index_meta.name() << " | ";
 }

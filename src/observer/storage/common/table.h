@@ -80,7 +80,7 @@ private:
 public:
   Index *find_index(const std::string &index_name) const;
   Index *find_index_by_field(const std::string &field_name) const;
-  std::vector<Index *> get_indexex() const;
+  std::vector<Index *> get_indexes() const;
 
 private:
   std::string base_dir_;
