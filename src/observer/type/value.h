@@ -25,6 +25,8 @@ class Value {
   friend struct std::hash<HashAggregateKey>;
   friend struct std::equal_to<HashAggregateKey>;
 
+  friend class AvgAggregate;
+
 public:
   Value() : Value{TypeId::UNDEFINED}
   {}
