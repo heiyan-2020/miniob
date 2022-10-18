@@ -1,6 +1,4 @@
 #include "sort_node.h"
-#include "sql/expr/column_value_expression.h"
-#include <utility>
 #include "common/log/log.h"
 #include "sql/expr/function_call.h"
 
@@ -30,9 +28,6 @@ RC SortNode::prepare()
 RC SortNode::next()
 {
   assert(left_child_);
-  if (order_by_spec_ == nullptr) {
-    return left_child_->next();
-  }
 
   if (sorted_res_.empty()) {
     // here call the left_child_'s next()
@@ -49,9 +44,6 @@ RC SortNode::next()
 
 RC SortNode::current_tuple(TupleRef &tuple)
 {
-  if (order_by_spec_ == nullptr) {
-    return left_child_->current_tuple(tuple);
-  }
   // doesn't pass this func through left_child_
   // just return current tuple in sorted_res in this layer
   if (current_tuple_index < sorted_res_.size()) {
