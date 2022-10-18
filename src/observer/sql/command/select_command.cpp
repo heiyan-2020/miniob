@@ -118,7 +118,7 @@ void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple, Schema
 }
 
 /**
- * 将 sub query 的结果 (Value) 保存到new_values中
+ * 将 sub query 的结果 (Value) 保存到 new_values 中
  * @param sql_event
  * @param new_values
  * @return

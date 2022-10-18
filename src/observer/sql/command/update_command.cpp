@@ -44,7 +44,6 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
   std::shared_ptr<PlanNode> sp;
   rc = planner.make_plan_upd(stmt_, sp);
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE\n");
     return rc;
   }
 
@@ -53,7 +52,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
 
   const TableMeta &table_meta = table->table_meta();
   const std::vector<FieldMeta> *field_metas = table_meta.field_metas();
-  size_t curr_index = table_meta.sys_field_num();
+  size_t curr_index = TableMeta::sys_field_num();
 
   rc = sp->next();
   while (RC::SUCCESS == rc) {
@@ -98,7 +97,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
             LOG_WARN("update select have multi result");
             return rc;
           }
-          // TODO(pjz): set value为空时是do update in vain还是FAILURE？
+          // TODO(pjz): set value 为空时是 do update in vain 还是 FAILURE
           if (new_values.empty()) {
             rc = RC::SCHEMA;
             LOG_WARN("update select have no result");
@@ -144,6 +143,22 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
   if (rc != RC::RECORD_EOF) {
     LOG_WARN("failed to update record: %s", strrc(rc));
     return rc;
+  }
+
+  // success
+  if (!session->is_trx_multi_operation_mode()) {
+    CLogRecord *clog_record = nullptr;
+    rc = clog_manager->clog_gen_record(CLogType::REDO_MTR_COMMIT, trx->get_current_id(), clog_record);
+    if (rc != RC::SUCCESS || clog_record == nullptr) {
+      return rc;
+    }
+
+    rc = clog_manager->clog_append_record(clog_record);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+
+    trx->next_current_id();
   }
 
   return RC::SUCCESS;
@@ -211,7 +226,7 @@ RC UpdateCommand::check_schema(const FieldMeta& field_meta, const Value& value)
 }
 
 /**
- * 从子查询结果保存到 vector<Value*>
+ * 从子查询结果保存到 vector<Value *>
  * @param sel_command
  * @param new_values
  * @return
