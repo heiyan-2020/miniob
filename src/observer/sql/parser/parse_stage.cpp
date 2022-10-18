@@ -139,7 +139,6 @@ RC ParseStage::handle_request(StageEvent *event)
 
 RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
 {
-  // TODO(vgalaxy): consider delim occur in select values
   std::string str{sql};
   auto select_size = std::string{"select"}.size();
   auto find_select = str.find("select");
@@ -152,7 +151,7 @@ RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
   }
   str = str.substr(find_select + select_size, find_from - (find_select + select_size));
   trim(str);
-  auto headers = split(str, ',');
+  auto headers = split(str);
   event->set_headers(std::move(headers));
   return RC::SUCCESS;
 }
