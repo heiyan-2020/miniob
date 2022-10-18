@@ -135,6 +135,10 @@ public:
 
   auto to_string() const -> std::string;
 
+  int32_t get_int_() { return value_.int_; }
+  float get_float_() { return value_.float_; }
+  char* get_char_() { return value_.char_; }
+
 protected:
   TypeId type_id_;
 

@@ -8,6 +8,7 @@
 #include "storage/record/record.h"
 #include "storage/clog/clog.h"
 #include "storage/trx/trx.h"
+#include "util/type_converter.h"
 
 UpdateCommand::UpdateCommand(const hsql::UpdateStatement *stmt) : Command{hsql::kStmtUpdate}, stmt_{stmt}
 {}
@@ -124,6 +125,9 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
         return rc;
       }
 
+      // typecast
+      new_value = type_cast(new_value, field_meta);
+
       new_value.serialize_to(data + field_meta.offset());
       Record new_record;
       new_record.set_rid(old_record.rid());
@@ -205,15 +209,15 @@ RC UpdateCommand::check_schema(const FieldMeta& field_meta, const Value& value)
   RC rc = RC::SUCCESS;
   switch (field_meta.type()) {
     case INT: {
-      if (value.get_type() == INT || value.get_type() == UNDEFINED) return rc;
+      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == CHAR || value.get_type() == UNDEFINED) return rc;
       break;
     }
     case FLOAT: {
-      if (value.get_type() == FLOAT || value.get_type() == UNDEFINED) return rc;
+      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == CHAR || value.get_type() == UNDEFINED) return rc;
       break;
     }
     case CHAR: {
-      if (value.get_type() == CHAR || value.get_type() == UNDEFINED) return rc;
+      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == CHAR || value.get_type() == UNDEFINED) return rc;
       break;
     }
     case DATE: {
@@ -236,4 +240,20 @@ RC UpdateCommand::get_sub_query(
     SelectCommand sel_command, const SQLStageEvent *sql_event, std::vector<Value> &new_values)
 {
   return sel_command.get_res_values(sql_event, new_values);
+}
+
+Value UpdateCommand::type_cast(Value to_be_converted, const FieldMeta &field_meta)
+{
+  switch (to_be_converted.get_type()) {
+    case INT: {
+      return TypeConverter::get_from_int(field_meta.type(), to_be_converted.get_int_());
+    }
+    case FLOAT: {
+      return TypeConverter::get_from_float(field_meta.type(), to_be_converted.get_float_());
+    }
+    case CHAR: {
+      return TypeConverter::get_from_char(field_meta.type(), to_be_converted.get_char_(), field_meta.len());
+    }
+    default: return to_be_converted;
+  }
 }

@@ -21,6 +21,7 @@ private:
   RC data_2_value(const hsql::Expr *expr, Value &value, const FieldMeta &fieldMeta);
   RC check_schema(const FieldMeta& field_meta, const Value& value);
   RC get_sub_query(SelectCommand sel_command, const SQLStageEvent *sql_event, std::vector<Value>& new_values);
+  Value type_cast(Value to_be_converted, const FieldMeta& field_meta);
 
   const hsql::UpdateStatement *stmt_;
 };
