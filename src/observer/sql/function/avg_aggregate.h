@@ -19,8 +19,7 @@ public:
     auto tmp = sum_value_.add(value);
     if (tmp.is_null()) {
       if (value.get_type() == CHAR) {
-        tmp = sum_value_.add(
-            TypeConverter::get_from_char(FLOAT, value.value_.char_, value.len_));
+        tmp = sum_value_.add(TypeConverter::get_from_char(FLOAT, value.value_.char_, value.len_));
       }
     }
     sum_value_ = tmp;

@@ -27,6 +27,8 @@ class Value {
 
   friend class AvgAggregate;
   friend class RoundFunction;
+  friend class LengthFunction;
+  friend class DateFormatFunction;
 
 public:
   Value() : Value{TypeId::UNDEFINED}

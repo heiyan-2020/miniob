@@ -4,6 +4,7 @@
 #include "rc.h"
 
 class Date {
+  friend auto format_date(const Date &date, const char *format) -> std::string;
 public:
   explicit Date(void *data);
   bool validate() const;
@@ -27,3 +28,5 @@ private:
   int month;
   int day;
 };
+
+auto format_date(const Date &date, const char *format) -> std::string;
