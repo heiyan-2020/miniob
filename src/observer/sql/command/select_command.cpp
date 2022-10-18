@@ -49,10 +49,11 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
     session_event->set_response("FAILURE\n");
     return rc;
   }
-  if (stmt_->order == NULL) {
-      std::string out = ss.str().substr(0, ss.str().length() - 1);
-      ss.clear();
-      ss << out;
+  if (stmt_->order != nullptr) {
+    int len = ss.str().length();
+    std::string out = ss.str().substr(0, len - 1);
+    ss.str("");
+    ss << out;
   }
   session_event->set_response(ss.str());
   return RC::SUCCESS;
