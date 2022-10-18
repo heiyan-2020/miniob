@@ -25,13 +25,18 @@ public:
     }
 
     for (const auto &val : value_list) {
-      if (cmp_res_to_int(lhs.compare(val)) == 0) {
+      if (lhs.compare_equals(val).get_as<bool>()) {
         out_value = {BOOL, true};
         return RC::SUCCESS;
       }
     }
 
     out_value = {BOOL, false};
+    // indicate that out_value is unknown.
+    // TODO(zyx): replace this trick by three-valued logic.
+    if (lhs.is_null()) {
+      out_value.is_null_ = true;
+    }
     return RC::SUCCESS;
   }
 

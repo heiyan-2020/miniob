@@ -19,6 +19,9 @@ RC BoolExpression::evaluate(EnvRef env, Value &out_value)
       return rc;
     }
     out_value = child_result.negation();
+    if (child_result.is_null()) {
+      out_value = {BOOL, false};
+    }
     return RC::SUCCESS;
   } else {
     if (children_.size() < 1) {
