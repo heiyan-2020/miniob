@@ -112,7 +112,6 @@ RC ParseStage::handle_request(StageEvent *event)
   // hyrise parser
   hsql::SQLParserResult result;
   std::string str{sql};
-  transform(str.begin(), str.end(), str.begin(), ::tolower);
   hsql::SQLParser::parse(str, &result);
   if (result.isValid()) {
     sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
@@ -126,7 +125,7 @@ RC ParseStage::handle_request(StageEvent *event)
     hsql::SQLParser::parse(str_trans, &result);
     if (result.isValid()) {
       sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
-      parse_headers(sql_event, str);
+      parse_headers(sql_event, str_trans);
     } else {
       sql_event->session_event()->set_response("Failed to parse sql\n");
       result.reset();
@@ -140,18 +139,28 @@ RC ParseStage::handle_request(StageEvent *event)
 RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
 {
   std::string str{sql};
+  std::string str_copy{sql};
+  transform(str_copy.begin(), str_copy.end(), str_copy.begin(), ::tolower);
   auto select_size = std::string{"select"}.size();
-  auto find_select = str.find("select");
+  auto find_select = str_copy.find("select");
   if (find_select == std::string::npos) {
     return RC::GENERIC_ERROR;
   }
-  auto find_from = str.find("from");
-  if (find_from == std::string::npos) {
-    return RC::GENERIC_ERROR;
+  auto find_from = str_copy.find("from");
+  if (find_from != std::string::npos) {
+    str = str.substr(find_select + select_size, find_from - (find_select + select_size));
+    trim(str);
+    event->set_headers(split(str));
+    return RC::SUCCESS;
+  } else {
+    // select without from clause
+    auto find_end = str_copy.find(';');
+    if (find_end == std::string::npos) {
+      return RC::GENERIC_ERROR;
+    }
+    str = str.substr(find_select + select_size, find_end - (find_select + select_size));
+    trim(str);
+    event->set_headers(split(str));
+    return RC::SUCCESS;
   }
-  str = str.substr(find_select + select_size, find_from - (find_select + select_size));
-  trim(str);
-  auto headers = split(str);
-  event->set_headers(std::move(headers));
-  return RC::SUCCESS;
 }
