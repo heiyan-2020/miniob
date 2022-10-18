@@ -149,8 +149,7 @@ RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
   auto find_from = str_copy.find("from");
   if (find_from != std::string::npos) {
     str = str.substr(find_select + select_size, find_from - (find_select + select_size));
-    trim(str);
-    event->set_headers(split(str));
+    event->set_headers(split(trim(str)));
     return RC::SUCCESS;
   } else {
     // select without from clause
@@ -159,8 +158,7 @@ RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
       return RC::GENERIC_ERROR;
     }
     str = str.substr(find_select + select_size, find_end - (find_select + select_size));
-    trim(str);
-    event->set_headers(split(str));
+    event->set_headers(split(trim(str)));
     return RC::SUCCESS;
   }
 }
