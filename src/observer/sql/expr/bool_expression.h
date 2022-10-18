@@ -15,7 +15,7 @@ public:
     BoolExpression(AbstractExpressionRef &&left, OperatorType type)
         : AbstractExpression({std::move(left)}), ope_type_(type) {}
 
-    BoolExpression(std::unordered_set<AbstractExpressionRef> terms, OperatorType type)
+    BoolExpression(const std::unordered_set<AbstractExpressionRef>& terms, OperatorType type)
         : ope_type_(type)
     {
       for (auto &term : terms) {
