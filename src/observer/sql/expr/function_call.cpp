@@ -3,6 +3,7 @@
 #include "sql/function/max_aggregate.h"
 #include "sql/function/min_aggregate.h"
 #include "sql/function/sum_aggregate.h"
+#include "sql/function/round_function.h"
 
 std::map<std::string, FunctionType> FunctionCall::function_directory = {
     {"count", FunctionType::COUNT},
@@ -10,6 +11,9 @@ std::map<std::string, FunctionType> FunctionCall::function_directory = {
     {"max", FunctionType::MAX},
     {"min", FunctionType::MIN},
     {"sum", FunctionType::SUM},
+    {"round", FunctionType::ROUND},
+    {"length", FunctionType::LENGTH},
+    {"date_format", FunctionType::DATE_FORMAT},
 };
 
 auto FunctionCall::function_factory(const std::string &fn_name, AbstractFunctionRef &out_fn) -> RC
@@ -34,6 +38,13 @@ auto FunctionCall::function_factory(const std::string &fn_name, AbstractFunction
     case FunctionType::SUM:
       out_fn = std::make_shared<SumAggregate>();
       return RC::SUCCESS;
+    case FunctionType::ROUND:
+      out_fn = std::make_shared<RoundFunction>();
+      return RC::SUCCESS;
+    case FunctionType::LENGTH:
+      break;
+    case FunctionType::DATE_FORMAT:
+      break;
   }
   return RC::UNIMPLENMENT;
 }

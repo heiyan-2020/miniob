@@ -4,7 +4,7 @@
 #include "session/session.h"
 #include "type/value.h"
 #include "storage/common/table.h"
-#include "util/date.h"
+#include "util/date_utils.h"
 #include "storage/record/record.h"
 #include "storage/clog/clog.h"
 #include "storage/trx/trx.h"

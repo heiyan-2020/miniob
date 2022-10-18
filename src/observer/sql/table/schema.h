@@ -45,7 +45,7 @@ public:
         return RC::SUCCESS;
       }
     }
-    return RC::SUCCESS;
+    return RC::SCHEMA;
   }
 
   size_t get_column_count() const

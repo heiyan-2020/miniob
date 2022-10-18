@@ -1,6 +1,6 @@
 #include "binder.h"
 #include "sql/table/schema.h"
-#include "util/date.h"
+#include "util/date_utils.h"
 #include "sql/expr/symbol_finder.h"
 #include "sql/expr/bool_expression.h"
 #include "planner.h"

@@ -26,6 +26,7 @@ class Value {
   friend struct std::equal_to<HashAggregateKey>;
 
   friend class AvgAggregate;
+  friend class RoundFunction;
 
 public:
   Value() : Value{TypeId::UNDEFINED}

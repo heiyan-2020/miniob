@@ -123,23 +123,33 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
       continue;
     }
 
-    // TODO(vgalaxy): only consider aggregate functions now
     std::shared_ptr<FunctionCall> fn_call = std::dynamic_pointer_cast<FunctionCall>(expr);
     if (fn_call) {
-      Column exp_col;
-      if (expr->convert_to_column(input_schema_, exp_col) != RC::SUCCESS) {
-        return RC::SCHEMA;
-      }
-      size_t idx;
-      rc = input_schema_->get_column_idx(exp_col.get_name(), idx);
-      if (rc != RC::SUCCESS) {
-        return RC::INTERNAL;
-      }
-      if (input_null_field_bitmap.get_bit(idx)) {
-        out_tuple_values.emplace_back(input_schema_->get_column(idx).get_type());
-        output_null_field_bitmap.set_bit(idx);
+      std::shared_ptr<SimpleFunction> simple_fn = std::dynamic_pointer_cast<SimpleFunction>(fn_call->get_fn());
+      if (!simple_fn) {
+        // TODO(vgalaxy): assume aggregate functions
+        Column exp_col;
+        if (expr->convert_to_column(input_schema_, exp_col) != RC::SUCCESS) {
+          return RC::SCHEMA;
+        }
+        size_t idx;
+        rc = input_schema_->get_column_idx(exp_col.get_name(), idx);
+        if (rc != RC::SUCCESS) {
+          return RC::INTERNAL;
+        }
+        if (input_null_field_bitmap.get_bit(idx)) {
+          out_tuple_values.emplace_back(input_schema_->get_column(idx).get_type());
+          output_null_field_bitmap.set_bit(idx);
+        } else {
+          out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
+        }
       } else {
-        out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
+        Value eval_result;
+        rc = expr->evaluate(env_, eval_result);
+        if (rc != RC::SUCCESS) {
+          return rc;
+        }
+        out_tuple_values.push_back(eval_result);
       }
       continue;
     }

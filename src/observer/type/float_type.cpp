@@ -1,6 +1,7 @@
 #include "float_type.h"
 #include "value.h"
 #include "util/type_converter.h"
+#include "util/float_utils.h"
 
 #include <sstream>
 
@@ -155,16 +156,7 @@ auto FloatType::deserialize_from(const char *storage, size_t length) const -> Va
 auto FloatType::to_string(const Value &val) const -> std::string
 {
   // 尽可能不打印小数点，若存在小数点，最多保留 2 位
-  char *foo = (char *) calloc(32, sizeof(char));
-  auto bar = static_cast<int64_t>(val.value_.float_);
-  size_t length = std::to_string(bar).size();
-  if (bar == 0) {
-    length--;
-  }
-  sprintf(foo, "%.*g", static_cast<int>(length + 2), val.value_.float_);
-  std::string res{foo};
-  free(foo);
-  return {res};
+  return format_float(val.value_.float_);
 }
 
 auto FloatType::cmp_float_helper(const float lhs, const float rhs) -> CmpRes
