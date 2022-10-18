@@ -15,7 +15,10 @@ public:
 
   RC execute(const SQLStageEvent *sql_event) override;
 
+  RC get_res_values(const SQLStageEvent *sql_event, std::vector<Value> &new_values);
+
 private:
+  void tuple_to_value(const Tuple &tuple, SchemaRef schema, std::vector<Value>& new_values);
   void tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema);
   void print_header(std::ostream &os, SchemaRef schema, const std::vector<std::string> &headers, bool has_multi_table);
 
