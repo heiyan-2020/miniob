@@ -25,11 +25,28 @@ std::vector<std::string> split(const std::string& str) {
   return res;
 }
 
-void trim(std::string &str) {
-  size_t index = 0;
-  if (!str.empty()) {
-    while ((index = str.find(' ', index)) != std::string::npos) {
-      str.erase(index, 1);
+std::string trim(const std::string &str)
+{
+  std::string res{};
+  bool in_str{};
+  size_t len = str.size();
+  size_t curr_index{};
+  while (curr_index < len) {
+    if (str[curr_index] == '\'') {
+      if (!in_str) {
+        in_str = true;
+      } else {
+        in_str = false;
+      }
     }
+    if (str[curr_index] == ' ') {
+      if (in_str) {
+        res += str[curr_index];
+      }
+    } else {
+      res += str[curr_index];
+    }
+    curr_index++;
   }
+  return res;
 }

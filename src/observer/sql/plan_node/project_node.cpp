@@ -11,31 +11,55 @@
 RC ProjectNode::prepare()
 {
   RC rc;
-  assert(left_child_);
-  rc = left_child_->prepare();
-  if (rc != RC::SUCCESS) {
-    return rc;
+  if (left_child_) {
+    rc = left_child_->prepare();
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+
+    input_schema_ = left_child_->get_schema();
+    rc = prepare_schema(input_schema_);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  } else {
+    // Construct an empty schema to avoid nullptr error.
+    input_schema_ = std::make_shared<Schema>();
   }
-  input_schema_ = left_child_->get_schema();
   rc = prepare_schema(input_schema_);
   return rc;
 }
 
 RC ProjectNode::next()
 {
-  assert(left_child_);
-  if (left_child_) {
-    return left_child_->next();
+  RC rc;
+  if (done) {
+   return RC::RECORD_EOF;
   }
+
+  if (left_child_) {
+    rc = left_child_->next();
+    if (rc == RC::RECORD_EOF) {
+      done = true;
+    }
+  } else {
+    // There is no from table, just iterate once.
+    done = true;
+    rc = RC::SUCCESS;
+  }
+  return rc;
 }
 
 RC ProjectNode::current_tuple(TupleRef &tuple)
 {
   RC rc;
-  rc = left_child_->current_tuple(current_);
-  if (rc != RC::SUCCESS) {
-    return rc;
+  if (left_child_) {
+    rc = left_child_->current_tuple(current_);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
   }
+
   rc = project_tuple(current_, tuple);
   if (rc != RC::SUCCESS) {
     return rc;
@@ -97,7 +121,10 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
   std::vector<Value> out_tuple_values;
   std::vector<Column> involved_columns;
 
-  common::Bitmap input_null_field_bitmap{original_tuple->get_record().data(), 32};
+  common::Bitmap input_null_field_bitmap;
+  if (original_tuple) {
+    input_null_field_bitmap = {original_tuple->get_record().data(), 32};
+  }
   char *tmp = (char *)calloc(4, sizeof(char));
   common::Bitmap output_null_field_bitmap{tmp, 32};
 

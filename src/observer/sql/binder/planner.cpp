@@ -110,11 +110,10 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
 RC Planner::handle_select_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
   if (!plan) {
-    LOG_ERROR("Not supported select values yet.");
-    return RC::UNIMPLENMENT;
-    // TODO(zyx): Support query without from tables.
+    plan = std::make_shared<ProjectNode>(binder_.select_values_);
+  } else {
+    plan = std::make_shared<ProjectNode>(plan, binder_.select_values_);
   }
-  plan = std::make_shared<ProjectNode>(plan, binder_.select_values_);
   return RC::SUCCESS;
 }
 
@@ -373,9 +372,10 @@ RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr
 #ifdef JOIN_OPTIMAL
   std::unordered_set<AbstractExpressionRef> extra_conjuncts;
   PredicateUtils::collect_conjuncts(binder_.where_predicate_, extra_conjuncts);
-
-  rc = handle_join(sel_stmt->fromTable, extra_conjuncts, plan);
-  HANDLE_EXCEPTION(rc, "failed to handle join");
+  if (sel_stmt->fromTable) {
+    rc = handle_join(sel_stmt->fromTable, extra_conjuncts, plan);
+    HANDLE_EXCEPTION(rc, "failed to handle join");
+  }
 #else
   rc = handle_table_name_clause(sel_stmt->fromTable, plan);
   if (rc != RC::SUCCESS) {

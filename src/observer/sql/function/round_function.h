@@ -25,10 +25,10 @@ public:
       }
       switch (target_result.get_type()) {
         case INT:
-          out_value = Value{FLOAT, (float) std::round(target_result.value_.int_)};
+          out_value = Value{FLOAT, (float)std::round(target_result.value_.int_)};
           return RC::SUCCESS;
         case FLOAT:
-          out_value = Value{FLOAT, (float) std::round(target_result.value_.float_)};
+          out_value = Value{FLOAT, (float)std::round(target_result.value_.float_)};
           return RC::SUCCESS;
         default:
           break;
@@ -57,14 +57,12 @@ public:
 
       switch (target_result.get_type()) {
         case INT:
-          out_value = Value{
-              FLOAT,
-              (float) atof(format_float(target_result.value_.int_, digits_result.value_.int_).c_str())};
+          out_value =
+              Value{FLOAT, (float)atof(format_float(target_result.value_.int_, digits_result.value_.int_).c_str())};
           return RC::SUCCESS;
         case FLOAT: {
-          out_value = Value{
-              FLOAT,
-              (float) atof(format_float(target_result.value_.float_, digits_result.value_.int_).c_str())};
+          out_value =
+              Value{FLOAT, (float)atof(format_float(target_result.value_.float_, digits_result.value_.int_).c_str())};
           return RC::SUCCESS;
         }
         default:

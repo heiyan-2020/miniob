@@ -4,6 +4,8 @@
 #include "sql/function/min_aggregate.h"
 #include "sql/function/sum_aggregate.h"
 #include "sql/function/round_function.h"
+#include "sql/function/length_function.h"
+#include "sql/function/date_format_function.h"
 
 std::map<std::string, FunctionType> FunctionCall::function_directory = {
     {"count", FunctionType::COUNT},
@@ -42,9 +44,11 @@ auto FunctionCall::function_factory(const std::string &fn_name, AbstractFunction
       out_fn = std::make_shared<RoundFunction>();
       return RC::SUCCESS;
     case FunctionType::LENGTH:
-      break;
+      out_fn = std::make_shared<LengthFunction>();
+      return RC::SUCCESS;
     case FunctionType::DATE_FORMAT:
-      break;
+      out_fn = std::make_shared<DateFormatFunction>();
+      return RC::SUCCESS;
   }
   return RC::UNIMPLENMENT;
 }

@@ -12,15 +12,22 @@
 class ProjectNode : public PlanNode {
 public:
   ProjectNode(std::shared_ptr<PlanNode> left_child, std::vector<AbstractExpressionRef> projection_specs)
-      : PlanNode(left_child), projection_spec_(std::move(projection_specs))
+      : PlanNode(std::move(left_child)), projection_spec_(std::move(projection_specs))
   {}
+
+  ProjectNode(std::vector<AbstractExpressionRef> projection_specs)
+      :projection_spec_(std::move(projection_specs))
+  {}
+
   ~ProjectNode() override = default;
 
   RC prepare() override;
   RC initialize() override
   {
     current_.reset();
-    left_child_->initialize();
+    if (left_child_) {
+      left_child_->initialize();
+    }
     return RC::SUCCESS;
   }
   RC next() override;
@@ -34,6 +41,7 @@ private:
   std::vector<AbstractExpressionRef> projection_spec_;
   SchemaRef input_schema_;
   TupleRef current_;
+  bool done{false};
 
 };
 
