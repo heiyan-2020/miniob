@@ -22,6 +22,7 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
     LOG_WARN("Can't find table");
     return RC::SCHEMA_TABLE_NOT_EXIST;
   }
+
   from_table_names = from_schema_->get_involved_tables();
 
   // Bind select values.
