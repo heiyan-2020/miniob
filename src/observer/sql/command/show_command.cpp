@@ -70,7 +70,7 @@ RC ShowCommand::do_show_index(const SQLStageEvent *sql_event)
     }
     ss << "TABLE | NON_UNIQUE | KEY_NAME | SEQ_IN_INDEX | COLUMN_NAME" << std::endl;
   } else {
-    ss << "No such table: " << table_name << std::endl;
+    ss << "FAILURE\n";
   }
 
   sql_event->session_event()->set_response(ss.str());
