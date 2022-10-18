@@ -170,6 +170,7 @@ RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractE
   std::vector<const hsql::TableRef *> leaf_froms;
   std::vector<PlanNodeRef> leaf_plans;
 
+  // collect_details must be called before populating binder_.enclosing, because we will bind ON-clause in collect_details.
   rc = collect_details(from, conjuncts, leaf_froms);
   HANDLE_EXCEPTION(rc, "Collect details error");
 

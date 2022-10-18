@@ -51,7 +51,7 @@ public:
         return RC::INTERNAL;
       }
       common::Bitmap null_field_bitmap{tuple->get_record().data(), 32};
-      size_t idx;
+      size_t idx = 0;
       if (schema->get_column_idx(found[0].get_name(), idx) != RC::SUCCESS) {
         return RC::INTERNAL;
       }
