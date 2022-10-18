@@ -16,7 +16,7 @@ class Binder {
   friend class Planner;
   friend class SelectCommand;
 public:
-  Binder(Db *db, std::vector<SchemaRef> enclosing) : db_(db), enclosing_(std::move(enclosing))
+  Binder(Db *db, std::vector<SchemaRef> enclosing) : db_(db), enclosing_(std::move(enclosing)), from_schema_(new Schema())
   {}
 
   RC bind_select(const hsql::SelectStatement *sel_stmt);
