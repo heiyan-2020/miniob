@@ -94,14 +94,15 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
 
           if (new_values.size() > 1) {
             rc = RC::SCHEMA;
-            LOG_WARN("update select have multi result");
+            LOG_WARN("subquery returns more than 1 row");
             return rc;
           }
-          // TODO(pjz): set value 为空时是 do update in vain 还是 FAILURE
+          // 根据 MySQL 上的测试，子查询为空时，将字段更新为 null
+          // 但是本题的前置依赖没有 null
+          // 因此暂时认为：子查询为空时，update in vain
           if (new_values.empty()) {
-            rc = RC::SCHEMA;
-            LOG_WARN("update select have no result");
-            return rc;
+//            new_value = Value(UNDEFINED);
+              return rc;
           }
           new_value = new_values.at(0);
           break;
@@ -204,19 +205,19 @@ RC UpdateCommand::check_schema(const FieldMeta& field_meta, const Value& value)
   RC rc = RC::SUCCESS;
   switch (field_meta.type()) {
     case INT: {
-      if (value.get_type() == INT) return rc;
+      if (value.get_type() == INT || value.get_type() == UNDEFINED) return rc;
       break;
     }
     case FLOAT: {
-      if (value.get_type() == FLOAT) return rc;
+      if (value.get_type() == FLOAT || value.get_type() == UNDEFINED) return rc;
       break;
     }
     case CHAR: {
-      if (value.get_type() == CHAR) return rc;
+      if (value.get_type() == CHAR || value.get_type() == UNDEFINED) return rc;
       break;
     }
     case DATE: {
-      if (value.get_type() == DATE) return rc;
+      if (value.get_type() == DATE || value.get_type() == UNDEFINED) return rc;
       break;
     }
     default: return RC::UNIMPLENMENT;
