@@ -225,15 +225,19 @@ RC Table::insert_record(Trx *trx, Record *record)
 {
   RC rc = RC::SUCCESS;
 
+  // init trx info
   if (trx != nullptr) {
     trx->init_trx_info(this, *record);
   }
+
+  // do insert
   rc = record_handler_->insert_record(record->data(), table_meta_.record_size(), &record->rid());
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Insert record failed. table name=%s, rc=%d:%s", table_meta_.name().c_str(), rc, strrc(rc));
     return rc;
   }
 
+  // handle trx
   if (trx != nullptr) {
     rc = trx->insert_record(this, record);
     if (rc != RC::SUCCESS) {
@@ -250,6 +254,7 @@ RC Table::insert_record(Trx *trx, Record *record)
     }
   }
 
+  // handle indexes
   rc = insert_entry_of_indexes(record->data(), record->rid());
   if (rc != RC::SUCCESS) {
     RC rc2 = delete_entry_of_indexes(record->data(), record->rid(), true);
@@ -259,6 +264,7 @@ RC Table::insert_record(Trx *trx, Record *record)
           rc2,
           strrc(rc2));
     }
+
     rc2 = record_handler_->delete_record(&record->rid());
     if (rc2 != RC::SUCCESS) {
       LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
@@ -269,10 +275,12 @@ RC Table::insert_record(Trx *trx, Record *record)
     return rc;
   }
 
+  // append clog record
   if (trx != nullptr) {
-    // append clog record
     CLogRecord *clog_record = nullptr;
-    rc = clog_manager_->clog_gen_record(CLogType::REDO_INSERT, trx->get_current_id(), clog_record, name().c_str(), table_meta_.record_size(), record);
+    rc = clog_manager_->clog_gen_record(
+        CLogType::REDO_INSERT, trx->get_current_id(), clog_record,
+        name().c_str(), table_meta_.record_size(), record);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Failed to create a clog record. rc=%d:%s", rc, strrc(rc));
       return rc;
@@ -282,6 +290,7 @@ RC Table::insert_record(Trx *trx, Record *record)
       return rc;
     }
   }
+
   return rc;
 }
 
@@ -747,7 +756,6 @@ RC Table::sync()
 //    return rc;
 //  }
   RC rc = RC::SUCCESS;
-
   for (Index *index : indexes_) {
     rc = index->sync();
     if (rc != RC::SUCCESS) {

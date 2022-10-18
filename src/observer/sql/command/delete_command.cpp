@@ -5,6 +5,8 @@
 #include "type/value.h"
 #include "storage/common/table.h"
 #include "util/date.h"
+#include "storage/clog/clog.h"
+#include "storage/trx/trx.h"
 
 DeleteCommand::DeleteCommand(const hsql::DeleteStatement *stmt) : Command{hsql::kStmtDelete}, stmt_{stmt}
 {}
@@ -24,7 +26,10 @@ RC DeleteCommand::execute(const SQLStageEvent *sql_event)
 RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
 {
   SessionEvent *session_event = sql_event->session_event();
-  Db *db = session_event->session()->get_current_db();
+  Session *session = session_event->session();
+  Db *db = session->get_current_db();
+  Trx *trx = session->current_trx();
+  CLogManager *clog_manager = db->get_clog_manager();
 
   Table *table = db->find_table(stmt_->tableName);
   RC rc = RC::SUCCESS;
@@ -37,7 +42,6 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
   std::shared_ptr<PlanNode> sp;
   rc = planner.make_plan_del(stmt_, sp);
   if (rc != RC::SUCCESS) {
-    session_event->set_response("FAILURE\n");
     return rc;
   }
   sp->prepare();
@@ -53,7 +57,7 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
     }
 
     Record record = tuple->get_record();
-    rc = table->delete_record(nullptr, &record);
+    rc = table->delete_record(trx, &record);
 
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to delete record: %s", strrc(rc));
@@ -67,5 +71,22 @@ RC DeleteCommand::do_delete(const SQLStageEvent *sql_event)
     LOG_WARN("failed to delete record: %s", strrc(rc));
     return rc;
   }
+
+  // success
+  if (!session->is_trx_multi_operation_mode()) {
+    CLogRecord *clog_record = nullptr;
+    rc = clog_manager->clog_gen_record(CLogType::REDO_MTR_COMMIT, trx->get_current_id(), clog_record);
+    if (rc != RC::SUCCESS || clog_record == nullptr) {
+      return rc;
+    }
+
+    rc = clog_manager->clog_append_record(clog_record);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+
+    trx->next_current_id();
+  }
+
   return RC::SUCCESS;
 }

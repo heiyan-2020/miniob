@@ -1,5 +1,6 @@
 #include "char_type.h"
 #include "value.h"
+#include "util/type_converter.h"
 
 auto CharType::compare_equals(const Value &left, const Value &right) const -> Value
 {
@@ -75,6 +76,12 @@ auto CharType::compare(const Value &left, const Value &right) const -> CmpRes
           return CmpRes::EQ;
         }
       }
+    }
+    case TypeId::INT: {
+      return TypeConverter::get_from_char(FLOAT, left.value_.char_, left.len_).compare(TypeConverter::get_from_int(FLOAT, right.value_.int_));
+    }
+    case TypeId::FLOAT: {
+      return TypeConverter::get_from_char(FLOAT, left.value_.char_, left.len_).compare(right);
     }
     default:
       return CmpRes::UNDEFINED;

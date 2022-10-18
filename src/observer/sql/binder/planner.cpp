@@ -195,7 +195,7 @@ RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractE
     rc = expression_planner->prepare_all();
   }
   
-  return RC::SUCCESS;
+  return rc;
 }
 
 RC Planner::collect_details(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, std::vector<const hsql::TableRef *> &leaf_clauses)
@@ -339,10 +339,8 @@ RC Planner::make_plan_sel(const hsql::SelectStatement *sel_stmt, std::shared_ptr
   RC rc;
 
   rc = binder_.bind_select(sel_stmt);
-  if (rc != RC::SUCCESS) {
-    LOG_WARN("Bind failed");
-    return rc;
-  }
+  HANDLE_EXCEPTION(rc, "Bind failed");
+
 #ifdef JOIN_OPTIMAL
   std::unordered_set<AbstractExpressionRef> extra_conjuncts;
   PredicateUtils::collect_conjuncts(binder_.where_predicate_, extra_conjuncts);
