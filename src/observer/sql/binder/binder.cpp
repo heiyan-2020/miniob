@@ -9,6 +9,7 @@
 #include "sql/expr/scalar_expression.h"
 #include "sql/expr/like_expression.h"
 #include "sql/expr/in_value_expression.h"
+#include "sql/expr/exists_expression.h"
 
 RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 {
@@ -228,6 +229,11 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
           return RC::SUCCESS;
 
         }
+      }
+
+      if (expr->opType == hsql::OperatorType::kOpExists) {
+        out_expr = std::make_shared<ExistsExpression>(expr->select);
+        return RC::SUCCESS;
       }
 
       if (expr->opType == hsql::OperatorType::kOpLike) {
