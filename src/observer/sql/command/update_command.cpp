@@ -42,6 +42,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
     session_event->set_response("FAILURE\n");
     return rc;
   }
+
   sp->prepare();
   sp->initialize();
 
@@ -49,40 +50,40 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
   const std::vector<FieldMeta> *field_metas = table_meta.field_metas();
   size_t curr_index = table_meta.sys_field_num();
 
-  // 由于比赛只要求 set 单个字段，所以其实这里的 for 循环只会执行一次
-  for (auto updateClause: *stmt_->updates) {
+  rc = sp->next();
+  while (RC::SUCCESS == rc) {
 
-    // find appropriate filed
-    FieldMeta field_meta = field_metas->at(curr_index);
-    while (field_meta.name() != updateClause->column) {
-      curr_index++;
-      if (curr_index >= field_metas->size()) {
-        LOG_WARN("update stmt offset has no related field");
-        return RC::INTERNAL;
-      }
-      field_meta = field_metas->at(curr_index);
-    }
-
-    // check schema
-    rc = check_schema(field_meta, updateClause);
+    TupleRef tuple;
+    rc = sp->current_tuple(tuple);
     if (rc != RC::SUCCESS) {
-      LOG_WARN("update with invalid value!: %s", strrc(rc));
+      LOG_WARN("failed to get current record: %s", strrc(rc));
       return rc;
     }
 
-    rc = sp->next();
-    while (RC::SUCCESS == rc) {
-      TupleRef tuple;
-      rc = sp->current_tuple(tuple);
-      if (rc != RC::SUCCESS) {
-        LOG_WARN("failed to get current record: %s", strrc(rc));
-        return rc;
+    Record old_record = tuple->get_record();
+    int record_size = table_meta.record_size();
+    char *data = new char[record_size];
+    memcpy(data, old_record.data(), record_size);
+
+    // update loop
+    for (auto updateClause: *stmt_->updates) {
+      // find appropriate filed
+      FieldMeta field_meta = field_metas->at(curr_index);
+      while (field_meta.name() != updateClause->column) {
+        curr_index++;
+        if (curr_index >= field_metas->size()) {
+          LOG_WARN("update stmt offset has no related field");
+          return RC::INTERNAL;
+        }
+        field_meta = field_metas->at(curr_index);
       }
 
-      Record old_record = tuple->get_record();
-      int record_size = table_meta.record_size();
-      char *data = new char[record_size];
-      memcpy(data, old_record.data(), record_size);
+      // check schema
+      rc = check_schema(field_meta, updateClause);
+      if (rc != RC::SUCCESS) {
+        LOG_WARN("update with invalid value!: %s", strrc(rc));
+        return rc;
+      }
 
       const hsql::Expr *expr = updateClause->value;
       Value new_value;
@@ -102,15 +103,18 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
         LOG_WARN("failed to update record: %s", strrc(rc));
         return rc;
       }
-
-      rc = sp->next();
+      // reset curr_index
+      curr_index = table_meta.sys_field_num();
     }
 
-    if (rc != RC::RECORD_EOF) {
-      LOG_WARN("failed to update record: %s", strrc(rc));
-      return rc;
-    }
+    rc = sp->next();
   }
+
+  if (rc != RC::RECORD_EOF) {
+    LOG_WARN("failed to update record: %s", strrc(rc));
+    return rc;
+  }
+
   return RC::SUCCESS;
 }
 
