@@ -30,7 +30,7 @@ See the Mulan PSL v2 for more details. */
 // 固定文件大小 TODO: 循环文件组
 #define CLOG_FILE_SIZE (48 * 1024 * 1024)
 #define CLOG_BUFFER_SIZE (4 * 1024 * 1024)
-#define TABLE_NAME_MAX_LEN 32  // TODO: 表名不要超过 32 字节
+#define TABLE_NAME_MAX_LEN 20  // TODO: 表名不要超过 20 字节
 
 class CLogManager;
 class CLogBuffer;
@@ -43,7 +43,7 @@ struct CLogBlockHeader;
 struct CLogBlock;
 struct CLogMTRManager;
 
-enum CLogType { REDO_ERROR = 0, REDO_MTR_BEGIN, REDO_MTR_COMMIT, REDO_INSERT, REDO_DELETE };
+enum CLogType { REDO_ERROR = 0, REDO_MTR_BEGIN, REDO_MTR_COMMIT, REDO_INSERT, REDO_DELETE, REDO_UPDATE };
 
 struct CLogRecordHeader {
   int32_t lsn_;
@@ -57,14 +57,14 @@ struct CLogRecordHeader {
   }
 };
 
-struct CLogInsertRecord {
+struct CLogInsertUpdateRecord {
   CLogRecordHeader hdr_;
   char table_name_[TABLE_NAME_MAX_LEN];
   RID rid_;
   int data_len_;
   char *data_;
 
-  bool operator==(const CLogInsertRecord &other) const
+  bool operator==(const CLogInsertUpdateRecord &other) const
   {
     return hdr_ == other.hdr_ && (strcmp(table_name_, other.table_name_) == 0) && (rid_ == other.rid_) &&
            (data_len_ == other.data_len_) && (memcmp(data_, other.data_, data_len_) == 0);
@@ -92,7 +92,7 @@ struct CLogMTRRecord {
 };
 
 union CLogRecords {
-  CLogInsertRecord ins;
+  CLogInsertUpdateRecord ins_upd;
   CLogDeleteRecord del;
   CLogMTRRecord mtr;
   char *errors;

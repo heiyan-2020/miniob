@@ -6,6 +6,8 @@
 #include "storage/common/table.h"
 #include "util/date.h"
 #include "storage/record/record.h"
+#include "storage/clog/clog.h"
+#include "storage/trx/trx.h"
 
 UpdateCommand::UpdateCommand(const hsql::UpdateStatement *stmt) : Command{hsql::kStmtUpdate}, stmt_{stmt}
 {}
@@ -25,7 +27,10 @@ RC UpdateCommand::execute(const SQLStageEvent *sql_event)
 RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
 {
   SessionEvent *session_event = sql_event->session_event();
-  Db *db = session_event->session()->get_current_db();
+  Session *session = session_event->session();
+  Db *db = session->get_current_db();
+  Trx *trx = session->current_trx();
+  CLogManager *clog_manager = db->get_clog_manager();
 
   const auto* table_ref = stmt_->table;
   Table *table = db->find_table(table_ref->getName());
@@ -97,7 +102,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       new_record.set_rid(old_record.rid());
       new_record.set_data(data);
 
-      rc = table->update_record(nullptr, &old_record, &new_record);
+      rc = table->update_record(trx, &old_record, &new_record);
       if (rc != RC::SUCCESS) {
         LOG_WARN("failed to update record: %s", strrc(rc));
         return rc;

@@ -46,6 +46,7 @@ public:
 
   RC recover_insert_record(Record *record);
   RC recover_delete_record(Record *record);
+  RC recover_update_record(Record *record);
 
   RC create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique);
 
