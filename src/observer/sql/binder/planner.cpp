@@ -137,12 +137,32 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
 
 RC Planner::handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
-  // TODO(pjz): check whether orderBy clause contains aggregates or subqueries!
-  // temporarily just construct te sort node
-  if (sel_stmt->order != nullptr) {
+  RC rc = RC::SUCCESS;
+  std::vector<hsql::OrderDescription*>* order_arr = sel_stmt->order;
+
+  if (order_arr != nullptr && !order_arr->empty()) {
+    for (auto* order_desc: *order_arr) {
+      hsql::Expr* order_expr = order_desc->expr;
+      if (order_expr->type == hsql::kExprFunctionRef) {
+        rc = RC::SQL_SYNTAX;
+        LOG_ERROR("ORDER-BY-clause cannot contain aggregates");
+        return rc;
+      }
+      if (order_expr->type == hsql::kExprSelect) {
+        rc = RC::SQL_SYNTAX;
+        LOG_ERROR("ORDER-BY-clause cannot contain subqueries");
+        return rc;
+      }
+      if (order_expr->type != hsql::kExprColumnRef) {
+        rc = RC::SQL_SYNTAX;
+        LOG_ERROR("ORDER-BY-clause syntax error!");
+        return rc;
+      }
+    }
     plan = std::make_shared<SortNode>(plan, sel_stmt->order);
   }
-  return RC::SUCCESS;
+  // if order_desc == nullptr, do nothing
+  return rc;
 }
 
 RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef expr)
