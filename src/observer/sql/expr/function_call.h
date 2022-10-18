@@ -9,7 +9,7 @@
 #include "leaf_node_expression.h"
 
 enum class FunctionType {
-  AVG, COUNT, MAX, MIN
+  AVG, COUNT, MAX, MIN, SUM
 };
 
 class FunctionCall : public LeafNodeExpression {

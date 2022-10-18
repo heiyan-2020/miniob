@@ -116,3 +116,63 @@ void SelectCommand::tuple_to_string(std::ostream &os, const Tuple &tuple, Schema
   }
   os << row;
 }
+
+/**
+ * 将 sub query 的结果 (Value) 保存到 new_values 中
+ * @param sql_event
+ * @param new_values
+ * @return
+ */
+RC SelectCommand::get_res_values(const SQLStageEvent *sql_event, std::vector<Value> &new_values) {
+  SessionEvent *session_event = sql_event->session_event();
+  Db *db = session_event->session()->get_current_db();
+
+  RC rc;
+  Planner planner(db);
+  std::shared_ptr<PlanNode> sp;
+  rc = planner.make_plan_sel(stmt_, sp);
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE\n");
+    return rc;
+  }
+  rc = sp->prepare();
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE\n");
+    return rc;
+  }
+  rc = sp->initialize();
+  if (rc != RC::SUCCESS) {
+    session_event->set_response("FAILURE\n");
+    return rc;
+  }
+
+  TupleRef tuple;
+  while ((rc = sp->next()) == RC::SUCCESS) {
+    rc = sp->current_tuple(tuple);
+    if (rc != RC::SUCCESS) {
+      break;
+    }
+    tuple_to_value(*tuple, sp->get_schema(), new_values);
+  }
+  if (rc != RC::RECORD_EOF) {
+    return rc;
+  }
+  return RC::SUCCESS;
+}
+
+void SelectCommand::tuple_to_value(const Tuple &tuple, SchemaRef schema, std::vector<Value> &new_values)
+{
+  common::Bitmap null_field_bitmap{tuple.get_record().data(), 32};
+  for (auto i = 0; i < schema->get_column_count(); i++) {
+    const auto &column = schema->get_column(i);
+    if (column.is_visible()) {
+      if (null_field_bitmap.get_bit(i)) {
+        // null value
+        new_values.emplace_back(Value());
+      }
+      else {
+        new_values.emplace_back(tuple.get_value(schema, i));
+      }
+    }
+  }
+}

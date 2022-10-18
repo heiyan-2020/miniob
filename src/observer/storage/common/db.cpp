@@ -188,21 +188,24 @@ RC Db::recover()
     CLogMTRManager *mtr_manager = clog_manager_->get_mtr_manager();
     for (auto it = mtr_manager->log_redo_list.begin(); it != mtr_manager->log_redo_list.end(); it++) {
       CLogRecord *clog_record = *it;
-      if (clog_record->get_log_type() != CLogType::REDO_INSERT && clog_record->get_log_type() != CLogType::REDO_DELETE) {
+      if (clog_record->get_log_type() != CLogType::REDO_INSERT
+          && clog_record->get_log_type() != CLogType::REDO_DELETE
+          && clog_record->get_log_type() != CLogType::REDO_UPDATE) {
         delete clog_record;
         continue;
       }
       auto find_iter = mtr_manager->trx_commited.find(clog_record->get_trx_id());
       if (find_iter == mtr_manager->trx_commited.end()) {
-        LOG_ERROR("CLog record without commit message! "); // unexpected error
+        LOG_ERROR("unknown trx id in clog record"); // unexpected error
         delete clog_record;
         return RC::GENERIC_ERROR;
-      } else if (find_iter->second == false ) {
+      } else if (!find_iter->second) {
+        // no commit message
         delete clog_record;
         continue;
       }
 
-      Table *table = find_table(clog_record->log_record_.ins.table_name_);
+      Table *table = find_table(clog_record->log_record_.ins_upd.table_name_);
       if (table == nullptr) {
         delete clog_record;
         continue;
@@ -210,13 +213,21 @@ RC Db::recover()
 
       switch(clog_record->get_log_type()) {
         case CLogType::REDO_INSERT: {
-          char *record_data = new char[clog_record->log_record_.ins.data_len_];
-          memcpy(record_data, clog_record->log_record_.ins.data_, clog_record->log_record_.ins.data_len_);
+          char *record_data = new char[clog_record->log_record_.ins_upd.data_len_];
+          memcpy(record_data, clog_record->log_record_.ins_upd.data_, clog_record->log_record_.ins_upd.data_len_);
           Record record;
           record.set_data(record_data);
-          record.set_rid(clog_record->log_record_.ins.rid_);
-
+          record.set_rid(clog_record->log_record_.ins_upd.rid_);
           rc = table->recover_insert_record(&record);
+          delete[] record_data;
+        } break;
+        case CLogType::REDO_UPDATE: {
+          char *record_data = new char[clog_record->log_record_.ins_upd.data_len_];
+          memcpy(record_data, clog_record->log_record_.ins_upd.data_, clog_record->log_record_.ins_upd.data_len_);
+          Record record;
+          record.set_data(record_data);
+          record.set_rid(clog_record->log_record_.ins_upd.rid_);
+          rc = table->recover_update_record(&record);
           delete[] record_data;
         } break;
         case CLogType::REDO_DELETE: {

@@ -17,7 +17,7 @@ See the Mulan PSL v2 for more details. */
 #include "common/log/log.h"
 #include "clog.h"
 
-#define CLOG_INS_REC_NODATA_SIZE (sizeof(CLogInsertRecord) - sizeof(char *))
+#define CLOG_INS_UPD_REC_NODATA_SIZE (sizeof(CLogInsertUpdateRecord) - sizeof(char *))
 const char *CLOG_FILE_NAME = "clog";
 
 int _align8(int size)
@@ -37,19 +37,20 @@ CLogRecord::CLogRecord(CLogType flag, int32_t trx_id, const char *table_name /* 
       log_record_.mtr.hdr_.logrec_len_ = sizeof(CLogMTRRecord);
       log_record_.mtr.hdr_.lsn_ = CLogManager::get_next_lsn(log_record_.mtr.hdr_.logrec_len_);
     } break;
-    case REDO_INSERT: {
+    case REDO_INSERT:
+    case REDO_UPDATE: {
       if (!rec || !rec->data()) {
         LOG_ERROR("Record is null");
       } else {
-        log_record_.ins.hdr_.trx_id_ = trx_id;
-        log_record_.ins.hdr_.type_ = flag;
-        strcpy(log_record_.ins.table_name_, table_name);
-        log_record_.ins.rid_ = rec->rid();
-        log_record_.ins.data_len_ = data_len;
-        log_record_.ins.hdr_.logrec_len_ = _align8(CLOG_INS_REC_NODATA_SIZE + data_len);
-        log_record_.ins.data_ = new char[log_record_.ins.hdr_.logrec_len_ - CLOG_INS_REC_NODATA_SIZE];
-        memcpy(log_record_.ins.data_, rec->data(), data_len);
-        log_record_.ins.hdr_.lsn_ = CLogManager::get_next_lsn(log_record_.ins.hdr_.logrec_len_);
+        log_record_.ins_upd.hdr_.trx_id_ = trx_id;
+        log_record_.ins_upd.hdr_.type_ = flag;
+        strncpy(log_record_.ins_upd.table_name_, table_name, TABLE_NAME_MAX_LEN - 1);
+        log_record_.ins_upd.rid_ = rec->rid();
+        log_record_.ins_upd.data_len_ = data_len;
+        log_record_.ins_upd.hdr_.logrec_len_ = _align8(CLOG_INS_UPD_REC_NODATA_SIZE + data_len);
+        log_record_.ins_upd.data_ = new char[log_record_.ins_upd.hdr_.logrec_len_ - CLOG_INS_UPD_REC_NODATA_SIZE];
+        memcpy(log_record_.ins_upd.data_, rec->data(), data_len);
+        log_record_.ins_upd.hdr_.lsn_ = CLogManager::get_next_lsn(log_record_.ins_upd.hdr_.logrec_len_);
       }
     } break;
     case REDO_DELETE: {
@@ -59,7 +60,7 @@ CLogRecord::CLogRecord(CLogType flag, int32_t trx_id, const char *table_name /* 
         log_record_.del.hdr_.trx_id_ = trx_id;
         log_record_.del.hdr_.type_ = flag;
         log_record_.del.hdr_.logrec_len_ = sizeof(CLogDeleteRecord);
-        strcpy(log_record_.ins.table_name_, table_name);
+        strncpy(log_record_.del.table_name_, table_name, TABLE_NAME_MAX_LEN - 1);
         log_record_.del.rid_ = rec->rid();
         log_record_.del.hdr_.lsn_ = CLogManager::get_next_lsn(log_record_.del.hdr_.logrec_len_);
       }
@@ -79,22 +80,23 @@ CLogRecord::CLogRecord(char *data)
     case REDO_MTR_COMMIT: {
       log_record_.mtr.hdr_ = *hdr;
     } break;
-    case REDO_INSERT: {
-      log_record_.ins.hdr_ = *hdr;
+    case REDO_INSERT:
+    case REDO_UPDATE: {
+      log_record_.ins_upd.hdr_ = *hdr;
       data += sizeof(CLogRecordHeader);
-      strcpy(log_record_.ins.table_name_, data);
+      strncpy(log_record_.ins_upd.table_name_, data, TABLE_NAME_MAX_LEN - 1);
       data += TABLE_NAME_MAX_LEN;
-      log_record_.ins.rid_ = *(RID *)data;
+      log_record_.ins_upd.rid_ = *(RID *)data;
       data += sizeof(RID);
-      log_record_.ins.data_len_ = *(int *)data;
+      log_record_.ins_upd.data_len_ = *(int *)data;
       data += sizeof(int);
-      log_record_.ins.data_ = new char[log_record_.ins.hdr_.logrec_len_ - CLOG_INS_REC_NODATA_SIZE];
-      memcpy(log_record_.ins.data_, data, log_record_.ins.data_len_);
+      log_record_.ins_upd.data_ = new char[log_record_.ins_upd.hdr_.logrec_len_ - CLOG_INS_UPD_REC_NODATA_SIZE];
+      memcpy(log_record_.ins_upd.data_, data, log_record_.ins_upd.data_len_);
     } break;
     case REDO_DELETE: {
       log_record_.del.hdr_ = *hdr;
       data += sizeof(CLogRecordHeader);
-      strcpy(log_record_.del.table_name_, data);
+      strncpy(log_record_.del.table_name_, data, TABLE_NAME_MAX_LEN - 1);
       data += TABLE_NAME_MAX_LEN;
       log_record_.del.rid_ = *(RID *)data;
     } break;
@@ -106,8 +108,8 @@ CLogRecord::CLogRecord(char *data)
 
 CLogRecord::~CLogRecord()
 {
-  if (REDO_INSERT == flag_) {
-    delete[] log_record_.ins.data_;
+  if (REDO_INSERT == flag_ || REDO_UPDATE == flag_) {
+    delete[] log_record_.ins_upd.data_;
   }
 }
 
@@ -116,18 +118,18 @@ RC CLogRecord::copy_record(void *dest, int start_off, int copy_len)
   CLogRecords *log_rec = &log_record_;
   if (start_off + copy_len > get_logrec_len()) {
     return RC::GENERIC_ERROR;
-  } else if (flag_ != REDO_INSERT) {
+  } else if (flag_ != REDO_INSERT && flag_ != REDO_UPDATE) {
     memcpy(dest, (char *)log_rec + start_off, copy_len);
   } else {
-    if (start_off > CLOG_INS_REC_NODATA_SIZE) {
-      memcpy(dest, log_rec->ins.data_ + start_off - CLOG_INS_REC_NODATA_SIZE, copy_len);
-    } else if (start_off + copy_len <= CLOG_INS_REC_NODATA_SIZE) {
+    if (start_off > CLOG_INS_UPD_REC_NODATA_SIZE) {
+      memcpy(dest, log_rec->ins_upd.data_ + start_off - CLOG_INS_UPD_REC_NODATA_SIZE, copy_len);
+    } else if (start_off + copy_len <= CLOG_INS_UPD_REC_NODATA_SIZE) {
       memcpy(dest, (char *)log_rec + start_off, copy_len);
     } else {
-      memcpy(dest, (char *)log_rec + start_off, CLOG_INS_REC_NODATA_SIZE - start_off);
-      memcpy((char *)dest + CLOG_INS_REC_NODATA_SIZE - start_off,
-          log_rec->ins.data_,
-          copy_len - (CLOG_INS_REC_NODATA_SIZE - start_off));
+      memcpy(dest, (char *)log_rec + start_off, CLOG_INS_UPD_REC_NODATA_SIZE - start_off);
+      memcpy((char *)dest + CLOG_INS_UPD_REC_NODATA_SIZE - start_off,
+          log_rec->ins_upd.data_,
+          copy_len - (CLOG_INS_UPD_REC_NODATA_SIZE - start_off));
     }
   }
   return RC::SUCCESS;
@@ -143,7 +145,8 @@ int CLogRecord::cmp_eq(CLogRecord *other)
       case REDO_MTR_COMMIT:
         return log_record_.mtr == other_logrec->mtr;
       case REDO_INSERT:
-        return log_record_.ins == other_logrec->ins;
+      case REDO_UPDATE:
+        return log_record_.ins_upd == other_logrec->ins_upd;
       case REDO_DELETE:
         return log_record_.del == other_logrec->del;
       default:
@@ -176,7 +179,7 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
   }
   RC rc = RC::SUCCESS;
   int32_t logrec_left_len = log_rec->get_logrec_len() - start_off;
-  CLogBlock *log_block = (CLogBlock *)&buffer_[write_block_offset_];
+  auto *log_block = (CLogBlock *)&buffer_[write_block_offset_];
 
   if (write_offset_ == 0 && write_block_offset_ == 0) {
     memset(log_block, 0, CLOG_BLOCK_SIZE);
@@ -184,8 +187,8 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
     log_block->log_block_hdr_.log_block_no = current_block_no_;
     write_offset_ += CLOG_BLOCK_HDR_SIZE;
   }
-  if (log_block->log_block_hdr_.log_data_len_ == CLOG_BLOCK_DATA_SIZE) {  // 当前block已写满
-    // 新分配一个block
+  if (log_block->log_block_hdr_.log_data_len_ == CLOG_BLOCK_DATA_SIZE) {  // 当前 block 已写满
+    // 新分配一个 block
     write_block_offset_ += CLOG_BLOCK_SIZE;
     current_block_no_ += CLOG_BLOCK_SIZE;
     log_block = (CLogBlock *)&buffer_[write_block_offset_];
@@ -194,8 +197,8 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
     write_offset_ += CLOG_BLOCK_HDR_SIZE;
     return append_log_record(log_rec, start_off);
   } else {
-    if (logrec_left_len <= (CLOG_BLOCK_DATA_SIZE - log_block->log_block_hdr_.log_data_len_)) {  //不需要再跨block存放
-      if (log_block->log_block_hdr_.log_data_len_ == 0) {                                       //当前为新block
+    if (logrec_left_len <= (CLOG_BLOCK_DATA_SIZE - log_block->log_block_hdr_.log_data_len_)) {  // 不需要再跨 block 存放
+      if (log_block->log_block_hdr_.log_data_len_ == 0) {                                       // 当前为新 block
         if (start_off == 0) {
           log_block->log_block_hdr_.first_rec_offset_ = CLOG_BLOCK_HDR_SIZE;
         } else {
@@ -206,8 +209,8 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
       write_offset_ += logrec_left_len;
       log_block->log_block_hdr_.log_data_len_ += logrec_left_len;
       start_off += logrec_left_len;
-    } else {                                               //需要跨block
-      if (log_block->log_block_hdr_.log_data_len_ == 0) {  //当前为新block
+    } else {                                               // 需要跨 block
+      if (log_block->log_block_hdr_.log_data_len_ == 0) {  // 当前为新 block
         log_block->log_block_hdr_.first_rec_offset_ = CLOG_BLOCK_SIZE;
       }
       int32_t block_left_len = CLOG_BLOCK_DATA_SIZE - log_block->log_block_hdr_.log_data_len_;
@@ -223,7 +226,7 @@ RC CLogBuffer::append_log_record(CLogRecord *log_rec, int &start_off)
 
 RC CLogBuffer::flush_buffer(CLogFile *log_file)
 {
-  if (write_offset_ == CLOG_BUFFER_SIZE) {  //如果是buffer满触发的下刷
+  if (write_offset_ == CLOG_BUFFER_SIZE) {  // 如果是 buffer 满触发的下刷
     CLogBlock *log_block = (CLogBlock *)buffer_;
     log_file->write(log_block->log_block_hdr_.log_block_no, CLOG_BUFFER_SIZE, buffer_);
     write_block_offset_ = 0;
@@ -233,12 +236,12 @@ RC CLogBuffer::flush_buffer(CLogFile *log_file)
     CLogBlock *log_block = (CLogBlock *)buffer_;
     log_file->write(log_block->log_block_hdr_.log_block_no, write_block_offset_ + CLOG_BLOCK_SIZE, buffer_);
     log_block = (CLogBlock *)&buffer_[write_block_offset_];
-    if (log_block->log_block_hdr_.log_data_len_ == CLOG_BLOCK_DATA_SIZE) {  // 最后一个block已写满
+    if (log_block->log_block_hdr_.log_data_len_ == CLOG_BLOCK_DATA_SIZE) {  // 最后一个 block 已写满
       write_block_offset_ = 0;
       write_offset_ = 0;
       memset(buffer_, 0, CLOG_BUFFER_SIZE);
     } else if (write_block_offset_ != 0) {
-      // 将最后一个未写满的block迁移到buffer起始位置
+      // 将最后一个未写满的 block 迁移到 buffer 起始位置
       write_offset_ = log_block->log_block_hdr_.log_data_len_ + CLOG_BLOCK_HDR_SIZE;
       memcpy(buffer_, &buffer_[write_block_offset_], CLOG_BLOCK_SIZE);
       write_block_offset_ = 0;
@@ -305,7 +308,7 @@ RC CLogFile::recover(CLogMTRManager *mtr_mgr, CLogBuffer *log_buffer)
   memset(&logrec_buf, 0, sizeof(CLogRecordBuf));
   CLogRecord *log_rec = nullptr;
 
-  uint64_t offset = CLOG_BLOCK_SIZE;  // 第一个block为文件头
+  uint64_t offset = CLOG_BLOCK_SIZE;  // 第一个 block 为文件头
   int64_t read_size = 0;
   log_file_->read_at(offset, CLOG_REDO_BUFFER_SIZE, redo_buffer, &read_size);
   while (read_size != 0) {
@@ -318,13 +321,13 @@ RC CLogFile::recover(CLogMTRManager *mtr_mgr, CLogBuffer *log_buffer)
       while (rec_offset < CLOG_BLOCK_HDR_SIZE + log_block->log_block_hdr_.log_data_len_) {
         block_recover(log_block, rec_offset, &logrec_buf, log_rec);
         if (log_rec != nullptr) {
-          CLogManager::gloabl_lsn_ = log_rec->get_lsn() + log_rec->get_logrec_len();
+          CLogManager::global_lsn_ = log_rec->get_lsn() + log_rec->get_logrec_len();
           mtr_mgr->log_record_manage(log_rec);
           log_rec = nullptr;
         }
       }
 
-      if (log_block->log_block_hdr_.log_data_len_ < CLOG_BLOCK_DATA_SIZE) {  //最后一个block
+      if (log_block->log_block_hdr_.log_data_len_ < CLOG_BLOCK_DATA_SIZE) {  // 最后一个 block
         log_buffer->block_copy(0, log_block);
         log_buffer->set_write_block_offset(0);
         log_buffer->set_write_offset(log_block->log_block_hdr_.log_data_len_ + CLOG_BLOCK_HDR_SIZE);
@@ -347,17 +350,17 @@ done:
 RC CLogFile::block_recover(CLogBlock *block, int16_t &offset, CLogRecordBuf *logrec_buf, CLogRecord *&log_rec)
 {
   if (offset == CLOG_BLOCK_HDR_SIZE &&
-      block->log_block_hdr_.first_rec_offset_ != CLOG_BLOCK_HDR_SIZE) {  //跨block中的某部分（非第一部分）
-    // 追加到logrec_buf
+      block->log_block_hdr_.first_rec_offset_ != CLOG_BLOCK_HDR_SIZE) {  // 跨 block 中的某部分（非第一部分）
+    // 追加到 logrec_buf
     memcpy(&logrec_buf->buffer_[logrec_buf->write_offset_],
         (char *)block + (int)offset,
         block->log_block_hdr_.first_rec_offset_ - CLOG_BLOCK_HDR_SIZE);
     logrec_buf->write_offset_ += block->log_block_hdr_.first_rec_offset_ - CLOG_BLOCK_HDR_SIZE;
     offset += block->log_block_hdr_.first_rec_offset_ - CLOG_BLOCK_HDR_SIZE;
   } else {
-    if (CLOG_BLOCK_SIZE - offset < sizeof(CLogRecordHeader)) {  // 一定是跨block的第一部分
-      // 此时无法确定log record的长度
-      // 开始写入logrec_buf
+    if (CLOG_BLOCK_SIZE - offset < sizeof(CLogRecordHeader)) {  // 一定是跨 block 的第一部分
+      // 此时无法确定 log record 的长度
+      // 开始写入 logrec_buf
       memcpy(&logrec_buf->buffer_[logrec_buf->write_offset_], (char *)block + (int)offset, CLOG_BLOCK_SIZE - offset);
       logrec_buf->write_offset_ += CLOG_BLOCK_SIZE - offset;
       offset = CLOG_BLOCK_SIZE;
@@ -370,8 +373,8 @@ RC CLogFile::block_recover(CLogBlock *block, int16_t &offset, CLogRecordBuf *log
         if (logrec_hdr->logrec_len_ <= CLOG_BLOCK_SIZE - offset) {
           log_rec = new CLogRecord((char *)block + (int)offset);
           offset += logrec_hdr->logrec_len_;
-        } else {  //此时为跨block的第一部分
-          // 开始写入logrec_buf
+        } else {  // 此时为跨 block 的第一部分
+          // 开始写入 logrec_buf
           memcpy(
               &logrec_buf->buffer_[logrec_buf->write_offset_], (char *)block + (int)offset, CLOG_BLOCK_SIZE - offset);
           logrec_buf->write_offset_ += CLOG_BLOCK_SIZE - offset;
@@ -397,7 +400,7 @@ void CLogMTRManager::log_record_manage(CLogRecord *log_rec)
 }
 
 ////////////////////
-std::atomic<int32_t> CLogManager::gloabl_lsn_(0);
+std::atomic<int32_t> CLogManager::global_lsn_(0);
 CLogManager::CLogManager(const char *path)
 {
   log_buffer_ = new CLogBuffer();
@@ -413,9 +416,9 @@ CLogManager::~CLogManager()
 }
 
 RC CLogManager::clog_gen_record(CLogType flag, int32_t trx_id, CLogRecord *&log_rec,
-    const char *table_name /* = nullptr */, int data_len /* = 0 */, Record *rec /* = nullptr*/)
+    const char *table_name, int data_len, Record *rec)
 {
-  CLogRecord *log_record = new CLogRecord(flag, trx_id, table_name, data_len, rec);
+  auto *log_record = new CLogRecord(flag, trx_id, table_name, data_len, rec);
   if (log_record) {
     log_rec = log_record;
   } else {
@@ -460,7 +463,7 @@ CLogMTRManager *CLogManager::get_mtr_manager()
 
 int32_t CLogManager::get_next_lsn(int32_t rec_len)
 {
-  int32_t res_lsn = CLogManager::gloabl_lsn_;
-  CLogManager::gloabl_lsn_ += rec_len;  // 当前不考虑溢出
+  int32_t res_lsn = CLogManager::global_lsn_;
+  CLogManager::global_lsn_ += rec_len;  // 当前不考虑溢出
   return res_lsn;
 }

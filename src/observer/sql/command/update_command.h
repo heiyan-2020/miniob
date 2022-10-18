@@ -4,6 +4,7 @@
 #include "sql/parser/hsql/sql/UpdateStatement.h"
 #include "storage/common/field_meta.h"
 #include "type/value.h"
+#include "select_command.h"
 
 class Session;
 class Table;
@@ -15,11 +16,11 @@ public:
 
   RC execute(const SQLStageEvent *sql_event) override;
 
-  RC do_update(const SQLStageEvent *sql_event);
-
-  RC data_2_value(const hsql::Expr *expr, Value &value, const FieldMeta &fieldMeta);
-
-  RC check_schema(const FieldMeta& field_meta, const hsql::UpdateClause * updateClause);
 private:
+  RC do_update(const SQLStageEvent *sql_event);
+  RC data_2_value(const hsql::Expr *expr, Value &value, const FieldMeta &fieldMeta);
+  RC check_schema(const FieldMeta& field_meta, const Value& value);
+  RC get_sub_query(SelectCommand sel_command, const SQLStageEvent *sql_event, std::vector<Value>& new_values);
+
   const hsql::UpdateStatement *stmt_;
 };

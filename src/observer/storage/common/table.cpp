@@ -225,15 +225,19 @@ RC Table::insert_record(Trx *trx, Record *record)
 {
   RC rc = RC::SUCCESS;
 
+  // init trx info
   if (trx != nullptr) {
     trx->init_trx_info(this, *record);
   }
+
+  // do insert
   rc = record_handler_->insert_record(record->data(), table_meta_.record_size(), &record->rid());
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Insert record failed. table name=%s, rc=%d:%s", table_meta_.name().c_str(), rc, strrc(rc));
     return rc;
   }
 
+  // handle trx
   if (trx != nullptr) {
     rc = trx->insert_record(this, record);
     if (rc != RC::SUCCESS) {
@@ -250,6 +254,7 @@ RC Table::insert_record(Trx *trx, Record *record)
     }
   }
 
+  // handle indexes
   rc = insert_entry_of_indexes(record->data(), record->rid());
   if (rc != RC::SUCCESS) {
     RC rc2 = delete_entry_of_indexes(record->data(), record->rid(), true);
@@ -259,6 +264,7 @@ RC Table::insert_record(Trx *trx, Record *record)
           rc2,
           strrc(rc2));
     }
+
     rc2 = record_handler_->delete_record(&record->rid());
     if (rc2 != RC::SUCCESS) {
       LOG_PANIC("Failed to rollback record data when insert index entries failed. table name=%s, rc=%d:%s",
@@ -269,10 +275,12 @@ RC Table::insert_record(Trx *trx, Record *record)
     return rc;
   }
 
+  // append clog record
   if (trx != nullptr) {
-    // append clog record
     CLogRecord *clog_record = nullptr;
-    rc = clog_manager_->clog_gen_record(CLogType::REDO_INSERT, trx->get_current_id(), clog_record, name().c_str(), table_meta_.record_size(), record);
+    rc = clog_manager_->clog_gen_record(
+        CLogType::REDO_INSERT, trx->get_current_id(), clog_record,
+        name().c_str(), table_meta_.record_size(), record);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Failed to create a clog record. rc=%d:%s", rc, strrc(rc));
       return rc;
@@ -282,6 +290,7 @@ RC Table::insert_record(Trx *trx, Record *record)
       return rc;
     }
   }
+
   return rc;
 }
 
@@ -571,31 +580,50 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
 
 RC Table::update_record(Trx *trx, Record *old_record, Record *new_record)
 {
-  RC rc = RC::SUCCESS;
-  if (trx != nullptr) {
-    LOG_WARN("not support updating for trx");
-    return RC::GENERIC_ERROR;
-  } else {
-    rc = delete_entry_of_indexes(old_record->data(), old_record->rid(), false);
-    if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to delete indexes of record (rid=%d.%d). rc=%d:%s",
-          old_record->rid().page_num,
-          old_record->rid().slot_num,
-          rc,
-          strrc(rc));
-    }
+  assert(old_record->rid() == new_record->rid());
 
-    rc = insert_entry_of_indexes(new_record->data(), new_record->rid());
-    if (rc != RC::SUCCESS) {
-      LOG_ERROR("Failed to insert indexes of record (rid=%d.%d). rc=%d:%s",
-          new_record->rid().page_num,
-          new_record->rid().slot_num,
-          rc,
-          strrc(rc));
-    }
-
-    rc = record_handler_->update_record(new_record);
+  RC rc;
+  rc = delete_entry_of_indexes(old_record->data(), old_record->rid(), false);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to delete indexes of record (rid=%d.%d). rc=%d:%s",
+        old_record->rid().page_num,
+        old_record->rid().slot_num,
+        rc,
+        strrc(rc));
   }
+
+  rc = insert_entry_of_indexes(new_record->data(), new_record->rid());
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to insert indexes of record (rid=%d.%d). rc=%d:%s",
+        new_record->rid().page_num,
+        new_record->rid().slot_num,
+        rc,
+        strrc(rc));
+  }
+
+  rc = record_handler_->update_record(new_record);
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to update record (rid=%d.%d). rc=%d:%s",
+        new_record->rid().page_num, new_record->rid().slot_num, rc, strrc(rc));
+    return rc;
+  }
+
+  if (trx != nullptr) {
+    // TODO(vgalaxy): trx->update_record
+
+    CLogRecord *clog_record = nullptr;
+    rc = clog_manager_->clog_gen_record(CLogType::REDO_UPDATE, trx->get_current_id(), clog_record,
+        name().c_str(), table_meta_.record_size(), new_record);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to create a clog record. rc=%d:%s", rc, strrc(rc));
+      return rc;
+    }
+    rc = clog_manager_->clog_append_record(clog_record);
+    if (rc != RC::SUCCESS) {
+      return rc;
+    }
+  }
+
   return rc;
 }
 
@@ -621,7 +649,8 @@ RC Table::delete_record(Trx *trx, Record *record)
     rc = trx->delete_record(this, record);
 
     CLogRecord *clog_record = nullptr;
-    rc = clog_manager_->clog_gen_record(CLogType::REDO_DELETE, trx->get_current_id(), clog_record, name().c_str(), 0, record);
+    rc = clog_manager_->clog_gen_record(CLogType::REDO_DELETE, trx->get_current_id(), clog_record,
+        name().c_str(), 0, record);
     if (rc != RC::SUCCESS) {
       LOG_ERROR("Failed to create a clog record. rc=%d:%s", rc, strrc(rc));
       return rc;
@@ -640,6 +669,11 @@ RC Table::recover_delete_record(Record *record)
   RC rc = RC::SUCCESS;
   rc = record_handler_->delete_record(&record->rid());
   return rc;
+}
+
+RC Table::recover_update_record(Record *record)
+{
+  return record_handler_->update_record(record);
 }
 
 RC Table::commit_delete(Trx *trx, const RID &rid)
@@ -747,7 +781,6 @@ RC Table::sync()
 //    return rc;
 //  }
   RC rc = RC::SUCCESS;
-
   for (Index *index : indexes_) {
     rc = index->sync();
     if (rc != RC::SUCCESS) {
@@ -806,4 +839,9 @@ RC Table::drop(const char *table_name)
   }
 
   return RC::SUCCESS;
+}
+
+std::vector<Index *> Table::get_indexes() const
+{
+  return indexes_;
 }

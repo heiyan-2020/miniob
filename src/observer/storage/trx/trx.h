@@ -108,7 +108,7 @@ public:
 
   void next_current_id();
 
-  int32_t get_current_id();
+  int32_t get_current_id() const;
 
 private:
   void set_record_trx_id(Table *table, Record &record, int32_t trx_id, bool deleted) const;

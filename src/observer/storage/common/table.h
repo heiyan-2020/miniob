@@ -46,6 +46,7 @@ public:
 
   RC recover_insert_record(Record *record);
   RC recover_delete_record(Record *record);
+  RC recover_update_record(Record *record);
 
   RC create_index(Trx *trx, const char *index_name, const std::vector<std::string> &attribute_names, int is_unique);
 
@@ -80,6 +81,7 @@ private:
 public:
   Index *find_index(const std::string &index_name) const;
   Index *find_index_by_field(const std::string &field_name) const;
+  std::vector<Index *> get_indexes() const;
 
 private:
   std::string base_dir_;

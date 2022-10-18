@@ -2,12 +2,14 @@
 #include "sql/function/avg_aggregate.h"
 #include "sql/function/max_aggregate.h"
 #include "sql/function/min_aggregate.h"
+#include "sql/function/sum_aggregate.h"
 
 std::map<std::string, FunctionType> FunctionCall::function_directory = {
     {"count", FunctionType::COUNT},
     {"avg", FunctionType::AVG},
     {"max", FunctionType::MAX},
     {"min", FunctionType::MIN},
+    {"sum", FunctionType::SUM},
 };
 
 auto FunctionCall::function_factory(const std::string &fn_name, AbstractFunctionRef &out_fn) -> RC
@@ -28,6 +30,9 @@ auto FunctionCall::function_factory(const std::string &fn_name, AbstractFunction
       return RC::SUCCESS;
     case FunctionType::MIN:
       out_fn = std::make_shared<MinAggregate>();
+      return RC::SUCCESS;
+    case FunctionType::SUM:
+      out_fn = std::make_shared<SumAggregate>();
       return RC::SUCCESS;
   }
   return RC::UNIMPLENMENT;

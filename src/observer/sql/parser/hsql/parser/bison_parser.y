@@ -486,6 +486,11 @@ export_statement : COPY table_name TO file_path opt_file_type {
  ******************************/
 
 show_statement : SHOW TABLES { $$ = new ShowStatement(kShowTables); }
+| SHOW INDEX FROM table_name {
+  $$ = new ShowStatement(kShowIndex);
+  $$->schema = $4.schema;
+  $$->name = $4.name;
+}
 | SHOW COLUMNS table_name {
   $$ = new ShowStatement(kShowColumns);
   $$->schema = $3.schema;
