@@ -7,6 +7,7 @@
 #include "sql/expr/function_call.h"
 #include "sql/expr/in_expression.h"
 #include "sql/expr/scalar_expression.h"
+#include "sql/expr/like_expression.h"
 
 RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
 {
@@ -208,6 +209,16 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       // special case: Constructing IN-expression needs select clause which others don't.
       if (expr->opType == hsql::OperatorType::kOpIn) {
         out_expr = std::make_shared<InExpression>(expr->select, lhs);
+        return RC::SUCCESS;
+      }
+
+      if (expr->opType == hsql::OperatorType::kOpLike) {
+        out_expr = std::make_shared<LikeExpression>(std::move(lhs), expr->expr2->name);
+        return RC::SUCCESS;
+      }
+
+      if (expr->opType == hsql::OperatorType::kOpNotLike) {
+        out_expr = std::make_shared<LikeExpression>(std::move(lhs), expr->expr2->name, true);
         return RC::SUCCESS;
       }
 

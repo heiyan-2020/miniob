@@ -167,15 +167,15 @@ RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractE
 {
   RC rc;
   std::unordered_set<AbstractExpressionRef> conjuncts;
-  std::vector<const hsql::TableRef *> leaf_forms;
+  std::vector<const hsql::TableRef *> leaf_froms;
   std::vector<PlanNodeRef> leaf_plans;
+
+  // collect_details must be called before populating binder_.enclosing, because we will bind ON-clause in collect_details.
+  rc = collect_details(from, conjuncts, leaf_froms);
+  HANDLE_EXCEPTION(rc, "Collect details error");
 
   binder_.enclosing_.push_back(binder_.from_schema_);
   std::shared_ptr<ExpressionPlanner> expression_planner = std::make_shared<ExpressionPlanner>(Planner(db_, binder_.enclosing_));
-
-
-  rc = collect_details(from, conjuncts, leaf_forms);
-  HANDLE_EXCEPTION(rc, "Collect details error");
 
   if (!extra_conjuncts.empty())
     conjuncts.insert(extra_conjuncts.begin(), extra_conjuncts.end());
@@ -184,7 +184,7 @@ RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractE
     expr->traverse(expression_planner);
   }
 
-  rc = generate_leaf_plans(leaf_forms, conjuncts, leaf_plans);
+  rc = generate_leaf_plans(leaf_froms, conjuncts, leaf_plans);
   HANDLE_EXCEPTION(rc, "Generate leaf plans error");
 
   rc = generate_optimal_plan(leaf_plans, conjuncts, out_plan);
@@ -222,6 +222,13 @@ RC Planner::collect_details(const hsql::TableRef *from, std::unordered_set<Abstr
       AbstractExpressionRef join_cond;
       rc = binder_.bind_expression(from->join->condition, join_cond);
       HANDLE_EXCEPTION(rc, "Collect details failed");
+
+      // Check whether expressions in ON clause violate semantics.
+      std::vector<ColumnName> symbols = join_cond->get_all_symbols();
+      for (auto const &name : symbols) {
+        rc = binder_.find_columns(name.table_name(), name.column_name());
+        HANDLE_EXCEPTION(rc, "ON clause violates senmatics.");
+      }
 
       PredicateUtils::collect_conjuncts(join_cond, conjuncts);
       break;
