@@ -28,11 +28,13 @@ public:
         return rc;
       }
       out_value = subquery_tuple->get_value(subquery_schema, 0);
+      has_scalar_ = true;
     }
 
-    if (rc != RC::SUCCESS) {
+    if (rc != RC::SUCCESS && !has_scalar_) {
       // terminate abnormally.
       // if rc == RC::EOF, still return false because empty tuple isn't scalar value.
+      LOG_PANIC("Scalar evaluation failed");
       return RC::EVALUATE;
     }
 
@@ -56,5 +58,5 @@ public:
   }
 
 private:
-  Value scalar_value_;
+  bool has_scalar_{false};
 };

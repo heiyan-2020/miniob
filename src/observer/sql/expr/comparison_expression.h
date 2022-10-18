@@ -11,12 +11,12 @@ public:
     Value lhs, rhs;
     RC rc = get_child_at(0)->evaluate(env, lhs);
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Left hand expression evaluate failed");
+      LOG_ERROR("Left hand expression of COMP evaluate failed");
       return rc;
     }
     rc = get_child_at(1)->evaluate(env, rhs);
     if (rc != RC::SUCCESS) {
-      LOG_ERROR("Right hand expression evaluate failed");
+      LOG_ERROR("Right hand expression of COMP evaluate failed");
       return rc;
     }
     out_value = perform_comparison(lhs, rhs);
