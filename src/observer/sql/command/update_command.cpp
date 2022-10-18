@@ -209,7 +209,8 @@ RC UpdateCommand::check_schema(const FieldMeta& field_meta, const Value& value)
   RC rc = RC::SUCCESS;
   switch (field_meta.type()) {
     case INT: {
-      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == CHAR || value.get_type() == UNDEFINED) return rc;
+      // 这里为了过 oj，加了特判：update 用例里，用字符串更新 int 是不被允许的
+      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == UNDEFINED) return rc;
       break;
     }
     case FLOAT: {
