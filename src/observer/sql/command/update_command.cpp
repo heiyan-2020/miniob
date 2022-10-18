@@ -78,18 +78,44 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
         field_meta = field_metas->at(curr_index);
       }
 
-      // check schema
-      rc = check_schema(field_meta, updateClause);
-      if (rc != RC::SUCCESS) {
-        LOG_WARN("update with invalid value!: %s", strrc(rc));
-        return rc;
-      }
-
       const hsql::Expr *expr = updateClause->value;
       Value new_value;
-      rc = data_2_value(expr, new_value, field_meta);
+
+      switch (expr->type) {
+        case hsql::kExprSelect: {
+          // sub query set
+          std::vector<Value> new_values;
+          const hsql::SelectStatement sel_stmt = reinterpret_cast<const hsql::SelectStatement &>(expr->select);
+          get_sub_query(SelectCommand(expr->select), sql_event, new_values);
+
+          if (new_values.size() > 1) {
+            rc = RC::SCHEMA;
+            LOG_WARN("update select have multi result");
+            return rc;
+          }
+          // TODO(pjz): set value为空时是do update in vain还是FAILURE？
+          if (new_values.empty()) {
+            rc = RC::SCHEMA;
+            LOG_WARN("update select have no result");
+            return rc;
+          }
+          new_value = new_values.at(0);
+          break;
+        }
+        default: {
+          // ordinary set
+          rc = data_2_value(expr, new_value, field_meta);
+          if (rc != RC::SUCCESS) {
+            LOG_WARN("failed to convert new record to byte code due to type constraint: %s", strrc(rc));
+            return rc;
+          }
+        }
+      }
+
+      // check schema
+      rc = check_schema(field_meta, new_value);
       if (rc != RC::SUCCESS) {
-        LOG_WARN("failed to convert new record to byte code due to type constraint: %s", strrc(rc));
+        LOG_WARN("update with invalid value!: %s", strrc(rc));
         return rc;
       }
 
@@ -153,25 +179,24 @@ RC UpdateCommand::data_2_value(const hsql::Expr *expr, Value &value, const Field
   return rc;
 }
 
-RC UpdateCommand::check_schema(const FieldMeta& field_meta, const hsql::UpdateClause *updateClause)
+RC UpdateCommand::check_schema(const FieldMeta& field_meta, const Value& value)
 {
   RC rc = RC::SUCCESS;
-  hsql::Expr* expr = updateClause->value;
   switch (field_meta.type()) {
     case INT: {
-      if (expr->type == hsql::kExprLiteralInt) return rc;
+      if (value.get_type() == INT) return rc;
       break;
     }
     case FLOAT: {
-      if (expr->type == hsql::kExprLiteralFloat) return rc;
+      if (value.get_type() == FLOAT) return rc;
       break;
     }
     case CHAR: {
-      if (expr->type == hsql::kExprLiteralString) return rc;
+      if (value.get_type() == CHAR) return rc;
       break;
     }
     case DATE: {
-      if (expr->type == hsql::kExprLiteralString) return rc;
+      if (value.get_type() == DATE) return rc;
       break;
     }
     default: return RC::UNIMPLENMENT;
@@ -180,3 +205,14 @@ RC UpdateCommand::check_schema(const FieldMeta& field_meta, const hsql::UpdateCl
   return rc;
 }
 
+/**
+ * 从子查询结果保存到 vector<Value*>
+ * @param sel_command
+ * @param new_values
+ * @return
+ */
+RC UpdateCommand::get_sub_query(
+    SelectCommand sel_command, const SQLStageEvent *sql_event, std::vector<Value> &new_values)
+{
+  return sel_command.get_res_values(sql_event, new_values);
+}
