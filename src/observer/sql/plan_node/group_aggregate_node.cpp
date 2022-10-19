@@ -156,8 +156,9 @@ RC GroupAggregateNode::prepare_output_schema(SchemaRef input_schema)
 RC GroupAggregateNode::compute_aggregates()
 {
   TupleRef current_tuple;
+  RC rc = RC::SUCCESS;
   while (true) {
-    RC rc = left_child_->next();
+    rc = left_child_->next();
     if (rc != RC::SUCCESS) {
       break;
     }
@@ -203,7 +204,7 @@ RC GroupAggregateNode::compute_aggregates()
     }
     computed_aggregates_.emplace(group_values, group_aggregates);
   }
-  return RC::SUCCESS;
+  return rc;
 }
 
 RC GroupAggregateNode::update_aggregates(std::map<std::string, AbstractExpressionRef> group_aggregates)
