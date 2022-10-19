@@ -96,7 +96,8 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
     }
 
     // find all sub queries.
-    expr->traverse(expression_planner);
+    AbstractExpressionRef dummy_ret;
+    expr->traverse(expression_planner, dummy_ret);
   }
 
   if (expression_planner->has_subquery()) {
@@ -120,8 +121,10 @@ RC Planner::handle_select_clause(const hsql::SelectStatement *sel_stmt, std::sha
 RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
   std::shared_ptr<AggregationProcessor> aggregation_processor = std::make_shared<AggregationProcessor>();
+
+  AbstractExpressionRef dummy_ret;
   for (const auto &expr : binder_.select_values_) {
-    expr->traverse(aggregation_processor);
+    expr->traverse(aggregation_processor, dummy_ret);
   }
   auto aggregates = aggregation_processor->get_aggregates();
   if (aggregates.empty()) {
@@ -181,8 +184,10 @@ RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractE
   if (!extra_conjuncts.empty())
     conjuncts.insert(extra_conjuncts.begin(), extra_conjuncts.end());
 
+  AbstractExpressionRef dummy_ret;
   for (const auto &expr : conjuncts) {
-    expr->traverse(expression_planner);
+    rc = expr->traverse(expression_planner, dummy_ret);
+    HANDLE_EXCEPTION(rc, "Traverse error in handle_join");
   }
 
   rc = generate_leaf_plans(leaf_froms, conjuncts, leaf_plans);

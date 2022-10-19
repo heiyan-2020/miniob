@@ -26,7 +26,7 @@ public:
 
     RC evaluate(EnvRef env, Value &out_value) override;
 
-    AbstractExpressionRef traverse(ProcessorRef processor) override;
+    RC traverse(ProcessorRef processor, AbstractExpressionRef &out_value) override;
 
     auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
     {

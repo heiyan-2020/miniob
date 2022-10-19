@@ -11,7 +11,8 @@
 std::vector<ColumnName> AbstractExpression::get_all_symbols()
 {
   std::shared_ptr<SymbolFinder> symbol_finder = std::make_shared<SymbolFinder>();
-  traverse(symbol_finder);
+  AbstractExpressionRef sp;
+  traverse(symbol_finder, sp);
   return symbol_finder->symbols_;
 }
 

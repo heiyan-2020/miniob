@@ -1,7 +1,6 @@
 #pragma once
 
 #include "abstract_expression.h"
-#include "util/macros.h"
 
 enum ThreeValueLogic {FALSE, UNKNOWN, TRUE};
 
@@ -50,16 +49,23 @@ public:
     return RC::SUCCESS;
   }
 
-  virtual AbstractExpressionRef traverse(ProcessorRef processor)
+  virtual RC traverse(ProcessorRef processor, AbstractExpressionRef &out_value)
   {
     std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
+    RC rc;
+    rc = processor->enter(sp);
+    HANDLE_EXCEPTION(rc, "");
+    AbstractExpressionRef out;
 
     for (auto &child : children_) {
-      child = child->traverse(processor);
+      rc = child->traverse(processor, out);
+      HANDLE_EXCEPTION(rc, "");
+      child = out;
+      out.reset();
     }
+    out_value = processor->leave(sp);
 
-    return processor->leave(sp);
+    return RC::SUCCESS;
   }
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
