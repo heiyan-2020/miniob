@@ -90,7 +90,6 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
         case hsql::kExprSelect: {
           // sub query set
           std::vector<Value> new_values;
-          const hsql::SelectStatement sel_stmt = reinterpret_cast<const hsql::SelectStatement &>(expr->select);
           get_sub_query(SelectCommand(expr->select), sql_event, new_values);
 
           if (new_values.size() > 1) {
