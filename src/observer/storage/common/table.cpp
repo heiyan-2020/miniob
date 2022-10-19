@@ -316,11 +316,13 @@ RC Table::insert_record(Trx *trx, const std::vector<Value> &values)
 
   size_t curr_offset{static_cast<size_t>(table_meta_.trx_field()->offset() + table_meta_.trx_field()->len())};
   size_t curr_index{TableMeta::sys_field_num()};
+  bool has_null = false;
   for (size_t i = 0; i < values.size(); ++i) {
     const auto &value = values[i];
     if (!value.is_null()) {
       value.serialize_to(record_data + curr_offset);
     } else {
+      has_null = true;
       null_field_bitmap.set_bit(i + TableMeta::sys_field_num());
     }
     curr_offset += table_meta_.field(curr_index)->len();
@@ -328,7 +330,7 @@ RC Table::insert_record(Trx *trx, const std::vector<Value> &values)
   }
 
   // TODO(vgalaxy): listener
-  RC rc = check_unique_constraint(record_data);
+  RC rc = check_unique_constraint(record_data, has_null);
   if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to insert a record due to violate unique constraint");
     return rc;
@@ -578,7 +580,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   return rc;
 }
 
-RC Table::update_record(Trx *trx, Record *old_record, Record *new_record)
+RC Table::update_record(Trx *trx, Record *old_record, Record *new_record, bool has_null)
 {
   assert(old_record->rid() == new_record->rid());
 
@@ -592,7 +594,7 @@ RC Table::update_record(Trx *trx, Record *old_record, Record *new_record)
         strrc(rc));
   }
 
-  rc = check_unique_constraint(new_record->data());
+  rc = check_unique_constraint(new_record->data(), has_null);
   if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to update a record due to violate unique constraint");
     // rollback deleted index
@@ -728,9 +730,10 @@ RC Table::rollback_delete(Trx *trx, const RID &rid)
   return trx->rollback_delete(this, record);  // update record in place
 }
 
-RC Table::check_unique_constraint(const char *record_data)
+RC Table::check_unique_constraint(const char *record_data, bool has_null)
 {
   RC rc = RC::SUCCESS;
+  if (has_null) return rc;
   for (Index *index : indexes_) {
     rc = index->check_unique_constraint(record_data);
     if (rc != RC::SUCCESS) {

@@ -129,11 +129,13 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       // typecast
       new_value = type_cast(new_value, field_meta);
 
+      bool has_null = false;
       // check null
       common::Bitmap null_field_bitmap{data, 32};
       if (new_value.is_null()) {
         // set to null
         null_field_bitmap.set_bit(curr_index);
+        has_null = true;
       }
       else {
         // set null to xx
@@ -146,7 +148,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       new_record.set_rid(old_record.rid());
       new_record.set_data(data);
 
-      rc = table->update_record(trx, &old_record, &new_record);
+      rc = table->update_record(trx, &old_record, &new_record, has_null);
       if (rc != RC::SUCCESS) {
         LOG_WARN("failed to update record: %s", strrc(rc));
         return rc;
