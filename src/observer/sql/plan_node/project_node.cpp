@@ -134,17 +134,18 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
       // column reference expression. including *, t.*, t.col
       ColumnName col_name(col_expr->get_col_name());
       involved_columns = input_schema_->find_columns(col_name.table_name(), col_name.column_name());
-      for (Column &column : involved_columns) {
-        size_t idx;
-        rc = input_schema_->get_column_idx(column.get_name(), idx);
+      for (size_t i = 0; i < involved_columns.size(); i++) {
+        size_t ori_idx; // 该列在原来 tuple 中的下标
+        Column column = involved_columns[i];
+        rc = input_schema_->get_column_idx(column.get_name(), ori_idx);
         if (rc != RC::SUCCESS) {
           return RC::INTERNAL;
         }
-        if (input_null_field_bitmap.get_bit(idx)) {
-          out_tuple_values.emplace_back(input_schema_->get_column(idx).get_type());
-          output_null_field_bitmap.set_bit(idx);
+        if (input_null_field_bitmap.get_bit(ori_idx)) {
+          out_tuple_values.emplace_back(input_schema_->get_column(ori_idx).get_type());
+          output_null_field_bitmap.set_bit(i); // 设置 out_tuple 的 bitmap 时需要以该列在新 tuple 中的下标为准
         } else {
-          out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
+          out_tuple_values.push_back(original_tuple->get_value(input_schema_, ori_idx));
         }
       }
       continue;

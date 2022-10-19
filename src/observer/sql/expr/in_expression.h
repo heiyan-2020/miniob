@@ -1,6 +1,7 @@
 #pragma once
 
 #include "subquery_expression.h"
+#include "in_value_expression.h"
 
 class InExpression : public SubqueryExpression, public UnaryExpression {
 public:
@@ -29,6 +30,7 @@ public:
     }
 
     // repeatedly find an equal tuple until EOF.
+    ThreeValueLogic cmp_res = ThreeValueLogic::FALSE;
     TupleRef subquery_tuple;
     subquery_plan_->initialize();
     while ((rc = subquery_plan_->next()) == RC::SUCCESS) {
@@ -38,20 +40,29 @@ public:
         return rc;
       }
       right_value = subquery_tuple->get_value(subquery_schema, 0);
-      Value res = left_value.compare_equals(right_value);
-      if (left_value.compare_equals(right_value).get_as<bool>()) {
-        out_value = {TypeId::BOOL, true};
-        return RC::SUCCESS;
+      if (left_value.is_null() || right_value.is_null()) {
+        cmp_res = ThreeValueLogic::UNKNOWN;
+      } else if (left_value.compare_equals(right_value).get_as<bool>()) {
+        cmp_res = ThreeValueLogic::TRUE;
+        break;
       }
     }
 
-    if (rc != RC::RECORD_EOF) {
+    if (rc != RC::RECORD_EOF && rc != RC::SUCCESS) {
       // terminate abnormally.
       return rc;
     }
 
-    // can't find equivalent row, the result is false.
-    out_value = {TypeId::BOOL, false};
+
+    if (cmp_res == ThreeValueLogic::FALSE) {
+      out_value = {BOOL, false};
+    } else if (cmp_res == ThreeValueLogic::UNKNOWN) {
+      out_value = {BOOL, false};
+      // Using is_null_ to indicate that this is UNKOWN
+      out_value.is_null_ = true;
+    } else {
+      out_value = {BOOL, true};
+    }
     return RC::SUCCESS;
   }
 

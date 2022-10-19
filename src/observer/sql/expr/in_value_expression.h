@@ -28,7 +28,6 @@ public:
     ThreeValueLogic res = FALSE;
 
     for (const auto &val : value_list) {
-      bool com_res = lhs.compare_equals(val).get_as<bool>();
       if (lhs.is_null() || val.is_null()) {
         res = ThreeValueLogic::UNKNOWN;
       } else if (lhs.compare_equals(val).get_as<bool>()) {
