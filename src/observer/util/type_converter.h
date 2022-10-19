@@ -5,9 +5,46 @@
 
 #include "type/value.h"
 #include "type/float_type.h"
+#include "storage/common/field_meta.h"
 
 class TypeConverter {
 public:
+  static Value get_from_int_upd(TypeId dst_type, int raw, const FieldMeta &field_meta)
+  {
+    switch (dst_type) {
+      case INT:
+        return {INT, raw};
+      case FLOAT:
+        return {FLOAT, (float) raw};
+      case CHAR: {
+        std::string converted = std::to_string(raw);
+        return {CHAR, converted.c_str(), static_cast<size_t>(field_meta.len())};
+      }
+      default:
+        assert(false);
+    }
+    return Value{};
+  }
+
+  static Value get_from_float_upd(TypeId dst_type, float raw, const FieldMeta &field_meta)
+  {
+    switch (dst_type) {
+      case INT:
+        // 四舍五入, 而非直接抹去小数位
+        return {INT, (int) std::round(raw)};
+      case FLOAT:
+        return {FLOAT, raw};
+      case CHAR: {
+        Value tmp = {FLOAT, raw};
+        std::string converted = tmp.to_string();
+        return {CHAR, converted.c_str(), static_cast<size_t>(field_meta.len())};
+      }
+      default:
+        assert(false);
+    }
+    return Value{};
+  }
+
   static Value get_from_int(TypeId dst_type, int raw)
   {
     switch (dst_type) {
