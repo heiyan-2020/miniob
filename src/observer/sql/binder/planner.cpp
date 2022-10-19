@@ -303,6 +303,15 @@ RC Planner::make_leaf_plan(const hsql::TableRef *from, std::unordered_set<Abstra
         HANDLE_EXCEPTION(RC::SCHEMA_TABLE_NOT_EXIST, "Can't bind table when making leaf plan");
       }
       out_plan = std::make_shared<TableScanNode>(tp, nullptr);
+
+      // generate rename node on the top of tableScanNode before add predicate,
+      // because predicate must be transformed to FilterNode rather than being a tableScanNode.predicate .
+      // By this way, predicate's schema is built on top of rename node's, which allowing reference column with alias.
+      if (from->alias) {
+        assert(from->alias->name);
+        out_plan = std::make_shared<RenameNode>(out_plan, from->alias->name);
+      }
+
       rc = push_conjunct_down(out_plan, conjuncts);
       HANDLE_EXCEPTION(rc, "make_leaf_plan");
       break;
@@ -315,10 +324,6 @@ RC Planner::make_leaf_plan(const hsql::TableRef *from, std::unordered_set<Abstra
       LOG_PANIC("Haven't supported outer join in from clause yet");
       return RC::UNIMPLENMENT;
     }
-  }
-  if (from->alias) {
-    assert(from->alias->name);
-    out_plan = std::make_shared<RenameNode>(out_plan, from->alias->name);
   }
   return rc;
 }
