@@ -10,7 +10,6 @@ ShowCommand::ShowCommand(const hsql::ShowStatement *stmt) : Command{hsql::kStmtS
 
 RC ShowCommand::execute(const SQLStageEvent *sql_event)
 {
-  std::cout << stmt_->type << std::endl;
   switch (stmt_->type) {
     case hsql::kShowTables:
       return do_show_tables(sql_event);
