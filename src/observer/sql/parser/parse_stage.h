@@ -19,6 +19,8 @@ See the Mulan PSL v2 for more details. */
 #include "rc.h"
 #include "event/sql_event.h"
 
+struct HeaderAlias;
+
 class ParseStage : public common::Stage {
 public:
   ~ParseStage() override = default;
@@ -38,7 +40,8 @@ protected:
   RC handle_request(common::StageEvent *event);
 
 private:
-  RC parse_headers(SQLStageEvent *event, const std::string &sql);
+  std::vector<HeaderAlias> parse_headers(const std::string &sql);
+  HeaderAlias parse_alias(const std::string &str);
   Stage *resolve_stage_ = nullptr;
 };
 

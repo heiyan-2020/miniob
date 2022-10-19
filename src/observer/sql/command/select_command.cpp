@@ -60,7 +60,7 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
 }
 
 void SelectCommand::print_header(
-    std::ostream &os, SchemaRef schema, const std::vector<std::string> &headers, bool has_multi_table)
+    std::ostream &os, SchemaRef schema, const std::vector<HeaderAlias> &headers, bool has_multi_table)
 {
   bool first = true;
   const std::vector<Column> &columns = schema->get_columns();
@@ -77,7 +77,7 @@ void SelectCommand::print_header(
     }
   } else {
     for (const auto &header : headers) {
-      if (header == "*") {
+      if (header.name == "*") {
         for (const auto &column : columns) {
           if (column.is_visible()) {
             if (!first) {
@@ -91,7 +91,7 @@ void SelectCommand::print_header(
         if (!first) {
           os << " | ";
         }
-        os << header;
+        os << header.name;
         first = false;
       }
     }
