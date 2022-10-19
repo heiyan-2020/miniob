@@ -57,7 +57,7 @@ RC GroupAggregateNode::current_tuple(TupleRef &tuple)
   auto curr = *computed_aggregates_.begin();
   auto group_values = curr.first;
   auto group_aggregates = curr.second;
-  computed_aggregates_.erase(group_values);
+  computed_aggregates_.erase(computed_aggregates_.begin());
 
   char *tmp = (char *)calloc(4, sizeof(char));
   common::Bitmap output_null_field_bitmap{tmp, 32};
@@ -66,6 +66,9 @@ RC GroupAggregateNode::current_tuple(TupleRef &tuple)
 
   size_t idx{};
   for (const auto &value : group_values.values) {
+    if (value.is_null()) {
+      output_null_field_bitmap.set_bit(idx);
+    }
     values.push_back(value);
     idx++;
   }

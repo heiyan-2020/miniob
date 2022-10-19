@@ -128,7 +128,8 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
   char *tmp = (char *)calloc(4, sizeof(char));
   common::Bitmap output_null_field_bitmap{tmp, 32};
 
-  for (AbstractExpressionRef expr : projection_spec_) {
+  for (size_t curr_idx = 0; curr_idx < projection_spec_.size(); ++curr_idx) {
+    AbstractExpressionRef expr = projection_spec_[curr_idx];
     std::shared_ptr<ColumnValueExpression> col_expr = std::dynamic_pointer_cast<ColumnValueExpression>(expr);
     if (col_expr) {
       // column reference expression. including *, t.*, t.col
@@ -143,7 +144,7 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
         }
         if (input_null_field_bitmap.get_bit(ori_idx)) {
           out_tuple_values.emplace_back(input_schema_->get_column(ori_idx).get_type());
-          output_null_field_bitmap.set_bit(i); // 设置 out_tuple 的 bitmap 时需要以该列在新 tuple 中的下标为准
+          output_null_field_bitmap.set_bit(curr_idx); // 设置 out_tuple 的 bitmap 时需要以该列在新 tuple 中的下标为准
         } else {
           out_tuple_values.push_back(original_tuple->get_value(input_schema_, ori_idx));
         }
@@ -167,7 +168,7 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
         }
         if (input_null_field_bitmap.get_bit(idx)) {
           out_tuple_values.emplace_back(input_schema_->get_column(idx).get_type());
-          output_null_field_bitmap.set_bit(idx);
+          output_null_field_bitmap.set_bit(curr_idx);
         } else {
           out_tuple_values.push_back(original_tuple->get_value(input_schema_, idx));
         }
