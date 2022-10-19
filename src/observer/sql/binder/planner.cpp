@@ -129,6 +129,14 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
   for (const auto &expr : binder_.select_values_) {
     expr->traverse(aggregation_processor, dummy_ret);
   }
+  bool has_having_clause{};
+  AbstractExpressionRef having_expr;
+  if (sel_stmt->groupBy && sel_stmt->groupBy->having) {
+    has_having_clause = true;
+    RC rc = binder_.bind_expression(sel_stmt->groupBy->having, having_expr);
+    HANDLE_EXCEPTION(rc, "Bind having expr failed.");
+    having_expr->traverse(aggregation_processor, dummy_ret);
+  }
   auto aggregates = aggregation_processor->get_aggregates();
   if (aggregates.empty()) {
     if (sel_stmt->groupBy) {
@@ -138,12 +146,8 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
     return RC::SUCCESS;
   }
   plan = std::make_shared<GroupAggregateNode>(plan, binder_.group_by_exprs_, aggregates);
-  // having clause
-  if (sel_stmt->groupBy && sel_stmt->groupBy->having) {
-    AbstractExpressionRef expr;
-    RC rc = binder_.bind_expression(sel_stmt->groupBy->having, expr);
-    HANDLE_EXCEPTION(rc, "Bind having expr failed.");
-    rc = add_predicate_to_plan(plan, expr);
+  if (has_having_clause) {
+    RC rc = add_predicate_to_plan(plan, having_expr);
     HANDLE_EXCEPTION(rc, "Add predicate onto plan tree failed.");
   }
   return RC::SUCCESS;
