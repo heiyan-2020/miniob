@@ -74,16 +74,23 @@ public:
     return oss.str();
   }
 
-  auto traverse(ProcessorRef processor) -> AbstractExpressionRef override
+  auto traverse(ProcessorRef processor, AbstractExpressionRef& out_value) -> RC override
   {
     std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
+    RC rc;
+    rc = processor->enter(sp);
+    HANDLE_EXCEPTION(rc, "");
 
+    AbstractExpressionRef out;
     for (auto &arg : args_) {
-      arg = arg->traverse(processor);
+      rc = arg->traverse(processor, out);
+      HANDLE_EXCEPTION(rc, "");
+      arg = out;
+      out.reset();
     }
+    out_value = processor->leave(sp);
 
-    return processor->leave(sp);
+    return RC::SUCCESS;
   }
 
   auto get_fn_name() const -> std::string
