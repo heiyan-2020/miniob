@@ -86,4 +86,5 @@ auto AbstractExpression::op_to_string(OperatorType op_type) -> std::string
     }
   };
   assert(false);
+  return ""; //dummy value to pass compiler warning.
 }

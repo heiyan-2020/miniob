@@ -31,6 +31,7 @@ public:
     }
 
     out_value = Value{INT, (int32_t)strlen(target_result.value_.char_)};
+    return RC::SUCCESS;
   }
 
   auto get_return_type(std::vector<AbstractExpressionRef> args, SchemaRef schema) -> Value override

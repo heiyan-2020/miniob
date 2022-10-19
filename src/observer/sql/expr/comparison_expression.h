@@ -64,5 +64,7 @@ private:
         LOG_ERROR("Evaluate compare failed");
         assert(false);
     }
+    assert(false);
+    return Value{};
   }
 };

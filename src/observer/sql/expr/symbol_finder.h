@@ -15,6 +15,7 @@ public:
         symbols_.push_back(col_name);
       }
     }
+    return RC::SUCCESS;
   }
 
   AbstractExpressionRef leave(AbstractExpressionRef node) override

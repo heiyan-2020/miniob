@@ -18,6 +18,7 @@ public:
   {
     if (std::dynamic_pointer_cast<SubqueryExpression>(node)) {
       std::shared_ptr<SubqueryExpression> expr = std::dynamic_pointer_cast<SubqueryExpression>(node);
+      assert(expr);
       hsql::SelectStatement *sel_clause = expr->subquery_;
       planner_.binder_.clear();
       RC rc = planner_.make_plan_sel(sel_clause, expr->subquery_plan_);
@@ -25,6 +26,7 @@ public:
       expr->subquery_plan_->add_parent_env(env_);
       subquery_plans_.push_back(expr->subquery_plan_);
     }
+    return RC::SUCCESS;
   }
 
   AbstractExpressionRef leave(AbstractExpressionRef node) override
