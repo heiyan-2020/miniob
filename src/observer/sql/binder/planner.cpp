@@ -17,7 +17,6 @@
 RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
   // TODO(zyx): add rename.
-  assert(false);
   if (table != nullptr) {
     switch (table->type) {
       case hsql::TableRefType::kTableName: {

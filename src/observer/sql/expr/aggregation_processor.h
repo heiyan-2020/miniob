@@ -24,6 +24,7 @@ public:
         }
       }
     }
+    return RC::SUCCESS;
   }
 
   AbstractExpressionRef leave(AbstractExpressionRef node) override

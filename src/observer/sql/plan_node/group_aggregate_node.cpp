@@ -204,7 +204,7 @@ RC GroupAggregateNode::compute_aggregates()
     }
     computed_aggregates_.emplace(group_values, group_aggregates);
   }
-  return rc;
+  return RC::SUCCESS;
 }
 
 RC GroupAggregateNode::update_aggregates(std::map<std::string, AbstractExpressionRef> group_aggregates)
