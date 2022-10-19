@@ -156,11 +156,14 @@ RC GroupAggregateNode::prepare_output_schema(SchemaRef input_schema)
 RC GroupAggregateNode::compute_aggregates()
 {
   TupleRef current_tuple;
-  RC rc = RC::SUCCESS;
+  RC rc;
   while (true) {
     rc = left_child_->next();
+    if (rc == RECORD_EOF) {
+      break ;
+    }
     if (rc != RC::SUCCESS) {
-      break;
+      return rc;
     }
     rc = left_child_->current_tuple(current_tuple);
     if (rc != RC::SUCCESS) {
