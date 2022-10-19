@@ -98,13 +98,7 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
             LOG_WARN("subquery returns more than 1 row");
             return rc;
           }
-          // 根据 MySQL 上的测试，子查询为空时，将字段更新为 null
-          // 但是本题的前置依赖没有 null
-          // 因此暂时认为：子查询为空时，update in vain
-          if (new_values.empty()) {
-//            new_value = Value(UNDEFINED);
-              return rc;
-          }
+          // 不考虑子查询为空的情况
           new_value = new_values.at(0);
           break;
         }
@@ -128,7 +122,19 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
       // typecast
       new_value = type_cast(new_value, field_meta);
 
-      new_value.serialize_to(data + field_meta.offset());
+      // check null
+      common::Bitmap null_field_bitmap{data, 32};
+      if (new_value.is_null()) {
+        // set to null
+        null_field_bitmap.set_bit(curr_index);
+      }
+      else {
+        // set null to xx
+        if (null_field_bitmap.get_bit(curr_index)) {
+          null_field_bitmap.clear_bit(curr_index);
+        }
+        new_value.serialize_to(data + field_meta.offset());
+      }
       Record new_record;
       new_record.set_rid(old_record.rid());
       new_record.set_data(data);
@@ -199,6 +205,13 @@ RC UpdateCommand::data_2_value(const hsql::Expr *expr, Value &value, const Field
       }
       break;
     }
+    case hsql::kExprLiteralNull: {
+      if (!field_meta.nullable()) {
+        return RC::CONSTRAINT_NOTNULL;
+      }
+      value = Value(field_meta.type());
+      break;
+    }
     default: return RC::UNIMPLENMENT;
   }
   return rc;
@@ -207,22 +220,25 @@ RC UpdateCommand::data_2_value(const hsql::Expr *expr, Value &value, const Field
 RC UpdateCommand::check_schema(const FieldMeta& field_meta, const Value& value)
 {
   RC rc = RC::SUCCESS;
+
+  // set null
+  if (field_meta.nullable() && value.get_type() == UNDEFINED) return rc;
   switch (field_meta.type()) {
     case INT: {
-      // 这里为了过 oj，加了特判：update 用例里，用字符串更新 int 是不被允许的
-      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == UNDEFINED) return rc;
+      // 这里为了过 oj，去掉了字符串到 int 的隐式转换：update 用例里，用字符串更新 int 是不被允许的
+      if (value.get_type() == INT || value.get_type() == FLOAT) return rc;
       break;
     }
     case FLOAT: {
-      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == CHAR || value.get_type() == UNDEFINED) return rc;
+      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == CHAR) return rc;
       break;
     }
     case CHAR: {
-      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == CHAR || value.get_type() == UNDEFINED) return rc;
+      if (value.get_type() == INT || value.get_type() == FLOAT || value.get_type() == CHAR) return rc;
       break;
     }
     case DATE: {
-      if (value.get_type() == DATE || value.get_type() == UNDEFINED) return rc;
+      if (value.get_type() == DATE ) return rc;
       break;
     }
     default: return RC::UNIMPLENMENT;
@@ -245,6 +261,9 @@ RC UpdateCommand::get_sub_query(
 
 Value UpdateCommand::type_cast(Value to_be_converted, const FieldMeta &field_meta)
 {
+  // null doesn't need to be cast
+  if (to_be_converted.is_null()) return to_be_converted;
+
   switch (to_be_converted.get_type()) {
     case INT: {
       return TypeConverter::get_from_int(field_meta.type(), to_be_converted.get_int_());
