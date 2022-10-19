@@ -19,9 +19,15 @@ See the Mulan PSL v2 for more details. */
 #include "common/seda/stage_event.h"
 #include "sql/parser/hsql/SQLParserResult.h"
 #include "sql/command/command.h"
+#include "sql/parser/parse_stage.h"
 
 class SessionEvent;
 class Command;
+
+struct HeaderAlias {
+  std::string name;
+  std::string alias;
+};
 
 class SQLStageEvent : public common::StageEvent {
 public:
@@ -45,7 +51,7 @@ public:
   {
     return command_;
   }
-  const std::vector<std::string>& headers() const
+  const std::vector<HeaderAlias>& headers() const
   {
     return headers_;
   }
@@ -62,7 +68,7 @@ public:
   {
     command_ = std::move(command);
   }
-  void set_headers(std::vector<std::string> headers)
+  void set_headers(std::vector<HeaderAlias> headers)
   {
     headers_ = std::move(headers);
   }
@@ -72,7 +78,7 @@ private:
   std::string sql_{};
   std::unique_ptr<hsql::SQLParserResult> result_{};
   std::unique_ptr<Command> command_{};
-  std::vector<std::string> headers_{};
+  std::vector<HeaderAlias> headers_{};
 };
 
 #endif  //__OBSERVER_SQL_EVENT_SQLEVENT_H__

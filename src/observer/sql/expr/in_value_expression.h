@@ -1,7 +1,8 @@
 #pragma once
 
 #include "abstract_expression.h"
-#include "util/macros.h"
+
+enum ThreeValueLogic {FALSE, UNKNOWN, TRUE};
 
 class InValueExpression : public AbstractExpression {
 public:
@@ -24,32 +25,46 @@ public:
       HANDLE_EXCEPTION(rc, "Right expression of IN operator evaluation failed");
     }
 
+    ThreeValueLogic res = FALSE;
+
     for (const auto &val : value_list) {
-      if (lhs.compare_equals(val).get_as<bool>()) {
-        out_value = {BOOL, true};
-        return RC::SUCCESS;
+      if (lhs.is_null() || val.is_null()) {
+        res = ThreeValueLogic::UNKNOWN;
+      } else if (lhs.compare_equals(val).get_as<bool>()) {
+        res = ThreeValueLogic::TRUE;
+        break;
       }
     }
 
-    out_value = {BOOL, false};
-    // indicate that out_value is unknown.
-    // TODO(zyx): replace this trick by three-valued logic.
-    if (lhs.is_null()) {
+    if (res == ThreeValueLogic::FALSE) {
+      out_value = {BOOL, false};
+    } else if (res == ThreeValueLogic::UNKNOWN) {
+      out_value = {BOOL, false};
+      // Using is_null_ to indicate that this is UNKOWN
       out_value.is_null_ = true;
+    } else {
+      out_value = {BOOL, true};
     }
     return RC::SUCCESS;
   }
 
-  virtual AbstractExpressionRef traverse(ProcessorRef processor)
+  virtual RC traverse(ProcessorRef processor, AbstractExpressionRef &out_value)
   {
     std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
+    RC rc;
+    rc = processor->enter(sp);
+    HANDLE_EXCEPTION(rc, "");
+    AbstractExpressionRef out;
 
     for (auto &child : children_) {
-      child = child->traverse(processor);
+      rc = child->traverse(processor, out);
+      HANDLE_EXCEPTION(rc, "");
+      child = out;
+      out.reset();
     }
+    out_value = processor->leave(sp);
 
-    return processor->leave(sp);
+    return RC::SUCCESS;
   }
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override

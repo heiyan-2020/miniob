@@ -8,7 +8,7 @@ using ProcessorRef = std::shared_ptr<ExpressionProcessor>;
 
 class ExpressionProcessor {
 public:
-  virtual void enter(AbstractExpressionRef node) = 0;
+  virtual RC enter(AbstractExpressionRef node) = 0;
 
   virtual AbstractExpressionRef leave(AbstractExpressionRef node) = 0;
 };

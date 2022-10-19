@@ -12,13 +12,15 @@
 #include "util/predicate_utils.h"
 #include "util/macros.h"
 #include "ini_setting.h"
+#include "sql/plan_node/rename_node.h"
 
 RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<PlanNode> &plan)
 {
+  // TODO(zyx): add rename.
   if (table != nullptr) {
     switch (table->type) {
       case hsql::TableRefType::kTableName: {
-        const char *table_name = table->getName();
+        const char *table_name = table->name;
         if (nullptr == table_name) {
           return RC::INVALID_ARGUMENT;
         }
@@ -57,7 +59,7 @@ RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<Plan
         HANDLE_EXCEPTION(rc, "");
 
         result = std::make_shared<NestedLoopJoinNode>(left, right);
-        for (size_t idx = 2; idx < table->list->size(); idx ++) {
+        for (size_t idx = 2; idx < table->list->size(); idx++) {
           right.reset();
           rc = handle_from_clause((*table->list)[idx], right);
           HANDLE_EXCEPTION(rc, "");
@@ -71,6 +73,7 @@ RC Planner::handle_from_clause(const hsql::TableRef *table, std::shared_ptr<Plan
         break;
     }
   }
+
   return RC::SUCCESS;
 }
 
@@ -96,7 +99,8 @@ RC Planner::handle_where_clause(hsql::Expr *predicate, std::shared_ptr<PlanNode>
     }
 
     // find all sub queries.
-    expr->traverse(expression_planner);
+    AbstractExpressionRef dummy_ret;
+    expr->traverse(expression_planner, dummy_ret);
   }
 
   if (expression_planner->has_subquery()) {
@@ -120,8 +124,10 @@ RC Planner::handle_select_clause(const hsql::SelectStatement *sel_stmt, std::sha
 RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
   std::shared_ptr<AggregationProcessor> aggregation_processor = std::make_shared<AggregationProcessor>();
+
+  AbstractExpressionRef dummy_ret;
   for (const auto &expr : binder_.select_values_) {
-    expr->traverse(aggregation_processor);
+    expr->traverse(aggregation_processor, dummy_ret);
   }
   auto aggregates = aggregation_processor->get_aggregates();
   if (aggregates.empty()) {
@@ -132,6 +138,14 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
     return RC::SUCCESS;
   }
   plan = std::make_shared<GroupAggregateNode>(plan, binder_.group_by_exprs_, aggregates);
+  // having clause
+  if (sel_stmt->groupBy && sel_stmt->groupBy->having) {
+    AbstractExpressionRef expr;
+    RC rc = binder_.bind_expression(sel_stmt->groupBy->having, expr);
+    HANDLE_EXCEPTION(rc, "Bind having expr failed.");
+    rc = add_predicate_to_plan(plan, expr);
+    HANDLE_EXCEPTION(rc, "Add predicate onto plan tree failed.");
+  }
   return RC::SUCCESS;
 }
 
@@ -201,8 +215,10 @@ RC Planner::handle_join(const hsql::TableRef *from, std::unordered_set<AbstractE
   if (!extra_conjuncts.empty())
     conjuncts.insert(extra_conjuncts.begin(), extra_conjuncts.end());
 
+  AbstractExpressionRef dummy_ret;
   for (const auto &expr : conjuncts) {
-    expr->traverse(expression_planner);
+    rc = expr->traverse(expression_planner, dummy_ret);
+    HANDLE_EXCEPTION(rc, "Traverse error in handle_join");
   }
 
   rc = generate_leaf_plans(leaf_froms, conjuncts, leaf_plans);
@@ -271,10 +287,10 @@ RC Planner::collect_details(const hsql::TableRef *from, std::unordered_set<Abstr
 
 RC Planner::make_leaf_plan(const hsql::TableRef *from, std::unordered_set<AbstractExpressionRef> &conjuncts, PlanNodeRef &out_plan)
 {
-  RC rc;
+  RC rc = RC::SUCCESS;
   switch (from->type) {
     case hsql::TableRefType::kTableName: {
-      const char *table_name = from->getName();
+      const char *table_name = from->name;
       if (nullptr == table_name) {
         HANDLE_EXCEPTION(RC::INVALID_ARGUMENT, "table name is null when making leaf plan");
       }
@@ -285,7 +301,7 @@ RC Planner::make_leaf_plan(const hsql::TableRef *from, std::unordered_set<Abstra
       out_plan = std::make_shared<TableScanNode>(tp, nullptr);
       rc = push_conjunct_down(out_plan, conjuncts);
       HANDLE_EXCEPTION(rc, "make_leaf_plan");
-      return rc;
+      break;
     }
     case hsql::TableRefType::kTableSelect: {
       LOG_PANIC("Haven't supported subquery in from clause yet");
@@ -296,6 +312,11 @@ RC Planner::make_leaf_plan(const hsql::TableRef *from, std::unordered_set<Abstra
       return RC::UNIMPLENMENT;
     }
   }
+  if (from->alias) {
+    assert(from->alias->name);
+    out_plan = std::make_shared<RenameNode>(out_plan, from->alias->name);
+  }
+  return rc;
 }
 
 RC Planner::generate_leaf_plans(std::vector<const hsql::TableRef *> &leaf_clauses, std::unordered_set<AbstractExpressionRef> &conjuncts, std::vector<PlanNodeRef> &out_plans)

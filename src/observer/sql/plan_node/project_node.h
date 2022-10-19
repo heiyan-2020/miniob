@@ -9,7 +9,11 @@
 
 #include "plan_node.h"
 
+class ScalarExpression;
+
 class ProjectNode : public PlanNode {
+  friend class ScalarExpression;
+
 public:
   ProjectNode(std::shared_ptr<PlanNode> left_child, std::vector<AbstractExpressionRef> projection_specs)
       : PlanNode(std::move(left_child)), projection_spec_(std::move(projection_specs))
@@ -28,6 +32,7 @@ public:
     if (left_child_) {
       left_child_->initialize();
     }
+    done = false;
     return RC::SUCCESS;
   }
   RC next() override;

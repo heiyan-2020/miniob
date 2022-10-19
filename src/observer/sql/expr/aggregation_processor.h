@@ -12,7 +12,7 @@
 class AggregationProcessor : public ExpressionProcessor {
   friend class AbstractExpression;
 public:
-  void enter(AbstractExpressionRef node) override
+  RC enter(AbstractExpressionRef node) override
   {
     std::shared_ptr<FunctionCall> fn_call = std::dynamic_pointer_cast<FunctionCall>(node);
     if (fn_call) {
@@ -24,6 +24,7 @@ public:
         }
       }
     }
+    return RC::SUCCESS;
   }
 
   AbstractExpressionRef leave(AbstractExpressionRef node) override

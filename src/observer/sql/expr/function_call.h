@@ -24,7 +24,12 @@ public:
     std::shared_ptr<SimpleFunction> simple_fn = std::dynamic_pointer_cast<SimpleFunction>(function_);
     if (!simple_fn) {
       // TODO(vgalaxy): assume aggregate functions
-      return RC::UNIMPLENMENT;
+      // try to get column value when evaluating having expr
+      RC rc = env->get_column_value(ColumnName{to_string()}, out_value);
+      if (rc != RC::SUCCESS) {
+        return RC::UNIMPLENMENT;
+      }
+      return RC::SUCCESS;
     }
     return simple_fn->evaluate(env, args_, out_value);
   }
@@ -69,16 +74,23 @@ public:
     return oss.str();
   }
 
-  auto traverse(ProcessorRef processor) -> AbstractExpressionRef override
+  auto traverse(ProcessorRef processor, AbstractExpressionRef& out_value) -> RC override
   {
     std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
+    RC rc;
+    rc = processor->enter(sp);
+    HANDLE_EXCEPTION(rc, "");
 
+    AbstractExpressionRef out;
     for (auto &arg : args_) {
-      arg = arg->traverse(processor);
+      rc = arg->traverse(processor, out);
+      HANDLE_EXCEPTION(rc, "");
+      arg = out;
+      out.reset();
     }
+    out_value = processor->leave(sp);
 
-    return processor->leave(sp);
+    return RC::SUCCESS;
   }
 
   auto get_fn_name() const -> std::string

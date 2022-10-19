@@ -40,5 +40,5 @@ public:
 
 private:
   ColumnName col_name_;
-
+  std::string alias_;
 };

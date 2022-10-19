@@ -4,6 +4,7 @@
 #include "sql/parser/hsql/sql/SelectStatement.h"
 #include "sql/table/tuple.h"
 #include "sql/table/schema.h"
+#include "sql/parser/parse_stage.h"
 
 class Session;
 class Table;
@@ -20,7 +21,7 @@ public:
 private:
   void tuple_to_value(const Tuple &tuple, SchemaRef schema, std::vector<Value>& new_values);
   void tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema);
-  void print_header(std::ostream &os, SchemaRef schema, const std::vector<std::string> &headers, bool has_multi_table);
+  void print_header(std::ostream &os, SchemaRef schema, const std::vector<HeaderAlias> &headers, bool has_multi_table);
 
 private:
   const hsql::SelectStatement *stmt_;

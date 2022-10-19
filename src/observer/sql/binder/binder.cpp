@@ -107,7 +107,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
   RC rc;
   switch (root_table->type) {
     case hsql::TableRefType::kTableName: {
-      const char *table_name = root_table->getName();
+      const char *table_name = root_table->name;
       if (nullptr == table_name) {
         return RC::INVALID_ARGUMENT;
       }
@@ -116,7 +116,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
         return RC::SCHEMA_TABLE_NOT_EXIST;
       }
       out_schema = std::make_shared<Schema>(tp, tp->table_meta().field_metas());
-      return RC::SUCCESS;
+      break;
     }
     case hsql::TableRefType::kTableJoin: {
       this->has_multi_table_ = true;
@@ -130,7 +130,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
         return rc;
       }
       out_schema = std::make_shared<Schema>(left_schema, right_schema);
-      return RC::SUCCESS;
+      break;
     }
     case hsql::TableRefType::kTableCrossProduct: {
       this->has_multi_table_ = true;
@@ -145,7 +145,7 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
         schemas.push_back(std::move(tmp));
       }
       out_schema = std::make_shared<Schema>(schemas);
-      return RC::SUCCESS;
+      break;
     }
     default: {
       LOG_PANIC("Unsupported from type");
@@ -153,6 +153,11 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
       return RC::UNIMPLENMENT;
     }
   }
+
+  if (root_table->alias) {
+    out_schema->set_table_name(root_table->alias->name);
+  }
+  return RC::SUCCESS;
 }
 
 RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)

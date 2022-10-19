@@ -1,14 +1,17 @@
 #pragma once
 
 #include "abstract_expression.h"
+#include "util/macros.h"
 
 class LeafNodeExpression : public virtual AbstractExpression {
 public:
-
-  AbstractExpressionRef traverse(ProcessorRef processor)
+  RC traverse(ProcessorRef processor, AbstractExpressionRef &out_value)
   {
     std::shared_ptr<AbstractExpression> sp = shared_from_this();
-    processor->enter(sp);
-    return processor->leave(sp);
+    RC rc = processor->enter(sp);
+    HANDLE_EXCEPTION(rc, "Traverse self error");
+
+    out_value = processor->leave(sp);
+    return RC::SUCCESS;
   }
 };

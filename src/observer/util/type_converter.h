@@ -22,6 +22,7 @@ public:
       default:
         assert(false);
     }
+    return Value{};
   }
 
   static Value get_from_float(TypeId dst_type, float raw)
@@ -40,6 +41,7 @@ public:
       default:
         assert(false);
     }
+    return Value{};
   }
 
   static Value get_from_char(TypeId dst_type, const char *raw, size_t size)
@@ -55,5 +57,6 @@ public:
       default:
         assert(false);
     }
+    return Value{};
   }
 };

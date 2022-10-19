@@ -11,7 +11,8 @@
 std::vector<ColumnName> AbstractExpression::get_all_symbols()
 {
   std::shared_ptr<SymbolFinder> symbol_finder = std::make_shared<SymbolFinder>();
-  traverse(symbol_finder);
+  AbstractExpressionRef sp;
+  traverse(symbol_finder, sp);
   return symbol_finder->symbols_;
 }
 
@@ -85,4 +86,5 @@ auto AbstractExpression::op_to_string(OperatorType op_type) -> std::string
     }
   };
   assert(false);
+  return ""; //dummy value to pass compiler warning.
 }

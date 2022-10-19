@@ -20,6 +20,7 @@ RC BoolExpression::evaluate(EnvRef env, Value &out_value)
     }
     out_value = child_result.negation();
     if (child_result.is_null()) {
+      // UNKNOWN
       out_value = {BOOL, false};
     }
     return RC::SUCCESS;
@@ -56,14 +57,21 @@ RC BoolExpression::evaluate(EnvRef env, Value &out_value)
   }
 }
 
-AbstractExpressionRef BoolExpression::traverse(ProcessorRef processor)
+RC BoolExpression::traverse(ProcessorRef processor, AbstractExpressionRef &out_value)
 {
   std::shared_ptr<AbstractExpression> sp = shared_from_this();
-  processor->enter(sp);
+  RC rc;
+  rc = processor->enter(sp);
+  HANDLE_EXCEPTION(rc, "");
+  AbstractExpressionRef out;
 
   for (auto &child : children_) {
-    child = child->traverse(processor);
+    rc = child->traverse(processor, out);
+    HANDLE_EXCEPTION(rc, "");
+    child = out;
+    out.reset();
   }
+  out_value = processor->leave(sp);
 
-  return processor->leave(sp);
+  return RC::SUCCESS;
 }

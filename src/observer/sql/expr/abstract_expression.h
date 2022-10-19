@@ -4,6 +4,7 @@
 #include "type/type.h"
 #include "sql/parser/hsql/sql/Expr.h"
 #include "expression_processor.h"
+#include "util/macros.h"
 
 enum class OperatorType { Equal, NotEqual, LessThan, LessThanOrEqual, GreaterThan, GreaterThanOrEqual, NOT, AND, OR, PLUS, SUB, MUL, SLASH, NEG, IsNull, IN, LIKE};
 
@@ -24,7 +25,7 @@ public:
 
   AbstractExpressionRef get_child_at(uint32_t child_idx) const { return children_[child_idx]; }
 
-  virtual AbstractExpressionRef traverse(ProcessorRef processor) = 0;
+  virtual RC traverse(ProcessorRef processor, AbstractExpressionRef &out_value) = 0;
 
   std::vector<ColumnName> get_all_symbols();
 

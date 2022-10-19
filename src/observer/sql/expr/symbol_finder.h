@@ -6,7 +6,7 @@
 class SymbolFinder : public ExpressionProcessor {
   friend class AbstractExpression;
 public:
-  void enter(AbstractExpressionRef node) override
+  RC enter(AbstractExpressionRef node) override
   {
     if (std::dynamic_pointer_cast<ColumnValueExpression>(node)) {
       std::shared_ptr<ColumnValueExpression> expr = std::dynamic_pointer_cast<ColumnValueExpression>(node);
@@ -15,6 +15,7 @@ public:
         symbols_.push_back(col_name);
       }
     }
+    return RC::SUCCESS;
   }
 
   AbstractExpressionRef leave(AbstractExpressionRef node) override

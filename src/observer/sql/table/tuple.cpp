@@ -37,7 +37,12 @@ Value Tuple::get_value(SchemaRef schema, size_t column_idx) const
   assert(data_);
   const auto &column = schema->get_column(column_idx);
   const char *data_ptr = get_data_ptr(schema, column_idx);
-  return Value{column.get_type()}.deserialize_from(data_ptr, column.get_len());
+  Value ret = Value{column.get_type()}.deserialize_from(data_ptr, column.get_len());
+  common::Bitmap null_field_bitmap{get_record().data(), 32};
+  if (null_field_bitmap.get_bit(column_idx)) {
+    ret.is_null_ = true;
+  }
+  return ret;
 }
 
 const char *Tuple::get_data_ptr(SchemaRef schema, const size_t column_idx) const

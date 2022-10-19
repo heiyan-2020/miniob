@@ -4,6 +4,7 @@
 #include "sql/plan_node/plan_node.h"
 #include "sql/binder/planner.h"
 #include "expression_processor.h"
+#include "util/macros.h"
 
 class ExpressionPlanner : public ExpressionProcessor {
   friend class AbstractExpression;
@@ -13,20 +14,19 @@ public:
     env_ = std::make_shared<Environment>();
   }
 
-  void enter(AbstractExpressionRef node) override
+  RC enter(AbstractExpressionRef node) override
   {
     if (std::dynamic_pointer_cast<SubqueryExpression>(node)) {
       std::shared_ptr<SubqueryExpression> expr = std::dynamic_pointer_cast<SubqueryExpression>(node);
+      assert(expr);
       hsql::SelectStatement *sel_clause = expr->subquery_;
       planner_.binder_.clear();
       RC rc = planner_.make_plan_sel(sel_clause, expr->subquery_plan_);
-      if (rc != RC::SUCCESS) {
-        LOG_PANIC("Plan subquery failed, need to be handled");
-        assert(false);
-      }
+      HANDLE_EXCEPTION(rc, "plan subquery failed");
       expr->subquery_plan_->add_parent_env(env_);
       subquery_plans_.push_back(expr->subquery_plan_);
     }
+    return RC::SUCCESS;
   }
 
   AbstractExpressionRef leave(AbstractExpressionRef node) override

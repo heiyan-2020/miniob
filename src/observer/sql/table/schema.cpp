@@ -106,3 +106,22 @@ std::unordered_set<std::string> Schema::get_involved_tables() const
   return names;
 }
 
+RC Schema::set_table_name(std::string table_name)
+{
+  std::unordered_set<std::string> col_names;
+  for (const auto &col : columns_) {
+    std::string name = col.get_name().column_name();
+    if (col_names.find(name) != col_names.end()) {
+      // duplicated column name, which indicates that table_name can't be overrided.
+      return RC::DUPLICATE;
+    }
+    col_names.insert(name);
+  }
+
+  for (auto &col : columns_) {
+    col.name_.table_name_ = table_name;
+  }
+
+  return RC::SUCCESS;
+}
+

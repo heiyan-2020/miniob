@@ -115,7 +115,7 @@ RC ParseStage::handle_request(StageEvent *event)
   hsql::SQLParser::parse(str, &result);
   if (result.isValid()) {
     sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
-    parse_headers(sql_event, str);
+    sql_event->set_headers(parse_headers(str));
   } else {
     // transform char -> char(4)
     // TODO(vgalaxy): consider coexistence of char and char (xxx)
@@ -125,7 +125,7 @@ RC ParseStage::handle_request(StageEvent *event)
     hsql::SQLParser::parse(str_trans, &result);
     if (result.isValid()) {
       sql_event->set_result(std::make_unique<hsql::SQLParserResult>(std::move(result)));
-      parse_headers(sql_event, str_trans);
+      sql_event->set_headers(parse_headers(str));
     } else {
       sql_event->session_event()->set_response("Failed to parse sql\n");
       result.reset();
@@ -136,29 +136,76 @@ RC ParseStage::handle_request(StageEvent *event)
   return RC::SUCCESS;
 }
 
-RC ParseStage::parse_headers(SQLStageEvent *event, const std::string &sql)
+std::vector<HeaderAlias> ParseStage::parse_headers(const std::string &sql)
 {
   std::string str{sql};
+
+  // for find
   std::string str_copy{sql};
   transform(str_copy.begin(), str_copy.end(), str_copy.begin(), ::tolower);
+
   auto select_size = std::string{"select"}.size();
   auto find_select = str_copy.find("select");
   if (find_select == std::string::npos) {
-    return RC::GENERIC_ERROR;
+    return {};
   }
   auto find_from = str_copy.find("from");
-  if (find_from != std::string::npos) {
-    str = str.substr(find_select + select_size, find_from - (find_select + select_size));
-    event->set_headers(split(trim(str)));
-    return RC::SUCCESS;
-  } else {
+  if (find_from == std::string::npos) {
     // select without from clause
     auto find_end = str_copy.find(';');
     if (find_end == std::string::npos) {
-      return RC::GENERIC_ERROR;
+      return {};
     }
-    str = str.substr(find_select + select_size, find_end - (find_select + select_size));
-    event->set_headers(split(trim(str)));
-    return RC::SUCCESS;
   }
+
+  str = str.substr(find_select + select_size, find_from - (find_select + select_size));
+  auto select_values = split(trim(str));
+  std::vector<HeaderAlias> headers{};
+  for (const auto &select_value : select_values) {
+    headers.push_back(parse_alias(trim(select_value)));
+  }
+  return headers;
+}
+
+HeaderAlias ParseStage::parse_alias(const std::string &str) {
+  // remove as
+  std::string tmp;
+  tmp = std::regex_replace(str, std::regex{"as"}, "");
+  tmp = std::regex_replace(tmp, std::regex{"AS"}, "");
+
+  size_t len = tmp.size();
+  size_t curr_index{};
+  std::string name{};
+  std::string alias{};
+  bool in_fn{};
+  bool in_str{};
+  bool has_alias{};
+
+  while (curr_index < len) {
+    if (tmp[curr_index] == '(') {
+      in_fn = true;
+    }
+    if (tmp[curr_index] == ')') {
+      in_fn = false;
+    }
+    if (tmp[curr_index] == '\'') {
+      in_str = !in_str;
+    }
+    if (tmp[curr_index] == ' ') {
+      if (in_fn || in_str) {
+        name += tmp[curr_index];
+      } else {
+        has_alias = true;
+      }
+    } else {
+      if (!has_alias) {
+        name += tmp[curr_index];
+      } else {
+        alias += tmp[curr_index];
+      }
+    }
+    curr_index++;
+  }
+
+  return {name, alias};
 }

@@ -14,6 +14,8 @@ struct HashAggregateKey;
 template<> struct std::hash<HashAggregateKey>;
 template<> struct std::equal_to<HashAggregateKey>;
 class InValueExpression;
+class InExpression;
+class Tuple;
 
 class Value {
   friend class Type;
@@ -24,6 +26,9 @@ class Value {
   friend class BoolType;
 
   friend class InValueExpression;
+  friend class InExpression;
+  friend class Tuple;
+
 
   friend struct std::hash<HashAggregateKey>;
   friend struct std::equal_to<HashAggregateKey>;
