@@ -28,6 +28,7 @@ public:
     if (left_child_) {
       left_child_->initialize();
     }
+    done = false;
     return RC::SUCCESS;
   }
   RC next() override;

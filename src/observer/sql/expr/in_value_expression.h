@@ -3,6 +3,8 @@
 #include "abstract_expression.h"
 #include "util/macros.h"
 
+enum ThreeValueLogic {FALSE, UNKNOWN, TRUE};
+
 class InValueExpression : public AbstractExpression {
 public:
   InValueExpression(AbstractExpressionRef &&left, std::vector<AbstractExpressionRef> right)
@@ -24,18 +26,26 @@ public:
       HANDLE_EXCEPTION(rc, "Right expression of IN operator evaluation failed");
     }
 
+    ThreeValueLogic res = FALSE;
+
     for (const auto &val : value_list) {
-      if (lhs.compare_equals(val).get_as<bool>()) {
-        out_value = {BOOL, true};
-        return RC::SUCCESS;
+      bool com_res = lhs.compare_equals(val).get_as<bool>();
+      if (lhs.is_null() || val.is_null()) {
+        res = ThreeValueLogic::UNKNOWN;
+      } else if (lhs.compare_equals(val).get_as<bool>()) {
+        res = ThreeValueLogic::TRUE;
+        break;
       }
     }
 
-    out_value = {BOOL, false};
-    // indicate that out_value is unknown.
-    // TODO(zyx): replace this trick by three-valued logic.
-    if (lhs.is_null()) {
+    if (res == ThreeValueLogic::FALSE) {
+      out_value = {BOOL, false};
+    } else if (res == ThreeValueLogic::UNKNOWN) {
+      out_value = {BOOL, false};
+      // Using is_null_ to indicate that this is UNKOWN
       out_value.is_null_ = true;
+    } else {
+      out_value = {BOOL, true};
     }
     return RC::SUCCESS;
   }

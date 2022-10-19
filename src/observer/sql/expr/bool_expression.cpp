@@ -20,6 +20,7 @@ RC BoolExpression::evaluate(EnvRef env, Value &out_value)
     }
     out_value = child_result.negation();
     if (child_result.is_null()) {
+      // UNKNOWN
       out_value = {BOOL, false};
     }
     return RC::SUCCESS;
