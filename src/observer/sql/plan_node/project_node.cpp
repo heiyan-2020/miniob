@@ -96,6 +96,8 @@ RC ProjectNode::prepare_schema(const SchemaRef& input_schema)
           LOG_PANIC("Ambiguous column name");
           return RC::INTERNAL;
         }
+        col_name.set_table_name(tmp[0].get_name().table_name());
+        tmp[0].set_name(col_name);
         columns.insert(columns.end(), tmp.begin(), tmp.end());
       }
     } else {
