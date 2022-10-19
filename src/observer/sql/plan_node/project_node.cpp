@@ -128,8 +128,8 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
   char *tmp = (char *)calloc(4, sizeof(char));
   common::Bitmap output_null_field_bitmap{tmp, 32};
 
-  for (size_t curr_idx = 0; curr_idx < projection_spec_.size(); ++curr_idx) {
-    AbstractExpressionRef expr = projection_spec_[curr_idx];
+  size_t curr_idx{};
+  for (AbstractExpressionRef expr : projection_spec_) {
     std::shared_ptr<ColumnValueExpression> col_expr = std::dynamic_pointer_cast<ColumnValueExpression>(expr);
     if (col_expr) {
       // column reference expression. including *, t.*, t.col
@@ -148,10 +148,12 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
         } else {
           out_tuple_values.push_back(original_tuple->get_value(input_schema_, ori_idx));
         }
+        curr_idx++;
       }
       continue;
     }
 
+    // function call expression
     std::shared_ptr<FunctionCall> fn_call = std::dynamic_pointer_cast<FunctionCall>(expr);
     if (fn_call) {
       std::shared_ptr<SimpleFunction> simple_fn = std::dynamic_pointer_cast<SimpleFunction>(fn_call->get_fn());
@@ -180,6 +182,7 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
         }
         out_tuple_values.push_back(eval_result);
       }
+      curr_idx++;
       continue;
     }
 
@@ -191,6 +194,7 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
     }
     // TODO(zyx): evaluation result may be null?
     out_tuple_values.push_back(eval_result);
+    curr_idx++;
   }
 
   out_tuple = std::make_shared<Tuple>(out_tuple_values, output_schema_, tmp);
