@@ -188,12 +188,17 @@ RC Db::recover()
     CLogMTRManager *mtr_manager = clog_manager_->get_mtr_manager();
     for (auto it = mtr_manager->log_redo_list.begin(); it != mtr_manager->log_redo_list.end(); it++) {
       CLogRecord *clog_record = *it;
+      if (max_trx_id < clog_record->get_trx_id()) {
+        max_trx_id = clog_record->get_trx_id();
+      }
+
       if (clog_record->get_log_type() != CLogType::REDO_INSERT
           && clog_record->get_log_type() != CLogType::REDO_DELETE
           && clog_record->get_log_type() != CLogType::REDO_UPDATE) {
         delete clog_record;
         continue;
       }
+
       auto find_iter = mtr_manager->trx_commited.find(clog_record->get_trx_id());
       if (find_iter == mtr_manager->trx_commited.end()) {
         LOG_ERROR("unknown trx id in clog record"); // unexpected error
@@ -244,9 +249,7 @@ RC Db::recover()
         LOG_ERROR("Failed to recover. rc=%d:%s", rc, strrc(rc));
         break;
       }
-      if (max_trx_id < clog_record->get_trx_id()) {
-        max_trx_id = clog_record->get_trx_id();
-      }
+
       delete clog_record;
     }
 
