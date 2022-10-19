@@ -24,7 +24,12 @@ public:
     std::shared_ptr<SimpleFunction> simple_fn = std::dynamic_pointer_cast<SimpleFunction>(function_);
     if (!simple_fn) {
       // TODO(vgalaxy): assume aggregate functions
-      return RC::UNIMPLENMENT;
+      // try to get column value when evaluating having expr
+      RC rc = env->get_column_value(ColumnName{to_string()}, out_value);
+      if (rc != RC::SUCCESS) {
+        return RC::UNIMPLENMENT;
+      }
+      return RC::SUCCESS;
     }
     return simple_fn->evaluate(env, args_, out_value);
   }

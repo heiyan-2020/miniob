@@ -132,6 +132,14 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
     return RC::SUCCESS;
   }
   plan = std::make_shared<GroupAggregateNode>(plan, binder_.group_by_exprs_, aggregates);
+  // having clause
+  if (sel_stmt->groupBy && sel_stmt->groupBy->having) {
+    AbstractExpressionRef expr;
+    RC rc = binder_.bind_expression(sel_stmt->groupBy->having, expr);
+    HANDLE_EXCEPTION(rc, "Bind having expr failed.");
+    rc = add_predicate_to_plan(plan, expr);
+    HANDLE_EXCEPTION(rc, "Add predicate onto plan tree failed.");
+  }
   return RC::SUCCESS;
 }
 
