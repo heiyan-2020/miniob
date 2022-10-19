@@ -98,7 +98,15 @@ RC UpdateCommand::do_update(const SQLStageEvent *sql_event)
             LOG_WARN("subquery returns more than 1 row");
             return rc;
           }
-          // 不考虑子查询为空的情况
+
+          // 子查询为空时，set 为 null
+          if (new_values.size() == 0) {
+            if (!field_meta.nullable()) {
+              return RC::CONSTRAINT_NOTNULL;
+            }
+            new_value = Value(field_meta.type());
+            break;
+          }
           new_value = new_values.at(0);
           break;
         }
