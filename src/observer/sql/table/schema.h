@@ -83,6 +83,13 @@ public:
 
   std::vector<Column> find_columns(std::string table_name, std::string column_name);
 
+  /**
+   * Override table_name of all columns;
+   * @param table_name
+   * @return
+   */
+  RC set_table_name(std::string table_name);
+
 private:
   void set_columns(const std::vector<Column> &columns);
 
