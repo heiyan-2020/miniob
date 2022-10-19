@@ -592,6 +592,21 @@ RC Table::update_record(Trx *trx, Record *old_record, Record *new_record)
         strrc(rc));
   }
 
+  rc = check_unique_constraint(new_record->data());
+  if (rc != RC::SUCCESS) {
+    LOG_WARN("Failed to update a record due to violate unique constraint");
+    // rollback deleted index
+    rc = insert_entry_of_indexes(old_record->data(), old_record->rid());
+    if (rc != RC::SUCCESS) {
+      LOG_PANIC("Failed to insert indexes of record (rid=%d.%d). rc=%d:%s",
+          old_record->rid().page_num,
+          old_record->rid().slot_num,
+          rc,
+          strrc(rc));
+    }
+    return RC::CONSTRAINT_UNIQUE;
+  }
+
   rc = insert_entry_of_indexes(new_record->data(), new_record->rid());
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to insert indexes of record (rid=%d.%d). rc=%d:%s",
