@@ -273,10 +273,10 @@ Value UpdateCommand::type_cast(Value to_be_converted, const FieldMeta &field_met
 
   switch (to_be_converted.get_type()) {
     case INT: {
-      return TypeConverter::get_from_int(field_meta.type(), to_be_converted.get_int_());
+      return TypeConverter::get_from_int_upd(field_meta.type(), to_be_converted.get_int_(), field_meta);
     }
     case FLOAT: {
-      return TypeConverter::get_from_float(field_meta.type(), to_be_converted.get_float_());
+      return TypeConverter::get_from_float_upd(field_meta.type(), to_be_converted.get_float_(), field_meta);
     }
     case CHAR: {
       return TypeConverter::get_from_char(field_meta.type(), to_be_converted.get_char_(), field_meta.len());
