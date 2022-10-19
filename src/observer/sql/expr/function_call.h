@@ -7,12 +7,13 @@
 #include "sql/function/abstract_function.h"
 #include "sql/function/count_aggregate.h"
 #include "leaf_node_expression.h"
+#include "sql/function/simple_function.h"
 
 enum class FunctionType {
-  AVG, COUNT, MAX, MIN, SUM
+  AVG, COUNT, MAX, MIN, SUM, ROUND, LENGTH, DATE_FORMAT
 };
 
-class FunctionCall : public LeafNodeExpression {
+class FunctionCall : public AbstractExpression {
 public:
   FunctionCall(std::string name, std::vector<AbstractExpressionRef> args, AbstractFunctionRef function) :
         name_{std::move(name)}, args_{std::move(args)}, function_{std::move(function)}
@@ -20,20 +21,43 @@ public:
 
   RC evaluate(EnvRef env, Value &out_value) override
   {
-    // TODO(vgalaxy): only consider aggregate functions now
-    return RC::UNIMPLENMENT;
+    std::shared_ptr<SimpleFunction> simple_fn = std::dynamic_pointer_cast<SimpleFunction>(function_);
+    if (!simple_fn) {
+      // TODO(vgalaxy): assume aggregate functions
+      // try to get column value when evaluating having expr
+      RC rc = env->get_column_value(ColumnName{to_string()}, out_value);
+      if (rc != RC::SUCCESS) {
+        return RC::UNIMPLENMENT;
+      }
+      return RC::SUCCESS;
+    }
+    return simple_fn->evaluate(env, args_, out_value);
   }
 
   auto convert_to_column(SchemaRef schema, Column &out_col) -> RC override
   {
-    ColumnName column_name{to_string()};
-    size_t idx;
-    RC rc = schema->get_column_idx(column_name, idx);
-    if (rc != RC::SUCCESS) {
-      return rc;
+    std::shared_ptr<SimpleFunction> simple_fn = std::dynamic_pointer_cast<SimpleFunction>(function_);
+    if (!simple_fn) {
+      // TODO(vgalaxy): assume aggregate functions
+      // aggregate function col has been generated in group aggregate node
+      ColumnName column_name{to_string()};
+      size_t idx;
+      RC rc = schema->get_column_idx(column_name, idx);
+      if (rc != RC::SUCCESS) {
+        return rc;
+      }
+      out_col = schema->get_column(idx);
+      return RC::SUCCESS;
+    } else {
+      Value value = simple_fn->get_return_type(args_, schema);
+      if (value.get_type() == UNDEFINED) {
+        LOG_ERROR("simple function return type error");
+        return RC::GENERIC_ERROR;
+      }
+      ColumnName column_name{to_string()};
+      out_col = {column_name, value.get_type(), value.get_len()};
+      return RC::SUCCESS;
     }
-    out_col = schema->get_column(idx);
-    return RC::SUCCESS;
   }
 
   std::string to_string() const override
@@ -48,6 +72,18 @@ public:
     }
     oss << ")";
     return oss.str();
+  }
+
+  auto traverse(ProcessorRef processor) -> AbstractExpressionRef override
+  {
+    std::shared_ptr<AbstractExpression> sp = shared_from_this();
+    processor->enter(sp);
+
+    for (auto &arg : args_) {
+      arg = arg->traverse(processor);
+    }
+
+    return processor->leave(sp);
   }
 
   auto get_fn_name() const -> std::string

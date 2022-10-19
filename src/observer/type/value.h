@@ -34,6 +34,9 @@ class Value {
   friend struct std::equal_to<HashAggregateKey>;
 
   friend class AvgAggregate;
+  friend class RoundFunction;
+  friend class LengthFunction;
+  friend class DateFormatFunction;
 
 public:
   Value() : Value{TypeId::UNDEFINED}
@@ -138,6 +141,10 @@ public:
   auto deserialize_from(const char *storage, size_t length) -> Value;
 
   auto to_string() const -> std::string;
+
+  int32_t get_int_() { return value_.int_; }
+  float get_float_() { return value_.float_; }
+  char* get_char_() { return value_.char_; }
 
 protected:
   TypeId type_id_;

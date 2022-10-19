@@ -2,7 +2,7 @@
 // Created by 37034 on 10/4/2022.
 //
 #include "planner.h"
-#include "util/date.h"
+#include "util/date_utils.h"
 #include "binder.h"
 #include "sql/expr/aggregation_processor.h"
 #include "sql/plan_node/group_aggregate_node.h"
@@ -135,17 +135,45 @@ RC Planner::handle_grouping_and_aggregation(const hsql::SelectStatement *sel_stm
     return RC::SUCCESS;
   }
   plan = std::make_shared<GroupAggregateNode>(plan, binder_.group_by_exprs_, aggregates);
+  // having clause
+  if (sel_stmt->groupBy && sel_stmt->groupBy->having) {
+    AbstractExpressionRef expr;
+    RC rc = binder_.bind_expression(sel_stmt->groupBy->having, expr);
+    HANDLE_EXCEPTION(rc, "Bind having expr failed.");
+    rc = add_predicate_to_plan(plan, expr);
+    HANDLE_EXCEPTION(rc, "Add predicate onto plan tree failed.");
+  }
   return RC::SUCCESS;
 }
 
 RC Planner::handle_order_by_clause(const hsql::SelectStatement *sel_stmt, std::shared_ptr<PlanNode> &plan)
 {
-  // TODO(pjz): check whether orderBy clause contains aggregates or subqueries!
-  // temporarily just construct te sort node
-  if (sel_stmt->order != nullptr) {
+  RC rc = RC::SUCCESS;
+  std::vector<hsql::OrderDescription*>* order_arr = sel_stmt->order;
+
+  if (order_arr != nullptr && !order_arr->empty()) {
+    for (auto* order_desc: *order_arr) {
+      hsql::Expr* order_expr = order_desc->expr;
+      if (order_expr->type == hsql::kExprFunctionRef) {
+        rc = RC::SQL_SYNTAX;
+        LOG_ERROR("ORDER-BY-clause cannot contain aggregates");
+        return rc;
+      }
+      if (order_expr->type == hsql::kExprSelect) {
+        rc = RC::SQL_SYNTAX;
+        LOG_ERROR("ORDER-BY-clause cannot contain subqueries");
+        return rc;
+      }
+      if (order_expr->type != hsql::kExprColumnRef) {
+        rc = RC::SQL_SYNTAX;
+        LOG_ERROR("ORDER-BY-clause syntax error!");
+        return rc;
+      }
+    }
     plan = std::make_shared<SortNode>(plan, sel_stmt->order);
   }
-  return RC::SUCCESS;
+  // if order_desc == nullptr, do nothing
+  return rc;
 }
 
 RC Planner::add_predicate_to_plan(std::shared_ptr<PlanNode> &plan, AbstractExpressionRef expr)

@@ -3,7 +3,6 @@
 #define MINIOB_SORT_NODE_H
 
 #include <utility>
-
 #include "plan_node.h"
 #include "sql/table/tuple_comparator.h"
 

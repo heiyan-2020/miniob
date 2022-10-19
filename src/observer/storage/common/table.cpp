@@ -28,7 +28,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/index.h"
 #include "storage/index/bplus_tree_index.h"
 #include "storage/trx/trx.h"
-#include "util/date.h"
+#include "util/date_utils.h"
 #include "common/lang/defer.h"
 #include "sql/table/schema.h"
 #include "type/value.h"

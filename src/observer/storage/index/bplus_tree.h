@@ -23,7 +23,7 @@ See the Mulan PSL v2 for more details. */
 
 #include "storage/record/record_manager.h"
 #include "storage/default/disk_buffer_pool.h"
-#include "util/date.h"
+#include "util/date_utils.h"
 #include "type/value.h"
 
 class AttrComparator {

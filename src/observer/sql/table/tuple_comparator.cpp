@@ -1,30 +1,19 @@
-//
-// Created by 86186 on 2022/10/14.
-//
 #include "tuple_comparator.h"
 #include <algorithm>
 #include <utility>
 
 RC TupleComparator::sort_tuples(std::vector<TupleRef>& sorted_res_)
 {
-  // TODO(pjz): consider other sort algorithm, or use <algorithm>
-  // issue: comp() can't be a non-static member function
-  int len = sorted_res_.size();
-  for (int i = 0; i < len - 1; i++) {
-    for (int j = 0; j < len - 1 - i; j++) {
-      int comp_res = comp(sorted_res_.at(j), sorted_res_.at(j+1));
-      if (comp_res == -2) {
-        LOG_ERROR("order by expression evaluate failed");
-        return RC::EVALUATE;
-      }
-      if (comp_res == 1) {        // 相邻元素两两对比
-        TupleRef temp = sorted_res_.at(j+1);
-        sorted_res_[j+1] = sorted_res_[j];
-        sorted_res_[j] = temp;
-      }
-    }
-  }
-  return RC::SUCCESS;
+  RC rc = RC::SUCCESS;
+  std::sort(sorted_res_.begin(), sorted_res_.end(),
+      [&rc, this](TupleRef lhs, TupleRef rhs) {
+        int comp_res = comp(std::move(lhs), std::move(rhs));
+        if (comp_res == -2) {
+          rc = RC::EVALUATE;
+        }
+        return comp_res != 1;
+      });
+  return rc;
 }
 
 int TupleComparator::comp(TupleRef a, TupleRef b)
@@ -47,10 +36,12 @@ int TupleComparator::comp(TupleRef a, TupleRef b)
     Value value_A, value_B;
     rc = expr.evaluate(env_A, value_A);
     if (rc != RC::SUCCESS) {
+      LOG_ERROR("order by expression evaluate failed");
       return -2;
     }
     rc = expr.evaluate(env_B, value_B);
     if (rc != RC::SUCCESS) {
+      LOG_ERROR("order by expression evaluate failed");
       return -2;
     }
 

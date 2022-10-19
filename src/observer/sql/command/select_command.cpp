@@ -42,18 +42,25 @@ RC SelectCommand::execute(const SQLStageEvent *sql_event)
       break;
     }
     tuple_to_string(ss, *tuple, sp->get_schema());
+
     ss << std::endl;
   }
   if (rc != RC::RECORD_EOF) {
     session_event->set_response("FAILURE\n");
     return rc;
   }
+  if (stmt_->order != nullptr) {
+    int len = ss.str().length();
+    std::string out = ss.str().substr(0, len - 1);
+    ss.str("");
+    ss << out;
+  }
   session_event->set_response(ss.str());
   return RC::SUCCESS;
 }
 
 void SelectCommand::print_header(
-    std::ostream &os, SchemaRef schema, const std::vector<std::string> &headers, bool has_multi_table)
+    std::ostream &os, SchemaRef schema, const std::vector<HeaderAlias> &headers, bool has_multi_table)
 {
   bool first = true;
   const std::vector<Column> &columns = schema->get_columns();
@@ -70,7 +77,7 @@ void SelectCommand::print_header(
     }
   } else {
     for (const auto &header : headers) {
-      if (header == "*") {
+      if (header.name == "*") {
         for (const auto &column : columns) {
           if (column.is_visible()) {
             if (!first) {
@@ -84,7 +91,7 @@ void SelectCommand::print_header(
         if (!first) {
           os << " | ";
         }
-        os << header;
+        os << header.name;
         first = false;
       }
     }
