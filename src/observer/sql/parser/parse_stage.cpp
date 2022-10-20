@@ -145,20 +145,20 @@ std::vector<HeaderAlias> ParseStage::parse_headers(const std::string &sql)
   transform(str_copy.begin(), str_copy.end(), str_copy.begin(), ::tolower);
 
   auto select_size = std::string{"select"}.size();
-  auto find_select = str_copy.find("select");
-  if (find_select == std::string::npos) {
+  auto find_start = str_copy.find("select");
+  if (find_start == std::string::npos) {
     return {};
   }
-  auto find_from = str_copy.find("from");
-  if (find_from == std::string::npos) {
+  auto find_end = str_copy.find("from");
+  if (find_end == std::string::npos) {
     // select without from clause
-    auto find_end = str_copy.find(';');
+    find_end = str_copy.find(';');
     if (find_end == std::string::npos) {
       return {};
     }
   }
 
-  str = str.substr(find_select + select_size, find_from - (find_select + select_size));
+  str = str.substr(find_start + select_size, find_end - (find_start + select_size));
   auto select_values = split(trim(str));
   std::vector<HeaderAlias> headers{};
   for (const auto &select_value : select_values) {
@@ -170,6 +170,7 @@ std::vector<HeaderAlias> ParseStage::parse_headers(const std::string &sql)
 HeaderAlias ParseStage::parse_alias(const std::string &str) {
   // remove as
   std::string tmp;
+  // TODO(vgalaxy): consider "As" or "aS"
   tmp = std::regex_replace(str, std::regex{"as"}, "");
   tmp = std::regex_replace(tmp, std::regex{"AS"}, "");
 
