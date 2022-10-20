@@ -23,6 +23,9 @@ private:
   void tuple_to_string(std::ostream &os, const Tuple &tuple, SchemaRef schema);
   void print_header(std::ostream &os, SchemaRef schema, const std::vector<HeaderAlias> &headers, bool has_multi_table);
 
+  // extracting involved table name of header. if header doesn't specify table name like *, just return empty.
+  std::string get_table_name_from_header(HeaderAlias);
+
 private:
   const hsql::SelectStatement *stmt_;
 };

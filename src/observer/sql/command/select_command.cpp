@@ -79,7 +79,8 @@ void SelectCommand::print_header(
   } else {
     for (const auto &header : headers) {
       if (ends_with(header.name, "*")) {
-        for (const auto &column : columns) {
+        std::vector<Column> involved_columns = schema->find_columns(get_table_name_from_header(header), {});
+        for (const auto &column : involved_columns) {
           if (column.is_visible()) {
             if (!first) {
               os << " | ";
@@ -187,4 +188,13 @@ void SelectCommand::tuple_to_value(const Tuple &tuple, SchemaRef schema, std::ve
       }
     }
   }
+}
+
+std::string SelectCommand::get_table_name_from_header(HeaderAlias header)
+{
+  size_t dot_pos = header.name.find('.');
+  if (dot_pos == std::string::npos) {
+    return {}; //doesn't specify table name, just return empty.
+  }
+  return header.name.substr(0, dot_pos);
 }

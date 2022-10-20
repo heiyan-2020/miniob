@@ -84,7 +84,7 @@ public:
   std::vector<Column> find_columns(std::string table_name, std::string column_name);
 
   /**
-   * Override table_name of all columns;
+   * Override table_name of all columns, used for preparing rename_node's schema;
    * @param table_name
    * @return
    */
