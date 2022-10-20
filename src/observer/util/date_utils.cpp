@@ -291,7 +291,8 @@ auto format_date(const Date &date, const char *format) -> std::string
 
         default: {
           // fall back normal character
-          res += format[curr_index];
+          // ignore '%'
+          // res += format[curr_index];
           curr_index += 1;
         } break;
       }
