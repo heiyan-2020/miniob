@@ -91,7 +91,11 @@ void SelectCommand::print_header(
         if (!first) {
           os << " | ";
         }
-        os << header.name;
+        if (!header.alias.empty()) {
+          os << header.alias;
+        } else {
+          os << header.name;
+        }
         first = false;
       }
     }
