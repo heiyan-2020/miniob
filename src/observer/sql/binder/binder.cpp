@@ -35,6 +35,11 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
         }
         column_name.set_table_name(selVal->table);
       }
+
+      if (selVal->hasAlias()) {
+        return RC::STAR_ALIAS;
+      }
+
       select_values_.push_back(std::make_shared<ColumnValueExpression>(column_name));
     } else {
       // An expression that is not a wildcard.  It could contain
