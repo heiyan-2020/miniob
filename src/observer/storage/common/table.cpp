@@ -731,13 +731,31 @@ RC Table::rollback_delete(Trx *trx, const RID &rid)
 RC Table::check_unique_constraint(const char *record_data)
 {
   RC rc = RC::SUCCESS;
+  char *tmp = (char *)calloc(4, sizeof(char));
+  memcpy(tmp, record_data, 4);
+  common::Bitmap null_field_bitmap{tmp, 32};
   for (Index *index : indexes_) {
     rc = index->check_unique_constraint(record_data);
     if (rc != RC::SUCCESS) {
+      int null_field_idx = null_field_bitmap.next_setted_bit(0);
+      bool pass{};
+      while (null_field_idx != -1) {
+        const FieldMeta *field_meta = this->table_meta_.field(null_field_idx);
+        if (index->find_field_meta_by_name(field_meta->name()) && field_meta->nullable()) {
+          pass = true;
+          break;
+        }
+        null_field_idx = null_field_bitmap.next_setted_bit(null_field_idx);
+      }
+      if (pass) {
+        continue;
+      }
+      free(tmp);
       return rc;
     }
   }
-  return rc;
+  free(tmp);
+  return RC::SUCCESS;
 }
 
 RC Table::insert_entry_of_indexes(const char *record, const RID &rid)
