@@ -203,8 +203,12 @@ RC Binder::bind_expression(hsql::Expr *expr, AbstractExpressionRef &out_expr)
       out_expr = std::make_shared<ColumnValueExpression>(col_name);
       return RC::SUCCESS;
     }
-    case hsql::kExprColumnRef: {
-      out_expr = std::make_shared<ColumnValueExpression>(ColumnName(expr->table, expr->name));
+     case hsql::kExprColumnRef: {
+      ColumnName col_name = ColumnName(expr->table, expr->name);
+      if (expr->hasAlias()) {
+        col_name.set_alias(expr->alias);
+      }
+      out_expr = std::make_shared<ColumnValueExpression>(col_name);
       return RC::SUCCESS;
     }
     case hsql::kExprOperator: {

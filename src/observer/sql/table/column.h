@@ -38,9 +38,9 @@ public:
 
   ColumnName(const ColumnName &other)
   {
-    // TODO(zyx): shallow copy, may be wrong.
     this->table_name_ = other.table_name_;
     this->column_name_ = other.column_name_;
+    this->alias_ = other.alias_;
   }
 
   bool operator==(const ColumnName &other) const
@@ -50,13 +50,17 @@ public:
 
   std::string to_string(bool table_name_ignorable = false) const
   {
+    std::string column_name = column_name_;
+    if (has_alias()) {
+      column_name = alias_;
+    }
     if (table_name_.empty() && column_name_.empty()) {
       return "*";
     }
     if (table_name_ignorable || table_name_.empty()) {
-      return column_name_;
+      return column_name;
     }
-    return table_name_ + "." + column_name_;
+    return table_name_ + "." + column_name;
   }
 
   bool is_wild_card() const
@@ -79,9 +83,25 @@ public:
     return column_name_;
   }
 
+  std::string alias()
+  {
+    return alias_;
+  }
+
+  bool has_alias() const
+  {
+    return !alias_.empty();
+  }
+
+  void set_alias(std::string alias)
+  {
+    alias_ = std::move(alias);
+  }
+
 private:
   std::string table_name_;
   std::string column_name_;
+  std::string alias_;
 };
 
 class Column {
@@ -116,9 +136,9 @@ public:
     return name_;
   }
 
-  void set_alias(std::string alias)
+  void set_name(ColumnName name)
   {
-    name_.column_name_ = std::move(alias);
+    name_ = std::move(name);
   }
 
   bool is_visible() const
