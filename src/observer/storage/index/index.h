@@ -43,6 +43,16 @@ public:
     return index_meta_;
   }
 
+  bool find_field_meta_by_name(const std::string& name) const
+  {
+    for (const auto &field_meta : field_metas_) {
+      if (field_meta.name() == name) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   virtual RC insert_entry(const char *record, const RID *rid) = 0;
   virtual RC delete_entry(const char *record, const RID *rid) = 0;
   virtual RC check_unique_constraint(const char *record) = 0;

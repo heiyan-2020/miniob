@@ -316,13 +316,11 @@ RC Table::insert_record(Trx *trx, const std::vector<Value> &values)
 
   size_t curr_offset{static_cast<size_t>(table_meta_.trx_field()->offset() + table_meta_.trx_field()->len())};
   size_t curr_index{TableMeta::sys_field_num()};
-  bool has_null = false;
   for (size_t i = 0; i < values.size(); ++i) {
     const auto &value = values[i];
     if (!value.is_null()) {
       value.serialize_to(record_data + curr_offset);
     } else {
-      has_null = true;
       null_field_bitmap.set_bit(i + TableMeta::sys_field_num());
     }
     curr_offset += table_meta_.field(curr_index)->len();
@@ -330,7 +328,7 @@ RC Table::insert_record(Trx *trx, const std::vector<Value> &values)
   }
 
   // TODO(vgalaxy): listener
-  RC rc = check_unique_constraint(record_data, has_null);
+  RC rc = check_unique_constraint(record_data);
   if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to insert a record due to violate unique constraint");
     return rc;
@@ -580,7 +578,7 @@ RC Table::create_index(Trx *trx, const char *index_name, const std::vector<std::
   return rc;
 }
 
-RC Table::update_record(Trx *trx, Record *old_record, Record *new_record, bool has_null)
+RC Table::update_record(Trx *trx, Record *old_record, Record *new_record)
 {
   assert(old_record->rid() == new_record->rid());
 
@@ -594,7 +592,7 @@ RC Table::update_record(Trx *trx, Record *old_record, Record *new_record, bool h
         strrc(rc));
   }
 
-  rc = check_unique_constraint(new_record->data(), has_null);
+  rc = check_unique_constraint(new_record->data());
   if (rc != RC::SUCCESS) {
     LOG_WARN("Failed to update a record due to violate unique constraint");
     // rollback deleted index
@@ -730,17 +728,34 @@ RC Table::rollback_delete(Trx *trx, const RID &rid)
   return trx->rollback_delete(this, record);  // update record in place
 }
 
-RC Table::check_unique_constraint(const char *record_data, bool has_null)
+RC Table::check_unique_constraint(const char *record_data)
 {
   RC rc = RC::SUCCESS;
-  if (has_null) return rc;
+  char *tmp = (char *)calloc(4, sizeof(char));
+  memcpy(tmp, record_data, 4);
+  common::Bitmap null_field_bitmap{tmp, 32};
   for (Index *index : indexes_) {
     rc = index->check_unique_constraint(record_data);
     if (rc != RC::SUCCESS) {
+      int null_field_idx = null_field_bitmap.next_setted_bit(0);
+      bool pass{};
+      while (null_field_idx != -1) {
+        const FieldMeta *field_meta = this->table_meta_.field(null_field_idx);
+        if (index->find_field_meta_by_name(field_meta->name()) && field_meta->nullable()) {
+          pass = true;
+          break;
+        }
+        null_field_idx = null_field_bitmap.next_setted_bit(null_field_idx);
+      }
+      if (pass) {
+        continue;
+      }
+      free(tmp);
       return rc;
     }
   }
-  return rc;
+  free(tmp);
+  return RC::SUCCESS;
 }
 
 RC Table::insert_entry_of_indexes(const char *record, const RID &rid)
