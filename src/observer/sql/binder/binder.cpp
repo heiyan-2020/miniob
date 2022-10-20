@@ -35,6 +35,11 @@ RC Binder::bind_select(const hsql::SelectStatement *sel_stmt)
         }
         column_name.set_table_name(selVal->table);
       }
+
+      if (selVal->hasAlias()) {
+        return RC::STAR_ALIAS;
+      }
+
       select_values_.push_back(std::make_shared<ColumnValueExpression>(column_name));
     } else {
       // An expression that is not a wildcard.  It could contain
@@ -155,7 +160,11 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
   }
 
   if (root_table->alias) {
+    if (table_alias_.find(root_table->alias->name) != table_alias_.end()) {
+      return RC::DUPLICATE;
+    }
     out_schema->set_table_name(root_table->alias->name);
+    table_alias_.insert(root_table->alias->name);
   }
   return RC::SUCCESS;
 }

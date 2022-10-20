@@ -29,6 +29,7 @@ public:
     where_predicate_.reset();
     group_by_exprs_.clear();
     from_schema_.reset();
+    table_alias_.clear();
   }
 
 private:
@@ -41,6 +42,7 @@ private:
   std::vector<AbstractExpressionRef> group_by_exprs_;
   std::vector<SchemaRef> enclosing_;
   SchemaRef from_schema_;
+  std::unordered_set<std::string> table_alias_;
 
 private:
   RC find_columns(const std::string& table_name, std::string column_name);
