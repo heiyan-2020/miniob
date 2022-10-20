@@ -18,8 +18,7 @@ public:
    * @param schemas
    */
   static void find_expr_using_schemas(std::unordered_set<AbstractExpressionRef> &src_expr,
-      std::unordered_set<AbstractExpressionRef> &dst_expr,
-      const std::vector<SchemaRef>& schemas);
+      std::unordered_set<AbstractExpressionRef> &dst_expr, const std::vector<SchemaRef> &schemas);
 
   /**
    * Constructing conjuncts to a predicate.

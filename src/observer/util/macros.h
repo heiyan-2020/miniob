@@ -20,5 +20,3 @@
       return rc;                       \
     }                                  \
   } while (0)
-
-
