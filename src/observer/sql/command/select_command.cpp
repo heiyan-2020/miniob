@@ -5,6 +5,7 @@
 #include "storage/common/table.h"
 #include "sql/table/column.h"
 #include "sql/binder/binder.h"
+#include "util/string_utils.h"
 
 SelectCommand::SelectCommand(const hsql::SelectStatement *stmt) : Command{hsql::kStmtSelect}, stmt_{stmt}
 {}
@@ -77,7 +78,7 @@ void SelectCommand::print_header(
     }
   } else {
     for (const auto &header : headers) {
-      if (header.name == "*") {
+      if (ends_with(header.name, "*")) {
         for (const auto &column : columns) {
           if (column.is_visible()) {
             if (!first) {

@@ -34,3 +34,9 @@ std::vector<std::string> split(const std::string& str) {
   res.push_back(str.substr(prev_index, curr_index - prev_index));
   return res;
 }
+
+bool ends_with(const std::string& str, const std::string& suffix) {
+  if (suffix.length() > str.length()) { return false; }
+
+  return (str.rfind(suffix) == (str.length() - suffix.length()));
+}
