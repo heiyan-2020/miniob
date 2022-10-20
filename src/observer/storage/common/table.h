@@ -38,7 +38,7 @@ public:
   RC drop(const char *table_name);
 
   RC insert_record(Trx *trx, const std::vector<Value>& values);
-  RC update_record(Trx *trx, Record *old_record, Record *new_record, bool has_null);
+  RC update_record(Trx *trx, Record *old_record, Record *new_record);
   RC delete_record(Trx *trx, Record *record);
 
   RC get_record_scanner(RecordFileScanner &scanner);
@@ -69,7 +69,7 @@ public:
 private:
   RC scan_record(Trx *trx, int limit, void *context, RC (*record_reader)(Record *, void *));
   RC insert_record(Trx *trx, Record *record);
-  RC check_unique_constraint(const char *record_data, bool has_null);
+  RC check_unique_constraint(const char *record_data);
 
 private:
   RC insert_entry_of_indexes(const char *record, const RID &rid);
