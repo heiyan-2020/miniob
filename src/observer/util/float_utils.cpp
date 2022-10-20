@@ -28,3 +28,22 @@ auto floor_float(float val, int digits) -> float
   }
   return (float)atof(res.c_str());
 }
+
+auto round_float(std::string val, int digits) -> std::string
+{
+  std::string res{};
+  auto find_dot = val.find('.');
+  assert(find_dot != std::string::npos);
+  res += val.substr(0, find_dot);
+  if (digits > 0) {
+    res += val.substr(find_dot, digits);
+    size_t last = val.at(find_dot + digits) - '0';
+    size_t after_last = val.at(find_dot + digits + 1) - '0';
+    if (after_last >= 5) {
+      res += std::to_string(last + 1);
+    } else {
+      res += std::to_string(last);
+    }
+  }
+  return res;
+}

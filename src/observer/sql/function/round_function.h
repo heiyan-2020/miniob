@@ -25,10 +25,10 @@ public:
       }
       switch (target_result.get_type()) {
         case INT:
-          out_value = Value{FLOAT, floor_float(target_result.value_.int_, 0)};
+          out_value = Value{FLOAT, (float)std::round(target_result.value_.int_)};
           return RC::SUCCESS;
         case FLOAT:
-          out_value = Value{FLOAT, floor_float(target_result.value_.float_, 0)};
+          out_value = Value{FLOAT, (float)std::round(target_result.value_.float_)};
           return RC::SUCCESS;
         default:
           break;
@@ -56,13 +56,15 @@ public:
       }
 
       switch (target_result.get_type()) {
-        case INT:
-          out_value =
-              Value{FLOAT, floor_float(target_result.value_.int_, digits_result.value_.int_)};
+        case INT: {
+          auto val = round_float(std::to_string((float)target_result.value_.int_), digits_result.value_.int_);
+          out_value = Value{FLOAT, (float)atof(val.c_str())};
           return RC::SUCCESS;
+        }
         case FLOAT: {
-          out_value =
-              Value{FLOAT, floor_float(target_result.value_.float_, digits_result.value_.int_)};
+          auto pre_val = round_float(std::to_string(target_result.value_.float_), digits_result.value_.int_ + 1);
+          auto val = round_float(pre_val, digits_result.value_.int_);
+          out_value = Value{FLOAT, (float)atof(val.c_str())};
           return RC::SUCCESS;
         }
         default:
