@@ -155,7 +155,11 @@ RC Binder::bind_from(hsql::TableRef *root_table, SchemaRef &out_schema)
   }
 
   if (root_table->alias) {
+    if (table_alias_.find(root_table->alias->name) != table_alias_.end()) {
+      return RC::DUPLICATE;
+    }
     out_schema->set_table_name(root_table->alias->name);
+    table_alias_.insert(root_table->alias->name);
   }
   return RC::SUCCESS;
 }

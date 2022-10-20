@@ -228,7 +228,7 @@ enum RC {
   EVALUATE,         /* Evaluation error */
   ENV,              /* Doesn't find column in current environment */
   SCALAR,           /* scalar sub-query return multiple rows */
-  DUPLICATE,        /* Duplicated column name */
+  DUPLICATE,        /* Duplicated name */
 
   /* buffer pool part */
   BUFFERPOOL_EXIST = (BUFFERPOOL | (RCBufferPool::BP_EXIST << 8)),
