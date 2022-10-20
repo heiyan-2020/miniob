@@ -206,9 +206,9 @@ static std::string day_english[] = {
     "18th",
     "19th",
     "20th",
-    "21st", // note
-    "22nd", // note
-    "23rd", // note
+    "21st",  // note
+    "22nd",  // note
+    "23rd",  // note
     "24th",
     "25th",
     "26th",

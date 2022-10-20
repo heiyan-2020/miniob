@@ -4,11 +4,12 @@
 #include "predicate_utils.h"
 #include "sql/expr/bool_expression.h"
 
-void PredicateUtils::collect_conjuncts(AbstractExpressionRef expr, std::unordered_set<AbstractExpressionRef> &out_conjuncts)
+void PredicateUtils::collect_conjuncts(
+    AbstractExpressionRef expr, std::unordered_set<AbstractExpressionRef> &out_conjuncts)
 {
   // If there is no condition, just return without doing anything.
   if (!expr) {
-    return ;
+    return;
   }
 
   std::shared_ptr<BoolExpression> converted = std::dynamic_pointer_cast<BoolExpression>(expr);
@@ -28,16 +29,14 @@ void PredicateUtils::collect_conjuncts(AbstractExpressionRef expr, std::unordere
     // TODO(zyx): figure out the necessary of this line.
     out_conjuncts.insert(expr);
   }
-
 }
 
 void PredicateUtils::find_expr_using_schemas(std::unordered_set<AbstractExpressionRef> &src_expr,
-    std::unordered_set<AbstractExpressionRef> &dst_expr,
-    const std::vector<SchemaRef>& schemas)
+    std::unordered_set<AbstractExpressionRef> &dst_expr, const std::vector<SchemaRef> &schemas)
 {
   std::vector<ColumnName> symbols;
   for (auto it = src_expr.begin(); it != src_expr.end();) {
-    const auto& expr = *it;
+    const auto &expr = *it;
     symbols.clear();
     symbols = expr->get_all_symbols();
 

@@ -1,6 +1,7 @@
 #include "string_utils.h"
 
-std::string trim(const std::string &str) {
+std::string trim(const std::string &str)
+{
   if (str.empty()) {
     return str;
   }
@@ -10,7 +11,8 @@ std::string trim(const std::string &str) {
   return res;
 }
 
-std::vector<std::string> split(const std::string& str) {
+std::vector<std::string> split(const std::string &str)
+{
   std::vector<std::string> res{};
   size_t len = str.size();
   size_t prev_index{};
@@ -35,8 +37,11 @@ std::vector<std::string> split(const std::string& str) {
   return res;
 }
 
-bool ends_with(const std::string& str, const std::string& suffix) {
-  if (suffix.length() > str.length()) { return false; }
+bool ends_with(const std::string &str, const std::string &suffix)
+{
+  if (suffix.length() > str.length()) {
+    return false;
+  }
 
   return (str.rfind(suffix) == (str.length() - suffix.length()));
 }

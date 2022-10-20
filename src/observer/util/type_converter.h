@@ -15,7 +15,7 @@ public:
       case INT:
         return {INT, raw};
       case FLOAT:
-        return {FLOAT, (float) raw};
+        return {FLOAT, (float)raw};
       case CHAR: {
         std::string converted = std::to_string(raw);
         return {CHAR, converted.c_str(), static_cast<size_t>(field_meta.len())};
@@ -31,7 +31,7 @@ public:
     switch (dst_type) {
       case INT:
         // 四舍五入, 而非直接抹去小数位
-        return {INT, (int) std::round(raw)};
+        return {INT, (int)std::round(raw)};
       case FLOAT:
         return {FLOAT, raw};
       case CHAR: {
@@ -51,7 +51,7 @@ public:
       case INT:
         return {INT, raw};
       case FLOAT:
-        return {FLOAT, (float) raw};
+        return {FLOAT, (float)raw};
       case CHAR: {
         std::string converted = std::to_string(raw);
         return {CHAR, converted.c_str(), converted.size()};
@@ -67,7 +67,7 @@ public:
     switch (dst_type) {
       case INT:
         // 四舍五入, 而非直接抹去小数位
-        return {INT, (int) std::round(raw)};
+        return {INT, (int)std::round(raw)};
       case FLOAT:
         return {FLOAT, raw};
       case CHAR: {
@@ -87,7 +87,7 @@ public:
       case INT:
         return {INT, atoi(raw)};
       case FLOAT:
-        return {FLOAT, (float) atof(raw)};
+        return {FLOAT, (float)atof(raw)};
       case CHAR: {
         return {CHAR, raw, size};
       }
