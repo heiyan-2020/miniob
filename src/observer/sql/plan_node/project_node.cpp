@@ -194,8 +194,11 @@ RC ProjectNode::project_tuple(const TupleRef& original_tuple, TupleRef &out_tupl
     if (rc != RC::SUCCESS) {
       return rc;
     }
-    // TODO(zyx): evaluation result may be null?
+
     out_tuple_values.push_back(eval_result);
+    if (eval_result.is_null()) {
+      output_null_field_bitmap.set_bit(curr_idx);
+    }
     curr_idx++;
   }
 
